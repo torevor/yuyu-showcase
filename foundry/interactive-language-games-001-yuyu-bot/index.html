@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sensemaking Interferometer</title>
+<style>
+  :root{
+    --paper:#f8f7f2;
+    --ink:#191714;
+    --muted:#6e685d;
+    --line:#c9c0ae;
+    --line2:#dfd8ca;
+    --red:#b84d37;
+    --blue:#276b91;
+    --green:#4f7d50;
+    --gold:#a87823;
+    --violet:#6e5a86;
+    --field:#fffdfa;
+    --mark:#fff0ba;
+    --ok:#e5f0dc;
+    --bad:#f6ded9;
+    --shadow:0 1px 0 rgba(25,23,20,.08);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    overflow:hidden;
+    letter-spacing:0;
+  }
+  button,select,input{font:inherit;color:inherit}
+  .app{
+    display:grid;
+    grid-template-rows:38px 1fr 28px;
+    height:100vh;
+    min-height:720px;
+    border-top:4px solid var(--ink);
+  }
+  header{
+    display:grid;
+    grid-template-columns:260px 1fr 430px;
+    align-items:center;
+    border-bottom:1px solid var(--line);
+    background:#fbfaf6;
+    padding:0 10px;
+    gap:10px;
+  }
+  h1{
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+    font-size:20px;
+    line-height:1;
+    margin:0;
+    font-weight:700;
+  }
+  .topnote{
+    font-size:12px;
+    color:var(--muted);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .modebar{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+  .pill,.tinybtn{
+    border:1px solid var(--line);
+    background:var(--field);
+    min-height:24px;
+    padding:3px 7px;
+    border-radius:3px;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+  }
+  .pill.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tinybtn:hover,.pill:hover{border-color:var(--ink)}
+  main{
+    display:grid;
+    grid-template-columns:35% 31% 34%;
+    min-height:0;
+  }
+  .col{
+    min-width:0;
+    min-height:0;
+    border-right:1px solid var(--line);
+    display:grid;
+    grid-template-rows:auto 1fr;
+  }
+  .col:last-child{border-right:0}
+  .panelhead{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    min-height:30px;
+    padding:4px 8px;
+    border-bottom:1px solid var(--line);
+    background:#f1eee6;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0;
+    color:#453f36;
+  }
+  .panelbody{min-height:0;overflow:auto}
+  .corpus{
+    display:grid;
+    grid-template-columns:34px 76px 1fr 62px;
+    border-bottom:1px solid var(--line2);
+    cursor:pointer;
+    background:var(--field);
+  }
+  .corpus:hover{background:#fff8df}
+  .corpus.selected{background:#fff2c7;outline:2px solid var(--gold);outline-offset:-2px}
+  .cid,.game,.utt,.readtag{
+    padding:7px 6px;
+    border-right:1px solid var(--line2);
+    font-size:12px;
+    line-height:1.25;
+  }
+  .readtag{border-right:0;text-align:center;font-size:10px;text-transform:uppercase;color:#574f42}
+  .cid{font-weight:700;text-align:center;color:var(--blue)}
+  .game{font-size:11px;color:#4d493f}
+  mark{background:var(--mark);padding:0 2px;border-bottom:1px solid #d3a735}
+  .workgrid{
+    display:grid;
+    grid-template-rows:auto auto 1fr;
+    min-height:100%;
+  }
+  .selected-card{
+    padding:8px;
+    border-bottom:1px solid var(--line);
+    background:#fffdfa;
+  }
+  .selected-card h2{
+    font-family:ui-serif, Georgia, serif;
+    font-size:18px;
+    margin:0 0 5px;
+  }
+  .quote{font-size:16px;line-height:1.32;margin:0 0 8px}
+  .micro{font-size:11px;line-height:1.35;color:var(--muted)}
+  .controls{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    border-bottom:1px solid var(--line);
+  }
+  .control{
+    padding:8px;
+    border-right:1px solid var(--line2);
+    border-bottom:1px solid var(--line2);
+  }
+  .control:nth-child(2n){border-right:0}
+  .label{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:11px;text-transform:uppercase;letter-spacing:0;color:#50493d;margin-bottom:5px;
+  }
+  .choicegrid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  .choice{
+    border:1px solid var(--line);
+    background:#fffefa;
+    padding:5px 4px;
+    min-height:28px;
+    text-align:left;
+    border-radius:2px;
+    cursor:pointer;
+    font-size:12px;
+    line-height:1.1;
+  }
+  .choice small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+  .choice.active{background:#eaf2f4;border-color:var(--blue);box-shadow:inset 3px 0 0 var(--blue)}
+  .ledger{display:grid;grid-template-columns:1fr 1fr;min-height:0}
+  .ledger section{border-right:1px solid var(--line2);padding:8px;min-width:0}
+  .ledger section:last-child{border-right:0}
+  .ledger h3{
+    margin:0 0 5px;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0;
+  }
+  .fact{
+    border-top:1px solid var(--line2);
+    padding:5px 0;
+    font-size:12px;
+    line-height:1.25;
+  }
+  .fact b{color:#211f1a}
+  .mini-table{width:100%;border-collapse:collapse;font-size:11px}
+  .mini-table th,.mini-table td{border:1px solid var(--line2);padding:4px;vertical-align:top}
+  .mini-table th{background:#f1eee6;text-align:left;font-weight:700}
+  .vizwrap{
+    display:grid;
+    grid-template-rows:332px auto 1fr;
+    min-height:0;
+  }
+  .canvasbox{position:relative;background:#fffefa;border-bottom:1px solid var(--line)}
+  canvas{display:block;width:100%;height:332px}
+  .legend{
+    position:absolute;left:8px;top:7px;
+    display:grid;grid-template-columns:repeat(2,auto);gap:3px 9px;
+    background:rgba(255,253,248,.88);
+    border:1px solid var(--line2);
+    padding:5px;
+    font-size:10px;
+  }
+  .sw{display:inline-block;width:10px;height:10px;margin-right:4px;border:1px solid #555;vertical-align:-1px}
+  .metrics{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    border-bottom:1px solid var(--line);
+  }
+  .metric{padding:7px;border-right:1px solid var(--line2)}
+  .metric:last-child{border-right:0}
+  .metric span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:0;color:var(--muted)}
+  .metric b{font-family:ui-serif, Georgia, serif;font-size:24px;line-height:1}
+  .bar{height:4px;background:#eee4d1;margin-top:5px}
+  .bar i{display:block;height:100%;background:var(--green)}
+  .analysis{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    min-height:0;
+  }
+  .analysis>section{padding:8px;border-right:1px solid var(--line2);overflow:auto}
+  .analysis>section:last-child{border-right:0}
+  .analysis h3{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:0}
+  .cardline{
+    display:grid;
+    grid-template-columns:34px 1fr 44px;
+    gap:5px;
+    align-items:start;
+    border-top:1px solid var(--line2);
+    padding:5px 0;
+    font-size:11px;
+    line-height:1.25;
+  }
+  .scoretag{text-align:right;font-weight:700}
+  .badge{
+    display:inline-block;border:1px solid var(--line);background:#fffefa;border-radius:2px;
+    padding:1px 3px;font-size:10px;margin:0 2px 2px 0;color:#423c34;
+  }
+  footer{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+    align-items:center;
+    padding:4px 8px;
+    border-top:1px solid var(--line);
+    background:#f1eee6;
+    font-size:11px;
+    color:#514a3e;
+  }
+  .heat{height:12px;display:grid;grid-template-columns:repeat(12,1fr);border:1px solid var(--line)}
+  .heat i{display:block;border-right:1px solid rgba(0,0,0,.08)}
+  .heat i:last-child{border-right:0}
+  .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;border:1px solid var(--line);padding:1px 4px;background:#fff}
+  @media (max-width:980px){
+    body{overflow:auto}
+    .app{height:auto;min-height:100vh;grid-template-rows:auto 1fr auto}
+    header{grid-template-columns:1fr;gap:4px;padding:8px}
+    main{grid-template-columns:1fr}
+    .col{border-right:0;border-bottom:1px solid var(--line);min-height:620px}
+    footer{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Sensemaking Interferometer</h1>
+    <div class="topnote">Target term: <b>charge</b> / archive: 12 slips / dimensions: sense, reference, value, use, sign-relation.</div>
+    <div class="modebar" aria-label="game controls">
+      <button class="tinybtn" id="resetBtn" title="Restore the starting interpretation">Reset</button>
+      <button class="tinybtn" id="hintBtn" title="Nudge the selected fragment toward a coherent reading">Abduce</button>
+      <button class="pill active" data-view="field">Field</button>
+      <button class="pill" data-view="audit">Audit</button>
+    </div>
+  </header>
+  <main>
+    <section class="col">
+      <div class="panelhead"><span>Corpus Slips</span><span id="corpusCount"></span></div>
+      <div class="panelbody" id="corpus"></div>
+    </section>
+    <section class="col">
+      <div class="panelhead"><span>Interpretive Workbench</span><span id="statusLine"></span></div>
+      <div class="panelbody workgrid">
+        <div class="selected-card">
+          <h2 id="selTitle"></h2>
+          <p class="quote" id="selQuote"></p>
+          <div class="micro" id="selMicro"></div>
+        </div>
+        <div class="controls" id="controls"></div>
+        <div class="ledger">
+          <section>
+            <h3>Rule Ledger</h3>
+            <div id="ruleLedger"></div>
+          </section>
+          <section>
+            <h3>Opposition Grid</h3>
+            <table class="mini-table" id="oppGrid"></table>
+          </section>
+        </div>
+      </div>
+    </section>
+    <section class="col">
+      <div class="panelhead"><span id="vizTitle">Semantic Field</span><span id="selectedVector"></span></div>
+      <div class="panelbody vizwrap">
+        <div class="canvasbox">
+          <canvas id="field" width="760" height="448"></canvas>
+          <div class="legend">
+            <span><i class="sw" style="background:#276b91"></i>reference</span>
+            <span><i class="sw" style="background:#b84d37"></i>use-rule</span>
+            <span><i class="sw" style="background:#4f7d50"></i>opposition</span>
+            <span><i class="sw" style="background:#a87823"></i>sign type</span>
+          </div>
+        </div>
+        <div class="metrics" id="metrics"></div>
+        <div class="analysis">
+          <section>
+            <h3>Fragment Audit</h3>
+            <div id="auditList"></div>
+          </section>
+          <section>
+            <h3>Doctrine Notes</h3>
+            <div id="doctrine"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <div>Archive state: polysemy preserved across electrical, juridical, fiscal, imperative, and editorial language-games.</div>
+    <div class="heat" id="heat"></div>
+    <div id="footerNote"></div>
+  </footer>
+</div>
+<script>
+const DATA = {
+  dimensions: {
+    reference: {
+      title: "Fregean reference",
+      note: "What object, process, obligation, or act is stabilized by this use?",
+      options: {
+        energy: ["stored electrical potential", 18, 42],
+        accusation: ["formal imputation of fault", 72, 32],
+        price: ["monetary demand or fee", 76, 78],
+        command: ["ordered movement or duty", 29, 76]
+      }
+    },
+    use: {
+      title: "Wittgensteinian use",
+      note: "Which language-game makes the utterance count as a move?",
+      options: {
+        measuring: ["measurement / diagnosis", 18, 42],
+        accusing: ["accusation / defense", 72, 32],
+        billing: ["billing / accounting", 76, 78],
+        directing: ["command / instruction", 29, 76]
+      }
+    },
+    opposition: {
+      title: "Saussurean value",
+      note: "The term gains value by not being which neighboring term?",
+      options: {
+        discharge: ["charge versus discharge", 18, 42],
+        acquit: ["charge versus acquit", 72, 32],
+        credit: ["charge versus credit", 76, 78],
+        retreat: ["charge versus retreat", 29, 76]
+      }
+    },
+    sign: {
+      title: "Peircean sign relation",
+      note: "What relation carries interpretive force here?",
+      options: {
+        index: ["index: trace, symptom, pointing", 16, 52],
+        symbol: ["symbol: convention or office", 64, 32],
+        icon: ["icon: resemblance or diagram", 38, 66],
+        imperative: ["index-symbol hybrid: command signal", 30, 80]
+      }
+    }
+  },
+  slips: [
+    {
+      id:"A1", game:"battery bench",
+      text:"The cell will not hold a charge after the cold soak.",
+      context:"Lab notebook, reliability test, lithium pack.",
+      gold:{reference:"energy",use:"measuring",opposition:"discharge",sign:"index"},
+      gloss:"Here charge is a physically measurable state inferred from behavior; discharge is its structural opposite."
+    },
+    {
+      id:"A2", game:"court",
+      text:"The charge was amended after the witness recanted.",
+      context:"Criminal procedure note.",
+      gold:{reference:"accusation",use:"accusing",opposition:"acquit",sign:"symbol"},
+      gloss:"The word names an institutional act, not an electrical property; its force comes from legal convention."
+    },
+    {
+      id:"A3", game:"invoice",
+      text:"Apply the charge only if the parcel crosses the priority threshold.",
+      context:"Shipping rate rule.",
+      gold:{reference:"price",use:"billing",opposition:"credit",sign:"symbol"},
+      gloss:"A charge is an entry in an accounting practice, opposed to a credit or waiver."
+    },
+    {
+      id:"A4", game:"drill field",
+      text:"At the whistle, the front line will charge the gate.",
+      context:"Old tactical exercise, imperative register.",
+      gold:{reference:"command",use:"directing",opposition:"retreat",sign:"imperative"},
+      gloss:"The utterance coordinates action; its meaning depends on the rule of the drill."
+    },
+    {
+      id:"A5", game:"classroom",
+      text:"Your charge is to compare two translations without choosing a winner.",
+      context:"Seminar instruction.",
+      gold:{reference:"command",use:"directing",opposition:"retreat",sign:"symbol"},
+      gloss:"A duty is assigned by speech; the word carries office-like symbolic authority."
+    },
+    {
+      id:"A6", game:"newspaper",
+      text:"The mayor called the charge a theatrical distraction.",
+      context:"Political report quoting a denial.",
+      gold:{reference:"accusation",use:"accusing",opposition:"acquit",sign:"symbol"},
+      gloss:"Charge here is a contestable public imputation, anchored by denial and rebuttal."
+    },
+    {
+      id:"A7", game:"physics diagram",
+      text:"Draw the positive charge as a small circle at the plate edge.",
+      context:"Instruction for a diagram.",
+      gold:{reference:"energy",use:"measuring",opposition:"discharge",sign:"icon"},
+      gloss:"The sign is diagrammatic: a drawn mark resembles a model position, not the particle itself."
+    },
+    {
+      id:"A8", game:"receipt",
+      text:"The charge appears twice because the deposit and balance settled on different days.",
+      context:"Payment support transcript.",
+      gold:{reference:"price",use:"billing",opposition:"credit",sign:"index"},
+      gloss:"The duplicated entry functions as an indexical trace of transaction history."
+    },
+    {
+      id:"A9", game:"manual",
+      text:"Charge the probe before calibration, then discharge it through the test resistor.",
+      context:"Instrument manual.",
+      gold:{reference:"energy",use:"directing",opposition:"discharge",sign:"imperative"},
+      gloss:"The reference is electrical, but the use is instructional: an imperative handling procedure."
+    },
+    {
+      id:"A10", game:"ethics memo",
+      text:"The committee's charge excludes discipline and includes only interpretation.",
+      context:"Institutional remit.",
+      gold:{reference:"command",use:"directing",opposition:"acquit",sign:"symbol"},
+      gloss:"A committee charge is a bounded mandate; acquittal is not exact, but discipline marks the neighboring legal field being excluded."
+    },
+    {
+      id:"A11", game:"review",
+      text:"A static charge in the paragraph makes every metaphor lean toward debt.",
+      context:"Editorial marginalia about semantic contamination.",
+      gold:{reference:"price",use:"measuring",opposition:"credit",sign:"icon"},
+      gloss:"This is figurative: accounting value spreads as an iconic pattern across nearby language."
+    },
+    {
+      id:"A12", game:"testimony",
+      text:"I heard the charge before I saw the horses move.",
+      context:"Ambiguous historical witness line.",
+      gold:{reference:"command",use:"directing",opposition:"retreat",sign:"index"},
+      gloss:"Sound acts as an index of a coming ordered movement; context blocks the legal reading."
+    }
+  ],
+  doctrine: [
+    ["Frege", "Two uses can share a reference class yet differ in sense: A1 and A9 both concern electricity, but one diagnoses and one commands."],
+    ["Saussure", "Value is differential. Charge/credit belongs to accounting; charge/discharge belongs to electrical process; charge/acquit belongs to legal procedure."],
+    ["Peirce", "Indexical force is not mere pointing. A receipt entry, a battery failure, and a heard signal are traces that license abduction."],
+    ["Wittgenstein", "Do not ask for one essence of charge. Ask what move the word permits in this practice: bill, accuse, measure, instruct."]
+  ]
+};
+
+let state = {
+  selected: 0,
+  view: "field",
+  answers: DATA.slips.map(s => ({...s.gold}))
+};
+
+/* Seed with plausible errors so the first screen is already an active puzzle. */
+state.answers[4].opposition = "retreat";
+state.answers[6].sign = "symbol";
+state.answers[8].use = "measuring";
+state.answers[10].reference = "energy";
+state.answers[11].sign = "imperative";
+
+const $ = sel => document.querySelector(sel);
+const corpusEl = $("#corpus");
+const controlsEl = $("#controls");
+const canvas = $("#field");
+const ctx = canvas.getContext("2d");
+
+function optionLabel(dim, key){ return DATA.dimensions[dim].options[key][0]; }
+function scoreSlip(i){
+  const s = DATA.slips[i], a = state.answers[i];
+  return Object.keys(s.gold).reduce((n,k)=>n+(a[k]===s.gold[k]?1:0),0);
+}
+function percent(n,d){ return Math.round((n/d)*100); }
+function metrics(){
+  const totals = {reference:0,use:0,opposition:0,sign:0};
+  DATA.slips.forEach((s,i)=>{
+    for(const k of Object.keys(totals)) if(state.answers[i][k]===s.gold[k]) totals[k]++;
+  });
+  return Object.fromEntries(Object.entries(totals).map(([k,v])=>[k,percent(v,DATA.slips.length)]));
+}
+function overall(){
+  return percent(DATA.slips.reduce((n,_,i)=>n+scoreSlip(i),0), DATA.slips.length*4);
+}
+function renderCorpus(){
+  $("#corpusCount").textContent = DATA.slips.length + " slips";
+  corpusEl.innerHTML = "";
+  DATA.slips.forEach((s,i)=>{
+    const row = document.createElement("div");
+    row.className = "corpus" + (i===state.selected ? " selected" : "");
+    row.innerHTML = `<div class="cid">${s.id}</div><div class="game">${s.game}</div><div class="utt">${s.text.replace(/charge|Charge/g,m=>`<mark>${m}</mark>`)}</div><div class="readtag">${scoreSlip(i)}/4</div>`;
+    row.addEventListener("click",()=>{state.selected=i;render();});
+    corpusEl.appendChild(row);
+  });
+}
+function renderSelected(){
+  const s = DATA.slips[state.selected];
+  $("#selTitle").textContent = s.id + " / " + s.game;
+  $("#selQuote").innerHTML = s.text.replace(/charge|Charge/g,m=>`<mark>${m}</mark>`);
+  $("#selMicro").textContent = s.context + " " + s.gloss;
+  $("#selectedVector").textContent = Object.values(state.answers[state.selected]).join(" / ");
+}
+function renderControls(){
+  controlsEl.innerHTML = "";
+  for(const [dim, meta] of Object.entries(DATA.dimensions)){
+    const box = document.createElement("div");
+    box.className = "control";
+    const active = state.answers[state.selected][dim];
+    box.innerHTML = `<div class="label"><span>${meta.title}</span><span title="${meta.note}">?</span></div><div class="choicegrid"></div>`;
+    const grid = box.querySelector(".choicegrid");
+    for(const [key,val] of Object.entries(meta.options)){
+      const btn = document.createElement("button");
+      btn.className = "choice" + (key===active ? " active" : "");
+      btn.innerHTML = `${key}<small>${val[0]}</small>`;
+      btn.addEventListener("click",()=>{state.answers[state.selected][dim]=key;render();});
+      grid.appendChild(btn);
+    }
+    controlsEl.appendChild(box);
+  }
+}
+function renderLedger(){
+  const s = DATA.slips[state.selected], a = state.answers[state.selected];
+  const facts = [
+    ["Reference", optionLabel("reference",a.reference), s.gold.reference===a.reference],
+    ["Use", optionLabel("use",a.use), s.gold.use===a.use],
+    ["Opposition", optionLabel("opposition",a.opposition), s.gold.opposition===a.opposition],
+    ["Sign relation", optionLabel("sign",a.sign), s.gold.sign===a.sign]
+  ];
+  $("#ruleLedger").innerHTML = facts.map(f=>`<div class="fact"><b>${f[0]}</b><br>${f[1]} <span class="badge" style="background:${f[2]?"var(--ok)":"var(--bad)"}">${f[2]?"fits":"strained"}</span></div>`).join("");
+  const rows = Object.entries(DATA.dimensions.opposition.options).map(([k,v])=>{
+    const count = state.answers.filter(a=>a.opposition===k).length;
+    return `<tr><th>${k}</th><td>${v[0]}</td><td>${count}</td></tr>`;
+  }).join("");
+  $("#oppGrid").innerHTML = `<tr><th>axis</th><th>value relation</th><th>uses</th></tr>${rows}`;
+}
+function renderMetrics(){
+  const m = metrics();
+  const names = {reference:"reference",use:"use-rule",opposition:"opposition",sign:"sign"};
+  $("#statusLine").textContent = overall() + "% coherence";
+  $("#metrics").innerHTML = Object.entries(m).map(([k,v])=>`<div class="metric"><span>${names[k]}</span><b>${v}</b><div class="bar"><i style="width:${v}%"></i></div></div>`).join("");
+  $("#footerNote").textContent = "Current braid coherence: " + overall() + "%. Preserve polysemy; do not force all slips into a single reference.";
+  const heat = $("#heat");
+  heat.innerHTML = DATA.slips.map((_,i)=>{
+    const sc = scoreSlip(i);
+    const color = sc===4 ? "#4f7d50" : sc===3 ? "#c4a047" : sc===2 ? "#d98f55" : "#b84d37";
+    return `<i title="${DATA.slips[i].id}: ${sc}/4" style="background:${color}"></i>`;
+  }).join("");
+}
+function renderAudit(){
+  $("#auditList").innerHTML = DATA.slips.map((s,i)=>{
+    const sc = scoreSlip(i);
+    const a = state.answers[i];
+    return `<div class="cardline"><b>${s.id}</b><span>${s.game}<br><span class="badge">${a.reference}</span><span class="badge">${a.use}</span><span class="badge">${a.opposition}</span><span class="badge">${a.sign}</span></span><span class="scoretag">${sc}/4</span></div>`;
+  }).join("");
+  $("#doctrine").innerHTML = DATA.doctrine.map(d=>`<div class="fact"><b>${d[0]}</b><br>${d[1]}</div>`).join("");
+}
+function pointForAnswer(i){
+  const a = state.answers[i];
+  const dims = ["reference","use","opposition","sign"];
+  let x=0,y=0;
+  dims.forEach(dim=>{
+    const p = DATA.dimensions[dim].options[a[dim]];
+    x += p[1]; y += p[2];
+  });
+  return {x:x/dims.length, y:y/dims.length};
+}
+function drawField(){
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = "#fffefa";
+  ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = "#e0d7c8";
+  ctx.lineWidth = 1;
+  for(let x=40;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=40;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  const anchors = [
+    ["energy",18,42,"#276b91"],["accusation",72,32,"#276b91"],["price",76,78,"#276b91"],["command",29,76,"#276b91"],
+    ["use",50,18,"#b84d37"],["opposition",50,88,"#4f7d50"],["sign",8,8,"#a87823"]
+  ];
+  anchors.forEach(([name,xp,yp,color])=>{
+    const x=xp*w/100,y=yp*h/100;
+    ctx.fillStyle=color; ctx.globalAlpha=.12;
+    ctx.beginPath();ctx.arc(x,y,30,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;ctx.fillStyle=color;
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#302b24";ctx.font="12px system-ui";ctx.fillText(name,x+7,y+4);
+  });
+  const pts = DATA.slips.map((s,i)=>({s,i,...pointForAnswer(i)}));
+  ctx.lineWidth=1.4;
+  pts.forEach(p=>{
+    const gold = DATA.slips[p.i].gold;
+    for(const dim of ["reference","use","opposition","sign"]){
+      const opt = DATA.dimensions[dim].options[state.answers[p.i][dim]];
+      const gx = opt[1]*w/100, gy=opt[2]*h/100;
+      ctx.strokeStyle = {reference:"#276b91",use:"#b84d37",opposition:"#4f7d50",sign:"#a87823"}[dim];
+      ctx.globalAlpha = DATA.slips[p.i].gold[dim]===state.answers[p.i][dim] ? .28 : .09;
+      ctx.beginPath();ctx.moveTo(p.x*w/100,p.y*h/100);ctx.lineTo(gx,gy);ctx.stroke();
+    }
+  });
+  ctx.globalAlpha=1;
+  pts.forEach(p=>{
+    const x=p.x*w/100,y=p.y*h/100, sc=scoreSlip(p.i);
+    ctx.fillStyle = p.i===state.selected ? "#fff0ba" : sc===4 ? "#e5f0dc" : "#f6ded9";
+    ctx.strokeStyle = p.i===state.selected ? "#a87823" : "#6e685d";
+    ctx.lineWidth = p.i===state.selected ? 3 : 1;
+    ctx.beginPath();ctx.arc(x,y,p.i===state.selected?13:10,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle="#16130f";ctx.font="bold 11px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(DATA.slips[p.i].id,x,y);
+  });
+  ctx.textAlign="left";ctx.textBaseline="alphabetic";
+  if(state.view==="audit"){
+    ctx.fillStyle="rgba(255,253,248,.92)";
+    ctx.fillRect(118,82,520,250);
+    ctx.strokeStyle="#c9c0ae";ctx.strokeRect(118,82,520,250);
+    ctx.fillStyle="#191714";ctx.font="bold 16px Georgia";
+    ctx.fillText("Coherence audit",138,112);
+    ctx.font="12px system-ui";
+    const lines = [
+      "A perfect score is not semantic sameness. It is a defensible alignment",
+      "between reference, use, opposition, and sign-relation for each slip.",
+      "Low-scoring slips are places where the term's sense has been flattened",
+      "or moved into the wrong language-game."
+    ];
+    lines.forEach((l,i)=>ctx.fillText(l,138,144+i*21));
+    ctx.font="bold 42px Georgia";ctx.fillStyle=overall()>82?"#4f7d50":"#b84d37";
+    ctx.fillText(overall()+"%",138,274);
+    ctx.font="12px system-ui";ctx.fillStyle="#191714";
+    ctx.fillText("braid coherence",244,270);
+  }
+}
+function abduce(){
+  const i = state.selected, s = DATA.slips[i], a = state.answers[i];
+  const wrong = Object.keys(s.gold).find(k=>a[k]!==s.gold[k]);
+  if(wrong) a[wrong] = s.gold[wrong];
+  render();
+}
+function reset(){
+  state.answers = DATA.slips.map(s => ({...s.gold}));
+  state.answers[4].opposition = "retreat";
+  state.answers[6].sign = "symbol";
+  state.answers[8].use = "measuring";
+  state.answers[10].reference = "energy";
+  state.answers[11].sign = "imperative";
+  render();
+}
+function render(){
+  renderCorpus();
+  renderSelected();
+  renderControls();
+  renderLedger();
+  renderMetrics();
+  renderAudit();
+  drawField();
+}
+$("#resetBtn").addEventListener("click", reset);
+$("#hintBtn").addEventListener("click", abduce);
+document.querySelectorAll(".pill").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".pill").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    state.view = btn.dataset.view;
+    $("#vizTitle").textContent = state.view==="field" ? "Semantic Field" : "Coherence Audit";
+    drawField();
+  });
+});
+canvas.addEventListener("click", ev=>{
+  const r = canvas.getBoundingClientRect(), x=(ev.clientX-r.left)/r.width*100, y=(ev.clientY-r.top)/r.height*100;
+  let best = 0, dist = Infinity;
+  DATA.slips.forEach((_,i)=>{
+    const p = pointForAnswer(i), d = Math.hypot(p.x-x,p.y-y);
+    if(d<dist){dist=d;best=i;}
+  });
+  if(dist<6){state.selected=best;render();}
+});
+window.addEventListener("resize", drawField);
+render();
+</script>
+</body>
+</html>

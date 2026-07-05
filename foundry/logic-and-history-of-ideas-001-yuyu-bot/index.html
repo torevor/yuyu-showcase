@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interpretant Loom</title>
+<style>
+:root{
+  --paper:#fbfaf3;--ink:#181711;--muted:#676257;--rule:#cfc7b5;--hair:#e4ddcc;
+  --red:#b3342a;--blue:#245f8f;--green:#3f7b4a;--gold:#9b6b16;--violet:#6a5578;
+  --panel:#f4f0e5;--white:#fffdf7;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+body{font-size:12px;line-height:1.28;overflow:hidden}
+button,select,input{font:inherit;color:inherit}
+.app{height:100vh;display:grid;grid-template-rows:38px minmax(0,1fr) 154px;border-top:4px solid var(--ink)}
+.top{display:grid;grid-template-columns:230px 1fr 430px;align-items:center;border-bottom:1px solid var(--ink);background:#f7f3e8}
+.brand{height:100%;display:flex;align-items:center;padding:0 10px;border-right:1px solid var(--ink);font-family:Georgia,serif;font-size:18px;letter-spacing:.01em}
+.brand small{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:9px;margin-left:8px;color:var(--red);text-transform:uppercase}
+.thesis{padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#27241c}
+.tools{display:flex;gap:4px;justify-content:flex-end;padding:4px 8px;border-left:1px solid var(--ink)}
+.tools button{height:27px;padding:0 8px;border:1px solid var(--ink);background:var(--white);cursor:pointer}
+.tools button.on{background:var(--ink);color:var(--paper)}
+.main{display:grid;grid-template-columns:230px minmax(440px,1.2fr) 430px;min-height:0}
+.left,.center,.right{min-height:0;overflow:hidden}
+.left{border-right:1px solid var(--ink);background:#f6f1e6;display:grid;grid-template-rows:auto 1fr}
+.section-title{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase;letter-spacing:.08em;font-size:10px;color:#332f26;padding:7px 8px;border-bottom:1px solid var(--rule);background:#eee7d8}
+.utterances{overflow:auto}
+.u{padding:7px 8px;border-bottom:1px solid var(--hair);cursor:pointer;display:grid;gap:4px}
+.u:hover{background:#fffaf0}
+.u.active{background:#fffdf8;border-left:4px solid var(--red);padding-left:4px}
+.u .line{font-family:Georgia,serif;font-size:14px}
+.u .meta{display:flex;gap:5px;flex-wrap:wrap;color:var(--muted);font-size:10px}
+.tag{border:1px solid var(--rule);padding:1px 4px;background:#fffaf0;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.center{display:grid;grid-template-rows:68px minmax(0,1fr) 122px;background:var(--paper)}
+.sentence{border-bottom:1px solid var(--ink);padding:7px 9px;display:grid;grid-template-rows:auto 1fr;gap:5px}
+.sentence .label{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);font-size:10px;text-transform:uppercase}
+.tokens{display:flex;align-items:center;gap:3px;flex-wrap:wrap;min-width:0}
+.tok{border:1px solid var(--rule);background:var(--white);padding:3px 5px;cursor:pointer;min-height:23px}
+.tok.role-name{border-color:var(--blue)}
+.tok.role-quant{border-color:var(--red)}
+.tok.role-pred{border-color:var(--green)}
+.tok.role-index{border-color:var(--gold)}
+.tok.sel{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.loom-wrap{position:relative;min-height:0;background:
+  linear-gradient(90deg,rgba(0,0,0,.035) 1px,transparent 1px) 0 0/18px 18px,
+  linear-gradient(0deg,rgba(0,0,0,.025) 1px,transparent 1px) 0 0/18px 18px,
+  var(--paper)}
+#loom{width:100%;height:100%;display:block}
+.legend{position:absolute;left:8px;top:7px;display:grid;grid-template-columns:repeat(5,auto);gap:4px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px}
+.legend span{background:#fffdf5;border:1px solid var(--rule);padding:2px 4px}
+.readout{border-top:1px solid var(--ink);display:grid;grid-template-columns:1fr 1fr 1fr}
+.readout>div{padding:7px 8px;border-right:1px solid var(--rule);overflow:auto}
+.readout>div:last-child{border-right:0}
+.readout h3,.panel h3{margin:0 0 4px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.right{border-left:1px solid var(--ink);display:grid;grid-template-rows:1fr 1fr;background:#f8f4ea}
+.panels{display:grid;grid-template-columns:1fr 1fr;min-height:0;border-bottom:1px solid var(--ink)}
+.panel{padding:8px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);overflow:auto}
+.panel:nth-child(2n){border-right:0}
+.kv{display:grid;grid-template-columns:74px 1fr;gap:3px 6px;margin-top:4px}
+.k{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);font-size:10px}
+.v{font-size:11px}
+.matrix{display:grid;grid-template-rows:auto 1fr;min-height:0}
+#featureCanvas{width:100%;height:100%;display:block;background:#fffdf7}
+.bottom{border-top:1px solid var(--ink);display:grid;grid-template-columns:230px 1fr 430px;background:#f3eddf;min-height:0}
+.note{padding:8px;border-right:1px solid var(--ink);overflow:auto}
+.lattice{position:relative;overflow:hidden;border-right:1px solid var(--ink);background:#fffaf0}
+#latticeSvg{width:100%;height:100%;display:block}
+.delta{padding:8px;overflow:auto}
+.delta-grid{display:grid;grid-template-columns:82px 1fr;gap:4px 6px}
+.pill{display:inline-block;border:1px solid var(--rule);background:var(--white);padding:1px 4px;margin:0 2px 2px 0;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px}
+.warn{color:var(--red);font-weight:700}.blue{color:var(--blue)}.green{color:var(--green)}.gold{color:var(--gold)}
+@media(max-width:980px){
+  body{overflow:auto}.app{height:auto;min-height:100vh;grid-template-rows:auto auto auto}
+  .top,.main,.bottom{grid-template-columns:1fr}.tools{justify-content:flex-start;border-left:0;border-top:1px solid var(--rule);flex-wrap:wrap}
+  .brand,.left,.right,.note,.lattice{border-right:0}.main{grid-template-columns:1fr}.right{border-left:0}.center{min-height:650px}.bottom{min-height:500px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">Interpretant Loom <small>logic/history lane</small></div>
+    <div class="thesis" id="thesis"></div>
+    <div class="tools" id="tools"></div>
+  </header>
+  <main class="main">
+    <aside class="left">
+      <div class="section-title">Utterance Register / select a specimen</div>
+      <div class="utterances" id="utterances"></div>
+    </aside>
+    <section class="center">
+      <div class="sentence">
+        <div class="label" id="specimenLabel"></div>
+        <div class="tokens" id="tokens"></div>
+      </div>
+      <div class="loom-wrap">
+        <div class="legend">
+          <span class="blue">Frege: sense/reference</span><span class="green">Saussure: differential value</span><span class="gold">Peirce: sign/object/interpretant</span><span>Wittgenstein: use</span><span class="warn">Circuit proxy</span>
+        </div>
+        <svg id="loom" viewBox="0 0 900 430" role="img" aria-label="meaning loom"></svg>
+      </div>
+      <div class="readout">
+        <div><h3>Selected token</h3><div id="tokenRead"></div></div>
+        <div><h3>Logical skeleton</h3><div id="logicRead"></div></div>
+      <div><h3>Collision register</h3><div id="stressRead"></div></div>
+      </div>
+    </section>
+    <aside class="right">
+      <div class="panels">
+        <div class="panel"><h3>Frege ledger</h3><div id="frege"></div></div>
+        <div class="panel"><h3>Saussure ledger</h3><div id="saussure"></div></div>
+        <div class="panel"><h3>Peirce ledger</h3><div id="peirce"></div></div>
+        <div class="panel"><h3>Wittgenstein ledger</h3><div id="witt"></div></div>
+      </div>
+      <div class="matrix">
+        <div class="section-title">Token-feature circuit proxy / deterministic annotation, not a neural claim</div>
+        <canvas id="featureCanvas"></canvas>
+      </div>
+    </aside>
+  </main>
+  <footer class="bottom">
+    <div class="note">
+      <div class="section-title" style="margin:-8px -8px 7px">Operating rule</div>
+      This tool keeps rival accounts of meaning simultaneously visible. It does not reduce Frege to Saussure, Saussure to Peirce, Peirce to Wittgenstein, or any of them to embeddings. The productive event is the mismatch.
+      <p class="mono">Click a token. Toggle a stressor. Watch which theory changes first.</p>
+    </div>
+    <div class="lattice"><svg id="latticeSvg" viewBox="0 0 760 154"></svg></div>
+    <div class="delta">
+      <div class="section-title" style="margin:-8px -8px 7px">Formal concept analysis: highlighted concepts contain selected utterance</div>
+      <div id="conceptRead"></div>
+    </div>
+  </footer>
+</div>
+<script>
+const DATA={
+transforms:[
+  {id:"quote",label:"quote",effect:"mention/use distinction",delta:"The utterance becomes an object of discourse; reference to the world is suspended or bracketed."},
+  {id:"negate",label:"negate",effect:"truth-condition reversal",delta:"Truth conditions invert, but signifying value and public criteria remain inspectable."},
+  {id:"quant",label:"quantifier shift",effect:"domain restriction",delta:"A universal/existential pressure point changes the extension under consideration."},
+  {id:"deixis",label:"shift speaker",effect:"indexical anchoring",delta:"I, here, now, this, and you alter object and interpretant with context."},
+  {id:"game",label:"change game",effect:"pragmatic force change",delta:"Same sentence-form enters another practice: proof, order, confession, diagnosis, ritual, joke."}
+],
+utterances:[
+{id:"u1",source:"Frege after Begriffsschrift",text:"Every morning star names the same planet differently.",tags:["identity","reference","sense","astronomy","proper-name"],collision:"Reference stays fixed while cognitive value changes; Saussure explains difference internally, Frege explains it as sense.",logic:"forall x ((MorningStar(x)) -> exists y (Planet(y) and names_as(x,y,different_sense)))",truth:"True only if each admissible morning-star expression co-refers with the planet under a different mode of presentation.",game:"teaching the difference between reference and sense",tokens:[
+["Every","quant","universal quantifier; controls domain"],["morning","pred","part of a descriptive mode of presentation"],["star","pred","common noun historically masking a planet"],["names","pred","relation between expression and object"],["the","det","definite description marker"],["same","pred","identity pressure"],["planet","pred","referent category"],["differently","pred","sense contrast"]
+],frege:{sense:"mode of presentation: morning visibility rather than evening visibility",reference:"Venus, if the historical astronomical reading is fixed",warning:"Co-reference does not erase cognitive difference."},saussure:{value:"morning star gains value by opposition to evening star, planet, star, name",chain:"Every / morning / star / names / the / same / planet / differently"},peirce:{sign:"the expression 'morning star'",object:"the planet Venus under a habit of astronomical identification",interpretant:"a reader distinguishes co-reference from sameness of sense",mode:"symbol with indexical historical residue"},witt:{move:"instruction in a philosophical language-game",criteria:"user can preserve identity while explaining different informative value",risk:"treating naming as a private mental association"},features:{identity:.9,reference:.95,use:.35,difference:.72,index:.25,negation:.05,public:.44,material:.48}},
+{id:"u2",source:"Wittgenstein, rule-following problem",text:"A rule is public before it is exact.",tags:["rule","public","criterion","practice","norm"],collision:"Formal precision is not denied, but its authority depends on public criteria already operative in a practice.",logic:"Rule(r) -> PublicCriteria(r) precede ExactFormalization(r)",truth:"The claim concerns priority of criteria in a practice, not chronological publication.",game:"reminding a theorist that exactness has a use",tokens:[["A","det","indefinite article"],["rule","pred","norm-governed practice"],["is","cop","copula"],["public","pred","criterion must be shareable"],["before","index","priority relation, not necessarily temporal"],["it","index","anaphor to rule"],["is","cop","copula"],["exact","pred","formal precision under a practice"]],frege:{sense:"public-before-exact as a priority claim",reference:"rules as norm-governed practices, not inscriptions alone",warning:"The temporal word 'before' is a possible misleading surface."},saussure:{value:"public/exact works as an opposition; 'rule' is not exhausted by written mark",chain:"A / rule / is / public / before / it / is / exact"},peirce:{sign:"sentence-form in aphoristic register",object:"rule-following as social regularity",interpretant:"exactness is judged by criteria already in use",mode:"symbolic proposition"},witt:{move:"therapy against private-rule pictures",criteria:"can identify correction, continuation, and mistake within a form of life",risk:"mistaking exactness for the source of normativity"},features:{identity:.25,reference:.34,use:.95,difference:.55,index:.35,negation:.02,public:.98,material:.42}},
+{id:"u3",source:"Saussurean value",text:"In language there are only differences without positive terms.",tags:["difference","system","signifier","value","structural"],collision:"The sentence denies isolated positive terms while using stable terms to do the denying; the tool keeps that productive tension visible.",logic:"Language(L) -> ValueByDifference(L) and not PositiveTermsAsIsolatedAtoms(L)",truth:"A structural claim: units have linguistic value through relations inside a system.",game:"redescribing words as positions in a system",tokens:[["In","index","locates claim within language-system"],["language","pred","system of signs"],["there","index","expletive/indexical residue"],["are","cop","existential support"],["only","quant","restrictive focus"],["differences","pred","relational values"],["without","neg","privation operator"],["positive","pred","standalone substance denied"],["terms","pred","linguistic units"]],frege:{sense:"asserts relational constitution of linguistic value",reference:"language considered as a system, not individual speech events",warning:"Not a denial that speakers utter physical sounds."},saussure:{value:"the point itself: signs are differential units in a system",chain:"In / language / there / are / only / differences / without / positive / terms"},peirce:{sign:"the maxim as theoretical sign",object:"a system of sign differences",interpretant:"reader looks for oppositions rather than naming links",mode:"symbol, with diagrammatic force"},witt:{move:"grammatical reminder about how linguistic units function",criteria:"can show substitutions that change value",risk:"turning a methodological slogan into metaphysics"},features:{identity:.15,reference:.3,use:.52,difference:1,index:.4,negation:.55,public:.62,material:.77}},
+{id:"u4",source:"Peircean pragmatism",text:"The interpretant is the next habit a sign makes possible.",tags:["sign","interpretant","habit","pragmatic","future"],collision:"Peirce makes meaning temporal and consequential; Fregean bookkeeping can state the relation but not exhaust the semiotic process.",logic:"Sign(s) -> exists h (Interpretant(h,s) and PossibleNextHabit(h))",truth:"A sign is understood through the interpretive habit or further sign it can generate.",game:"linking meaning to consequences of interpretation",tokens:[["The","det","definite marker"],["interpretant","pred","effect or further sign, not merely interpreter"],["is","cop","copula"],["the","det","definite marker"],["next","index","future-oriented sequence"],["habit","pred","regular interpretive disposition"],["a","det","indefinite article"],["sign","pred","representamen in triadic relation"],["makes","pred","causal enabling"],["possible","pred","modal opening"]],frege:{sense:"defines interpretant by its role in a sign process",reference:"semiotic effects, habits, or further signs",warning:"Do not collapse interpretant into a private feeling."},saussure:{value:"interpretant/sign/habit form a local terminological system",chain:"The / interpretant / is / the / next / habit / a / sign / makes / possible"},peirce:{sign:"the sentence and the word 'interpretant'",object:"triadic semiosis over time",interpretant:"a habit of asking what action or further sign follows",mode:"symbolic definition with pragmatic maxim"},witt:{move:"setting a criterion for understanding",criteria:"look at what continuation becomes possible",risk:"over-intellectualizing habit as explicit theory"},features:{identity:.38,reference:.45,use:.72,difference:.5,index:.63,negation:.03,public:.58,material:.52}},
+{id:"u5",source:"Tarski/Montague line",text:"Snow is white iff snow belongs to the extension of white.",tags:["truth","extension","predicate","formal","object-language"],collision:"Truth-conditional clarity requires a metalanguage boundary; ordinary use can cross that boundary without announcing it.",logic:"White(snow) <-> snow in EXT(white)",truth:"A biconditional schema relating object-language sentence and metalanguage condition.",game:"calibrating truth conditions",tokens:[["Snow","pred","object term"],["is","cop","predication"],["white","pred","predicate"],["iff","quant","biconditional connective"],["snow","pred","object repeated in metalanguage"],["belongs","pred","membership relation"],["to","rel","relation marker"],["the","det","definite marker"],["extension","pred","set of objects satisfying predicate"],["of","rel","relation marker"],["white","pred","predicate named"]],frege:{sense:"connects sentence sense with condition for truth",reference:"truth value of the sentence under an interpretation",warning:"Metalanguage and object-language must not be confused."},saussure:{value:"repetition of 'white' shifts from use to quasi-mention",chain:"Snow / is / white / iff / snow / belongs / to / the / extension / of / white"},peirce:{sign:"truth-schema sentence",object:"condition under which predication holds",interpretant:"reader tracks levels of language",mode:"symbolic, diagrammatic in logical form"},witt:{move:"formal calibration, useful in a semantic calculus",criteria:"can distinguish saying snow is white from naming the predicate",risk:"thinking the schema explains every ordinary use of 'true'"},features:{identity:.52,reference:.86,use:.33,difference:.33,index:.08,negation:.05,public:.5,material:.62}},
+{id:"u6",source:"Transformer-era interpretability",text:"An attention head can mark a relation without understanding it.",tags:["circuit","relation","model","mechanism","caution"],collision:"A causal trace is index-like evidence, not a full interpretant; the machine-facing proxy must remain modest.",logic:"Can(Mark(head,relation)) and not Entails(Understand(head,relation))",truth:"A localization of behavior is not equivalent to semantic understanding.",game:"disciplining explanation of model internals",tokens:[["An","det","indefinite article"],["attention","pred","mechanism term from transformers"],["head","pred","component"],["can","modal","possibility"],["mark","pred","localize or signal"],["a","det","indefinite article"],["relation","pred","structured dependency"],["without","neg","non-entailment"],["understanding","pred","semantic competence denied"],["it","index","anaphor to relation"]],frege:{sense:"distinguishes functional marking from understanding",reference:"model component behavior under analysis",warning:"A causal role is not automatically a semantic grasp."},saussure:{value:"head/relation/understanding belong to different explanatory vocabularies",chain:"An / attention / head / can / mark / a / relation / without / understanding / it"},peirce:{sign:"component activation or attribution mark",object:"a relation in text or task",interpretant:"analyst infers a limited mechanism",mode:"indexical trace plus symbolic explanation"},witt:{move:"warning against category mistake in AI interpretation",criteria:"can say what behavior is localized and what competence is not shown",risk:"anthropomorphic vocabulary outruns evidence"},features:{identity:.2,reference:.5,use:.68,difference:.6,index:.72,negation:.66,public:.45,material:.8}}
+]};
+let state={u:0,token:0,active:new Set()};
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function cls(role){return "tok role-"+role}
+function init(){
+  $("thesis").textContent="A dense offline instrument for stressing meaning across Frege, Saussure, Peirce, Wittgenstein, and circuit-style annotation.";
+  $("tools").innerHTML=DATA.transforms.map(t=>`<button data-t="${t.id}" title="${esc(t.effect)}">${esc(t.label)}</button>`).join("");
+  $("tools").onclick=e=>{if(e.target.dataset.t){state.active.has(e.target.dataset.t)?state.active.delete(e.target.dataset.t):state.active.add(e.target.dataset.t);render();}};
+  $("utterances").innerHTML=DATA.utterances.map((u,i)=>`<div class="u" data-u="${i}"><div class="line">${esc(u.text)}</div><div class="meta"><span>${esc(u.source)}</span>${u.tags.slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div></div>`).join("");
+  $("utterances").onclick=e=>{let row=e.target.closest(".u");if(row){state.u=+row.dataset.u;state.token=0;render();}};
+  render();
+}
+function transformedText(u){
+  let s=u.text;
+  if(state.active.has("quote"))s='"'+s+'"';
+  if(state.active.has("negate"))s="It is not the case that "+s.charAt(0).toLowerCase()+s.slice(1);
+  if(state.active.has("quant"))s=s.replace(/^Every\b/,"Some").replace(/\bonly\b/,"not only");
+  if(state.active.has("deixis"))s=s.replace(/\bthe\b/,"this").replace(/\bthere\b/,"here");
+  if(state.active.has("game"))s=s+" [entered as courtroom testimony]";
+  return s;
+}
+function render(){
+  document.querySelectorAll(".tools button").forEach(b=>b.classList.toggle("on",state.active.has(b.dataset.t)));
+  document.querySelectorAll(".u").forEach((r,i)=>r.classList.toggle("active",i===state.u));
+  const u=DATA.utterances[state.u];
+  $("specimenLabel").textContent=u.source+" / tags: "+u.tags.join(", ");
+  $("tokens").innerHTML=u.tokens.map((t,i)=>`<button class="${cls(t[1])}${i===state.token?" sel":""}" data-i="${i}" title="${esc(t[2])}">${esc(t[0])}</button>`).join("");
+  $("tokens").onclick=e=>{if(e.target.dataset.i){state.token=+e.target.dataset.i;render();}};
+  ledger("frege",u.frege);ledger("saussure",u.saussure);ledger("peirce",u.peirce);ledger("witt",u.witt);
+  renderReadouts(u);renderLoom(u);renderCanvas(u);renderLattice(u);
+}
+function ledger(id,obj){$(id).innerHTML='<div class="kv">'+Object.entries(obj).map(([k,v])=>`<div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>`).join("")+'</div>'}
+function renderReadouts(u){
+  const t=u.tokens[state.token];
+  $("tokenRead").innerHTML=`<div class="mono">${esc(t[0])}</div><div>${esc(t[2])}</div><div class="pill">${esc(t[1])}</div>`;
+  $("logicRead").innerHTML=`<div class="mono">${esc(u.logic)}</div><p>${esc(u.truth)}</p>`;
+  const active=[...state.active].map(id=>DATA.transforms.find(t=>t.id===id));
+  $("stressRead").innerHTML=`<div class="warn">${esc(u.collision)}</div>`+(active.length?active.map(t=>`<span class="pill">${esc(t.effect)}</span><div>${esc(t.delta)}</div>`).join(""):"<div><span class='pill'>unstressed baseline</span> no transform applied.</div>");
+  $("conceptRead").innerHTML=`<div class="delta-grid"><div class="k">surface</div><div>${esc(transformedText(u))}</div><div class="k">tags</div><div>${u.tags.map(t=>`<span class="pill">${esc(t)}</span>`).join("")}</div><div class="k">active stress</div><div>${active.length?active.map(t=>`<span class="pill">${esc(t.label)}</span>`).join(""):"<span class='pill'>none</span>"}</div></div>`;
+}
+function renderLoom(u){
+  const svg=$("loom"),W=900,H=430;svg.innerHTML="";
+  const NS="http://www.w3.org/2000/svg";
+  function el(n,a){const x=document.createElementNS(NS,n);for(const k in a)x.setAttribute(k,a[k]);svg.appendChild(x);return x}
+  const lens=[["Frege",80,"#245f8f"],["Saussure",160,"#3f7b4a"],["Peirce",240,"#9b6b16"],["Wittgenstein",320,"#181711"],["Circuit proxy",392,"#b3342a"]];
+  lens.forEach(([name,y,c])=>{el("line",{x1:22,y1:y,x2:878,y2:y,stroke:"#d8cfbd","stroke-width":1});el("text",{x:26,y:y-8,fill:c,"font-size":12,"font-family":"ui-monospace,Consolas"}).textContent=name});
+  const n=u.tokens.length, gap=820/Math.max(n-1,1);
+  u.tokens.forEach((tok,i)=>{
+    const x=40+i*gap, top=34, selected=i===state.token, role=tok[1];
+    const c=role==="quant"?"#b3342a":role==="pred"?"#3f7b4a":role==="index"?"#9b6b16":role==="name"?"#245f8f":"#555";
+    el("line",{x1:x,y1:52,x2:x,y2:405,stroke:selected?"#181711":"#bbb19f","stroke-width":selected?2:1});
+    el("text",{x:x,y:top,fill:selected?"#181711":c,"font-size":selected?13:11,"text-anchor":"middle","font-family":"Georgia"}).textContent=tok[0];
+    lens.forEach(([,y,lc],j)=>{
+      const amp=((i+j*2)%5-2)*8, targetX=x+amp;
+      el("path",{d:`M${x} 54 C${x+amp} ${y-34}, ${targetX-amp} ${y+22}, ${targetX} ${y}`,fill:"none",stroke:selected?lc:c,"stroke-opacity":selected?.82:.28,"stroke-width":selected?2.3:1});
+      if(selected)el("circle",{cx:targetX,cy:y,r:4+j*.35,fill:lc});
+    });
+  });
+  const active=[...state.active];
+  active.forEach((id,i)=>{const tr=DATA.transforms.find(t=>t.id===id);el("text",{x:878,y:24+i*15,fill:"#b3342a","font-size":11,"text-anchor":"end","font-family":"ui-monospace,Consolas"}).textContent=tr.label+" -> "+tr.effect});
+  el("text",{x:878,y:418,fill:"#676257","font-size":10,"text-anchor":"end","font-family":"ui-monospace,Consolas"}).textContent="strands are token-to-lens annotations; opacity marks background commitments";
+}
+function renderCanvas(u){
+  const c=$("featureCanvas"),dpr=window.devicePixelRatio||1,rect=c.getBoundingClientRect();
+  c.width=Math.max(1,rect.width*dpr);c.height=Math.max(1,rect.height*dpr);
+  const g=c.getContext("2d");g.scale(dpr,dpr);g.clearRect(0,0,rect.width,rect.height);
+  const feats=Object.keys(u.features), rows=u.tokens.length, cols=feats.length;
+  const left=82,top=22,cw=(rect.width-left-8)/cols,ch=(rect.height-top-18)/rows;
+  g.fillStyle="#181711";g.font="10px ui-monospace,Consolas";feats.forEach((f,i)=>{g.save();g.translate(left+i*cw+cw*.5,14);g.rotate(-.55);g.fillText(f,-18,0);g.restore();});
+  u.tokens.forEach((tok,r)=>{g.fillStyle=r===state.token?"#181711":"#4d493e";g.fillText(tok[0].slice(0,11),6,top+r*ch+ch*.68);feats.forEach((f,col)=>{let v=u.features[f]*(tok[1]==="pred"?1:tok[1]==="quant"&&f==="identity"?1.15:tok[1]==="index"&&f==="index"?1.35:.72);if(state.active.has("negate")&&f==="negation")v=1;if(state.active.has("quote")&&f==="material")v=1;if(state.active.has("game")&&f==="use")v=1;v=Math.min(1,v);const red=Math.round(179*v+245*(1-v)),gr=Math.round(52*v+250*(1-v)),bl=Math.round(42*v+247*(1-v));g.fillStyle=`rgb(${red},${gr},${bl})`;g.fillRect(left+col*cw+1,top+r*ch+1,Math.max(1,cw-2),Math.max(1,ch-2));});});
+  g.strokeStyle="#181711";g.strokeRect(left,top,cols*cw,rows*ch);
+}
+function renderLattice(sel){
+  const svg=$("latticeSvg"),NS="http://www.w3.org/2000/svg";svg.innerHTML="";
+  function el(n,a){const x=document.createElementNS(NS,n);for(const k in a)x.setAttribute(k,a[k]);svg.appendChild(x);return x}
+  const concepts=[
+    {x:52,y:118,int:["utterance"],ext:[0,1,2,3,4,5]},
+    {x:172,y:82,int:["public","use"],ext:[1,3,5]},
+    {x:292,y:44,int:["difference","signifier"],ext:[0,2]},
+    {x:412,y:80,int:["reference","truth"],ext:[0,4]},
+    {x:532,y:42,int:["sign","interpretant"],ext:[3]},
+    {x:650,y:88,int:["mechanism","caution"],ext:[5]},
+    {x:360,y:122,int:["formal"],ext:[4,5]}
+  ];
+  [[0,1],[0,2],[0,3],[0,6],[1,4],[1,5],[3,6]].forEach(([a,b])=>el("line",{x1:concepts[a].x,y1:concepts[a].y,x2:concepts[b].x,y2:concepts[b].y,stroke:"#bfb5a3"}));
+  concepts.forEach(c=>{const hit=c.ext.includes(state.u);el("circle",{cx:c.x,cy:c.y,r:hit?15:10,fill:hit?"#181711":"#fffdf7",stroke:hit?"#181711":"#9f9583","stroke-width":1.4});el("text",{x:c.x,y:c.y+31,fill:hit?"#b3342a":"#4e493f","font-size":10,"text-anchor":"middle","font-family":"ui-monospace,Consolas"}).textContent=c.int.join("+");el("text",{x:c.x,y:c.y+44,fill:"#676257","font-size":9,"text-anchor":"middle","font-family":"ui-monospace,Consolas"}).textContent="{"+c.ext.map(i=>DATA.utterances[i].id).join(",")+"}";});
+}
+window.addEventListener("resize",()=>render());
+init();
+</script>
+</body>
+</html>

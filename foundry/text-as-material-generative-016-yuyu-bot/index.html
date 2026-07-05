@@ -1,0 +1,1568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounding Atlas</title>
+<style>
+  :root {
+    --ink:#151515; --muted:#5f5b54; --paper:#f4f1e8; --panel:#fffdf7;
+    --rule:#c5bcad; --heavy:#24211d; --blue:#245c8f; --red:#a33c35;
+    --green:#4f6f42; --gold:#9a691e; --violet:#76528a; --soft:#e9e1d3;
+    --cyan:#2f7478; --rose:#b35c59;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; min-height:100%; background:var(--paper); color:var(--ink); font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif; }
+  body { padding:8px; }
+  button, input, select, textarea { font:inherit; }
+  .shell { max-width:1680px; margin:0 auto; display:grid; grid-template-rows:auto 1fr; gap:7px; }
+  header { border:1px solid var(--heavy); background:var(--panel); display:grid; grid-template-columns:1.05fr 2.2fr 1.25fr; min-height:88px; }
+  .brand { padding:9px 11px; border-right:1px solid var(--rule); }
+  h1 { margin:0; font-size:27px; line-height:.96; letter-spacing:0; font-weight:850; }
+  .dek { margin-top:6px; font-size:12px; line-height:1.28; color:var(--muted); max-width:58ch; }
+  .controls { padding:7px; border-right:1px solid var(--rule); display:grid; grid-template-columns:minmax(150px,1fr) 92px 122px 138px 134px; gap:5px; align-content:start; }
+  .controls label { display:grid; gap:3px; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  input, select, textarea { width:100%; border:1px solid var(--rule); background:#fff; color:var(--ink); border-radius:0; padding:6px 7px; min-width:0; }
+  .btns { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:5px; grid-column:1 / -1; }
+  button { border:1px solid var(--heavy); background:#f3eadc; color:var(--ink); border-radius:0; padding:6px 8px; cursor:pointer; min-height:31px; }
+  button:hover, button:focus { background:#e6d7c1; outline:2px solid #d9c7a8; outline-offset:1px; }
+  button.active { background:#dcebf3; box-shadow:inset 0 -3px 0 var(--blue); }
+  .statbar { padding:7px; display:grid; grid-template-columns:repeat(3, 1fr); gap:5px; align-content:stretch; }
+  .stat { border:1px solid var(--rule); background:#fbf8f0; padding:6px; min-height:30px; }
+  .stat b { display:block; font-size:17px; line-height:1; }
+  .stat span { display:block; font-size:10px; color:var(--muted); text-transform:uppercase; margin-top:3px; }
+  .bedrock { grid-column:1 / -1; border-top:1px solid var(--heavy); background:#fbf8f0; display:grid; grid-template-columns:112px 1fr 110px 1.2fr 210px; gap:7px; padding:6px 7px; align-items:center; }
+  .bedrock b { font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
+  .bedrock small { color:var(--muted); font-size:11px; line-height:1.2; }
+  .bedrock-toggles, .domain-toggles { display:flex; gap:4px; flex-wrap:wrap; align-items:center; }
+  .bedrock button { min-height:23px; padding:2px 6px; border-color:var(--rule); font-size:11px; background:#fffdf9; }
+  .bedrock button.on { border-color:var(--green); background:#eef8e8; box-shadow:inset 0 -2px 0 var(--green); }
+  .bedrock button.fragile { border-color:var(--gold); box-shadow:inset 0 -2px 0 var(--gold); }
+  .domain-toggles button.on { border-color:var(--domain); box-shadow:inset 0 -2px 0 var(--domain); background:#fffdf9; }
+  .stance { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; line-height:1.25; text-align:right; }
+  main { display:grid; grid-template-columns:286px minmax(640px, 1fr) 398px; gap:7px; align-items:stretch; min-height:calc(100vh - 110px); }
+  section { border:1px solid var(--heavy); background:var(--panel); min-width:0; }
+  .left, .right { display:grid; grid-template-rows:auto 1fr; min-height:0; }
+  .section-title { border-bottom:1px solid var(--heavy); background:#eee6d9; padding:6px 8px; display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:32px; }
+  .section-title h2 { margin:0; font-size:13px; line-height:1.1; text-transform:uppercase; letter-spacing:.06em; }
+  .section-title small { color:var(--muted); font-size:11px; white-space:nowrap; }
+  .word-list { overflow:auto; padding:5px; display:grid; gap:4px; align-content:start; }
+  .word-row { border:1px solid var(--rule); background:#fffdf9; padding:5px 6px; display:grid; grid-template-columns:1fr auto; gap:5px; cursor:pointer; min-height:40px; }
+  .word-row.active { border-color:var(--blue); box-shadow:inset 4px 0 0 var(--blue); background:#f3f8fb; }
+  .word-row.kernel { border-color:#d8afa5; background:#fff4ef; }
+  .word-row.cyclic { box-shadow:inset 3px 0 0 var(--red); }
+  .word-row.grounded { box-shadow:inset 3px 0 0 var(--green); }
+  .word-row.mixed { box-shadow:inset 3px 0 0 var(--gold); }
+  .word-row.looped { box-shadow:inset 3px 0 0 var(--red); background:#fff7f5; }
+  .word-row strong { font-size:14px; line-height:1.05; }
+  .word-row em { font-style:normal; color:var(--muted); font-size:11px; }
+  .word-row code { color:var(--red); font-size:10px; align-self:start; text-align:right; }
+  .center { display:grid; grid-template-rows:minmax(390px, 47vh) minmax(230px, 1fr); gap:7px; border:0; background:transparent; }
+  .graphbox, .tablebox { border:1px solid var(--heavy); background:var(--panel); min-width:0; min-height:0; }
+  .graphbox { display:grid; grid-template-rows:auto 1fr auto; }
+  #graph { width:100%; height:100%; display:block; background:#fffdfa; }
+  .node text { font-size:10.5px; dominant-baseline:middle; text-anchor:middle; pointer-events:none; }
+  .node circle { stroke:#222; stroke-width:1.2; fill:#f8f2e7; }
+  .node.kernel circle { fill:#ffe2d8; stroke:var(--red); stroke-width:2; }
+  .node.anchor circle { fill:#e9f2df; stroke:var(--green); }
+  .node.root circle { fill:#dcecf8; stroke:var(--blue); stroke-width:2; }
+  .node.cluster circle { fill:#f7ebd6; stroke:#7d5e2b; stroke-width:1.5; }
+  .node.cluster.exact circle { fill:#ffe9df; stroke:var(--red); }
+  .node.hub circle { fill:#e3f2f3; stroke:var(--cyan); stroke-width:2; }
+  .node.flow circle { fill:#fff9df; stroke:var(--gold); stroke-width:1.5; }
+  .node.sealed circle { fill:#f2e7ea; stroke:var(--red); stroke-width:2; }
+  .node.ablated circle { fill:#ececec; stroke:#777; stroke-dasharray:3 2; }
+  .node.bridge circle { fill:#f0f6f7; stroke:var(--cyan); stroke-width:1.6; }
+  .node.artifact circle { fill:#fffdf9; stroke:#aaa; stroke-dasharray:4 2; }
+  .node.confirmed circle { fill:#eaf6ec; stroke:var(--green); stroke-width:2; }
+  .node.emergent circle { fill:#eef3fb; stroke:var(--blue); stroke-width:2; }
+  .node.fragile-sense circle { fill:#fff8dc; stroke:var(--gold); stroke-width:2; }
+  .domain-hull { fill:#fbf8f0; stroke:#c5bcad; stroke-width:1; }
+  .domain-label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; fill:#3d3933; }
+  .domain-general { --domain:#245c8f; }
+  .domain-legal { --domain:#a33c35; }
+  .domain-science { --domain:#4f6f42; }
+  .domain-computing { --domain:#76528a; }
+  .domain-custom { --domain:#9a691e; }
+  .chip.domain { border-color:var(--domain); color:var(--domain); background:#fffdf9; }
+  .edge { stroke:#8f877a; stroke-width:1; marker-end:url(#arrow); }
+  .edge.cyclic { stroke:var(--red); stroke-width:1.8; }
+  .edge.bridge { stroke:var(--cyan); stroke-width:1.55; stroke-opacity:.72; marker-end:url(#arrow); }
+  .edge.share { stroke:#b89555; stroke-width:1.1; stroke-opacity:.62; marker-end:none; }
+  .edge.flow { stroke:var(--blue); stroke-opacity:.28; stroke-width:1.3; marker-end:none; }
+  .edge.mixed { stroke:var(--gold); stroke-opacity:.45; stroke-width:1.6; marker-end:none; }
+  .edge.sealed { stroke:var(--red); stroke-opacity:.42; stroke-width:1.4; marker-end:none; }
+  .edge.dead { stroke:#aaa; stroke-dasharray:3 3; marker-end:none; }
+  .edge.autopsy { stroke:#777; stroke-width:1; stroke-dasharray:2 3; marker-end:none; }
+  .caption { font-size:11px; color:var(--muted); padding:5px 8px; border-top:1px solid var(--rule); background:#fbf7ed; }
+  .table-scroll { overflow:auto; max-height:100%; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th, td { border-bottom:1px solid var(--rule); padding:5px 6px; vertical-align:top; text-align:left; }
+  th { position:sticky; top:0; background:#eee6d9; z-index:1; font-size:10px; text-transform:uppercase; letter-spacing:.05em; }
+  td:first-child { font-weight:700; color:var(--blue); }
+  .right-body { overflow:auto; padding:7px; display:grid; gap:7px; align-content:start; }
+  .card { border:1px solid var(--rule); background:#fffdf9; padding:8px; }
+  .card h3 { margin:0 0 5px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
+  .receipt { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space:pre-wrap; font-size:12px; line-height:1.35; background:#f6efe2; border-color:#b89d72; }
+  .chips { display:flex; gap:4px; flex-wrap:wrap; }
+  .chip { border:1px solid var(--rule); padding:2px 5px; font-size:11px; background:#f8f4ec; }
+  .chip.kernel { border-color:var(--red); color:var(--red); background:#fff1ee; }
+  .chip.anchor { border-color:var(--green); color:var(--green); background:#f2faed; }
+  .chip.hub { border-color:var(--cyan); color:var(--cyan); background:#eef9fa; }
+  .chip.exact { border-color:var(--gold); color:#744900; background:#fff6dc; }
+  .chip.grounded { border-color:var(--green); color:#36592b; background:#f0faea; }
+  .chip.mixed { border-color:var(--gold); color:#744900; background:#fff6dc; }
+  .chip.looped { border-color:var(--red); color:var(--red); background:#fff1ee; }
+  .chip.artifact { border-color:#888; color:#555; background:#f4f1ea; }
+  .chip.confirmed { border-color:var(--green); color:#36592b; background:#f0faea; }
+  .chip.emergent { border-color:var(--blue); color:#1d4f7b; background:#eef6fb; }
+  .def { font-size:13px; line-height:1.4; }
+  .matrix { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:5px; }
+  .metric { border:1px solid var(--rule); padding:5px; background:#fbf8f0; }
+  .metric b { display:block; font-size:15px; line-height:1; }
+  .metric span { color:var(--muted); font-size:10px; text-transform:uppercase; }
+  .risk { display:grid; grid-template-columns:82px 1fr; gap:6px; font-size:12px; border-top:1px solid var(--rule); padding-top:6px; margin-top:6px; }
+  .risk b { color:var(--red); }
+  textarea { min-height:106px; resize:vertical; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; line-height:1.35; }
+  .custom { display:none; }
+  .custom.open { display:block; }
+  .toolbar { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+  .mini { min-height:25px; padding:3px 6px; font-size:11px; border-color:var(--rule); }
+  .split { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .mono { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .flow-label { font-size:10px; fill:#3d3933; text-anchor:middle; dominant-baseline:middle; pointer-events:none; }
+  @media (max-width:1050px) {
+    header, main { grid-template-columns:1fr; }
+    .brand, .controls { border-right:0; border-bottom:1px solid var(--rule); }
+    .controls { grid-template-columns:1fr 1fr; }
+    .bedrock { grid-template-columns:1fr; }
+    .stance { text-align:left; }
+    .center { grid-template-rows:390px 420px; }
+    main { min-height:auto; }
+  }
+  @media (max-width:620px) {
+    body { padding:6px; }
+    h1 { font-size:23px; }
+    .controls { grid-template-columns:1fr; }
+    .statbar { grid-template-columns:repeat(3, 1fr); }
+    .stat b { font-size:14px; }
+    .btns, .matrix, .split { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="brand">
+      <h1>Grounding Atlas</h1>
+      <div class="dek">A dense, offline definition-graph workbench. It now computes the whole lexicon first: cyclic clusters, exact kernels, shared hubs, ablations, receipts.</div>
+    </div>
+    <div class="controls">
+      <label>Word <input id="query" list="wordOptions" autocomplete="off" value="meaning"></label>
+      <label>Depth <select id="depth"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
+      <label>Map <select id="view"><option value="federation" selected>Federation</option><option value="sense">Sense autopsy</option><option value="atlas">Cycle atlas</option><option value="flow">Grounding flow</option><option value="word">Word descent</option><option value="ablate">Ablation lab</option></select></label>
+      <label>Layout <select id="layout"><option value="radial" selected>Radial descent</option><option value="bands">Depth bands</option><option value="global">Global cluster</option></select></label>
+      <label>Ablate <select id="ablate"></select></label>
+      <div class="btns"><button id="analyze">Analyze</button><button id="atlasBtn">Whole atlas</button><button id="customBtn">Custom lab</button><button id="sample">Load tight loop</button></div>
+      <datalist id="wordOptions"></datalist>
+    </div>
+    <div class="statbar">
+      <div class="stat"><b id="sNodes">0</b><span>nodes</span></div>
+      <div class="stat"><b id="sEdges">0</b><span>edges</span></div>
+      <div class="stat"><b id="sScc">0</b><span id="lScc">loop cells</span></div>
+      <div class="stat"><b id="sKernel">0</b><span id="lKernel">anchored</span></div>
+      <div class="stat"><b id="sExact">0</b><span id="lExact">mixed</span></div>
+      <div class="stat"><b id="sHubs">0</b><span id="lHubs">sealed</span></div>
+    </div>
+    <div class="bedrock">
+      <div><b>Bedrock</b><br><small>what may stop a path</small></div>
+      <div class="bedrock-toggles" id="bedrockToggles"></div>
+      <div><b>Domains</b><br><small>federate live</small></div>
+      <div class="domain-toggles" id="domainToggles"></div>
+      <div class="stance" id="stanceReadout"></div>
+    </div>
+  </header>
+  <main>
+    <section class="left">
+      <div class="section-title"><h2>Lexicon / Clusters</h2><small id="lexCount"></small></div>
+      <div class="word-list" id="wordList"></div>
+    </section>
+    <section class="center">
+      <div class="graphbox">
+        <div class="section-title"><h2 id="graphTitle">Whole-Lexicon Cycle Atlas</h2><small id="graphNote">clusters sized by loop complexity</small></div>
+        <svg id="graph" role="img" aria-label="Definition dependency graph"></svg>
+        <div class="caption" id="caption"></div>
+      </div>
+      <div class="tablebox">
+        <div class="section-title"><h2 id="ledgerTitle">Cluster Ledger</h2><small>deterministic facts below the wall</small></div>
+        <div class="table-scroll"><table id="edgeTable"></table></div>
+      </div>
+    </section>
+    <section class="right">
+      <div class="section-title"><h2>Grounding Receipt</h2><small>generated from graph facts</small></div>
+      <div class="right-body">
+        <div class="custom" id="customBox">
+          <div class="card">
+            <h3>Custom Mini Dictionary</h3>
+            <div class="def">One entry per line: <code>word: definition using other words</code>. The parser is intentionally plain; it exposes the material relation instead of hiding it behind NLP.</div>
+            <textarea id="customText">law: rule authority institution order
+rule: law order pattern
+authority: institution recognition rule
+institution: rule people practice
+order: pattern rule relation
+pattern: relation repetition form
+relation: connection difference
+difference: relation contrast</textarea>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Atlas Metrics</h3>
+          <div class="matrix" id="atlasMetrics"></div>
+        </div>
+        <div class="card receipt" id="receipt"></div>
+        <div class="card">
+          <h3>Selected Definition / Cluster</h3>
+          <div class="def" id="definition"></div>
+          <div class="chips" id="chips"></div>
+        </div>
+        <div class="card">
+          <h3>Hub Terms</h3>
+          <div class="chips" id="hubs"></div>
+        </div>
+        <div class="card">
+          <h3>Interpretive Risk Notes</h3>
+          <div id="risks"></div>
+        </div>
+        <div class="card">
+          <h3>Kernel Reading</h3>
+          <div class="def" id="kernelReading"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+const BASE = {
+  meaning:{pos:"n.", def:"what a sign, word, act, or expression is taken to convey in a context of use", anchors:["textual","social"], to:["sign","word","act","expression","convey","context","use"]},
+  sign:{pos:"n.", def:"a perceptible form that stands for or indicates something to an interpreter", anchors:["perceptual","semiotic"], to:["form","indicate","interpreter","something"]},
+  word:{pos:"n.", def:"a conventional unit of language used to express or name something", anchors:["textual","social"], to:["convention","unit","language","express","name","something"]},
+  act:{pos:"n.", def:"something done by an agent in a situation", anchors:["social"], to:["agent","situation","something"]},
+  expression:{pos:"n.", def:"a form of language or action by which something is made manifest", anchors:["textual"], to:["form","language","action","manifest","something"]},
+  convey:{pos:"v.", def:"to cause an interpreter to receive or infer a content", anchors:["social"], to:["cause","interpreter","receive","infer","content"]},
+  context:{pos:"n.", def:"the surrounding situation, discourse, and practical use that constrain interpretation", anchors:["social","textual"], to:["situation","discourse","use","constrain","interpretation"]},
+  use:{pos:"n.", def:"the practice in which a sign or word is applied by speakers", anchors:["social"], to:["practice","sign","word","apply","speaker"]},
+  interpretation:{pos:"n.", def:"the act of assigning meaning to a sign, text, event, or utterance", anchors:["judgment"], to:["act","assign","meaning","sign","text","event","utterance"]},
+  reference:{pos:"n.", def:"the relation by which an expression picks out an object, event, or content", anchors:["referential"], to:["relation","expression","object","event","content"]},
+  sense:{pos:"n.", def:"a mode of presentation through which a reference is given to a thinker", anchors:["conceptual"], to:["mode","presentation","reference","thinker"]},
+  truth:{pos:"n.", def:"a status of a claim when what it says corresponds, holds, or is warranted", anchors:["logical","institutional"], to:["status","claim","correspond","warrant"]},
+  claim:{pos:"n.", def:"an assertion put forward as true or acceptable in a discourse", anchors:["argument"], to:["assertion","truth","acceptable","discourse"]},
+  evidence:{pos:"n.", def:"material that warrants, supports, or counts against a claim", anchors:["institutional"], to:["material","warrant","support","claim"]},
+  warrant:{pos:"n.", def:"a rule or reason licensing movement from evidence to claim", anchors:["argument"], to:["rule","reason","evidence","claim"]},
+  rule:{pos:"n.", def:"a general pattern or norm that governs action, inference, or classification", anchors:["institutional"], to:["pattern","norm","action","inference","classification"]},
+  language:{pos:"n.", def:"a social system of signs and differences used for expression and interpretation", anchors:["social","semiotic"], to:["system","sign","difference","expression","interpretation","use"]},
+  discourse:{pos:"n.", def:"connected language in use, organized by speakers, genres, institutions, and aims", anchors:["textual","social"], to:["language","use","speaker","genre","institution","aim"]},
+  text:{pos:"n.", def:"a durable arrangement of signs available for reading and interpretation", anchors:["textual"], to:["arrangement","sign","reading","interpretation"]},
+  material:{pos:"n.", def:"the stuff or evidence from which a form, claim, or interpretation is made", anchors:["perceptual"], to:["stuff","evidence","form","claim","interpretation"]},
+  form:{pos:"n.", def:"the perceptible arrangement or pattern by which material is distinguished", anchors:["perceptual"], to:["arrangement","pattern","material","difference"]},
+  pattern:{pos:"n.", def:"a repeated form or relation recognized across cases", anchors:["perceptual"], to:["repeat","form","relation","recognition","case"]},
+  relation:{pos:"n.", def:"a connection, contrast, or ordered bearing between things", anchors:["logical"], to:["connection","contrast","order","thing"]},
+  difference:{pos:"n.", def:"a relation of contrast by which one sign or form is not another", anchors:["logical","semiotic"], to:["relation","contrast","sign","form"]},
+  object:{pos:"n.", def:"a thing presented as available for reference, perception, or action", anchors:["perceptual"], to:["thing","reference","perception","action"]},
+  event:{pos:"n.", def:"something that happens and can be described, dated, or interpreted", anchors:["temporal"], to:["something","happen","describe","date","interpretation"]},
+  utterance:{pos:"n.", def:"a concrete act of language made by a speaker in a situation", anchors:["textual","social"], to:["act","language","speaker","situation"]},
+  speaker:{pos:"n.", def:"an agent who produces an utterance within a language practice", anchors:["social"], to:["agent","utterance","language","practice"]},
+  interpreter:{pos:"n.", def:"an agent who takes a sign, word, or event as meaningful", anchors:["social"], to:["agent","sign","word","event","meaning"]},
+  practice:{pos:"n.", def:"repeated social use that stabilizes rules, expectations, and meanings", anchors:["social"], to:["repeat","use","rule","expectation","meaning"]},
+  institution:{pos:"n.", def:"a durable social practice with recognized rules, roles, and authority", anchors:["institutional"], to:["practice","rule","role","authority","recognition"]},
+  authority:{pos:"n.", def:"recognized power to settle, license, or constrain a claim or action", anchors:["institutional"], to:["recognition","power","constrain","claim","action"]},
+  inference:{pos:"n.", def:"movement from one claim, sign, or evidence item to another", anchors:["logical"], to:["movement","claim","sign","evidence"]},
+  content:{pos:"n.", def:"what is conveyed, asserted, represented, or interpreted", anchors:["conceptual"], to:["convey","assertion","represent","interpretation"]},
+  assertion:{pos:"n.", def:"an utterance or act that presents content as true", anchors:["argument"], to:["utterance","act","content","truth"]},
+  norm:{pos:"n.", def:"a rule or expectation governing what counts as acceptable", anchors:["social"], to:["rule","expectation","acceptable"]},
+  recognition:{pos:"n.", def:"the act or practice of treating something as the same, valid, or salient", anchors:["social"], to:["act","practice","something","valid","salient"]},
+  arrangement:{pos:"n.", def:"an order of parts in a form or text", anchors:["perceptual"], to:["order","part","form","text"]},
+  perception:{pos:"n.", def:"sensory awareness of form, difference, object, or event", anchors:["perceptual"], to:["awareness","form","difference","object","event"]},
+  thing:{pos:"n.", def:"a minimally specified object of reference or attention", anchors:["referential"], to:["object","reference","attention"]},
+  something:{pos:"pron.", def:"an unspecified thing, event, content, or object", anchors:["deictic"], to:["thing","event","content","object"]},
+  acceptable:{pos:"adj.", def:"treated as permitted, warranted, or fitting under a rule or practice", anchors:["social"], to:["warrant","rule","practice"]},
+  constrain:{pos:"v.", def:"to limit the available interpretations, actions, or inferences", anchors:["logical"], to:["limit","interpretation","action","inference"]},
+  action:{pos:"n.", def:"an act considered as done by an agent under a description", anchors:["social"], to:["act","agent","description"]},
+  agent:{pos:"n.", def:"one who can act, interpret, or be assigned responsibility", anchors:["social"], to:["act","interpretation","responsibility"]},
+  situation:{pos:"n.", def:"a structured occasion in which acts, utterances, or events occur", anchors:["temporal"], to:["occasion","act","utterance","event"]},
+  cause:{pos:"v.", def:"to bring about an event, state, or interpretation", anchors:["causal"], to:["event","state","interpretation"]},
+  receive:{pos:"v.", def:"to take in a sign, utterance, or content", anchors:["perceptual"], to:["sign","utterance","content"]},
+  infer:{pos:"v.", def:"to move from evidence or signs to a claim or interpretation", anchors:["logical"], to:["evidence","sign","claim","interpretation"]},
+  name:{pos:"v.", def:"to attach a word or sign to an object, role, or class", anchors:["social"], to:["word","sign","object","role","class"]},
+  convention:{pos:"n.", def:"a social rule stabilized by repeated practice", anchors:["social"], to:["rule","practice","repeat"]},
+  system:{pos:"n.", def:"an organized set of relations whose parts constrain one another", anchors:["logical"], to:["relation","part","constrain","order"]},
+  contrast:{pos:"n.", def:"a perceived or stipulated difference between forms, signs, or things", anchors:["perceptual"], to:["difference","form","sign","thing"]},
+  order:{pos:"n.", def:"a rule-governed arrangement or relation among parts", anchors:["logical"], to:["rule","arrangement","relation","part"]},
+  reading:{pos:"n.", def:"an interpretation of text under a context of use", anchors:["textual"], to:["interpretation","text","context","use"]},
+  valid:{pos:"adj.", def:"recognized as licensed by a rule, warrant, or institution", anchors:["institutional"], to:["recognition","rule","warrant","institution"]},
+  salient:{pos:"adj.", def:"treated as relevant or attention-worthy in a situation", anchors:["cognitive"], to:["attention","situation"]},
+  mode:{pos:"n.", def:"a way in which something is presented, used, or interpreted", anchors:["conceptual"], to:["presentation","use","interpretation","something"]},
+  presentation:{pos:"n.", def:"a form in which content or reference is given", anchors:["conceptual"], to:["form","content","reference"]},
+  state:{pos:"n.", def:"a condition of a thing, system, or discourse at a time", anchors:["temporal"], to:["condition","thing","system","discourse","date"]},
+  status:{pos:"n.", def:"recognized standing under a rule, institution, or discourse", anchors:["institutional"], to:["recognition","rule","institution","discourse"]},
+  support:{pos:"v.", def:"to provide evidence or warrant for a claim", anchors:["argument"], to:["evidence","warrant","claim"]},
+  classify:{pos:"v.", def:"to place something under a rule, type, or contrast", anchors:["logical"], to:["something","rule","type","contrast"]},
+  classification:{pos:"n.", def:"the act or result of classifying by rule or type", anchors:["logical"], to:["act","classify","rule","type"]},
+  type:{pos:"n.", def:"a class recognized by rule, resemblance, or use", anchors:["logical"], to:["class","recognition","rule","use"]},
+  class:{pos:"n.", def:"a set of things treated as sharing a type or rule", anchors:["logical"], to:["thing","type","rule"]},
+  part:{pos:"n.", def:"a component of an arrangement, system, or form", anchors:["perceptual"], to:["arrangement","system","form"]},
+  role:{pos:"n.", def:"a position within a practice, institution, or situation", anchors:["social"], to:["practice","institution","situation"]},
+  aim:{pos:"n.", def:"an intended end that organizes action or discourse", anchors:["social"], to:["intention","action","discourse"]},
+  genre:{pos:"n.", def:"a recognized type of discourse with expected forms and moves", anchors:["textual"], to:["type","discourse","expectation","form"]},
+  expectation:{pos:"n.", def:"a projected norm about what should happen or count", anchors:["cognitive"], to:["norm","happen"]},
+  limit:{pos:"v.", def:"to constrain possible states, actions, or interpretations", anchors:["logical"], to:["constrain","state","action","interpretation"]},
+  repeat:{pos:"v.", def:"to occur again as similar under recognition", anchors:["temporal"], to:["happen","recognition"]},
+  happen:{pos:"v.", def:"to occur as an event in time", anchors:["temporal"], to:["event","date"]},
+  date:{pos:"n.", def:"a position in time used to order events", anchors:["temporal"], to:["time","order","event"]},
+  time:{pos:"n.", def:"the ordering dimension in which events happen", anchors:["temporal"], to:["order","event","happen"]},
+  awareness:{pos:"n.", def:"perceptual or cognitive attention to something", anchors:["cognitive"], to:["perception","attention","something"]},
+  attention:{pos:"n.", def:"selective awareness directed toward something salient", anchors:["cognitive"], to:["awareness","something","salient"]},
+  power:{pos:"n.", def:"capacity to cause, constrain, license, or settle action", anchors:["social"], to:["cause","constrain","action"]},
+  responsibility:{pos:"n.", def:"a role assigning answerability for an act or claim", anchors:["social"], to:["role","act","claim"]},
+  description:{pos:"n.", def:"language presenting a thing, event, or action under terms", anchors:["textual"], to:["language","thing","event","action"]},
+  condition:{pos:"n.", def:"a state or requirement under which something holds", anchors:["logical"], to:["state","requirement","something"]},
+  requirement:{pos:"n.", def:"a condition treated as necessary by rule or practice", anchors:["institutional"], to:["condition","rule","practice"]},
+  intention:{pos:"n.", def:"an aim or directed content of an agent's act", anchors:["cognitive"], to:["aim","content","agent","act"]},
+  occasion:{pos:"n.", def:"a time-bound situation for action or utterance", anchors:["temporal"], to:["time","situation","action","utterance"]},
+  represent:{pos:"v.", def:"to stand for, depict, or make present as content", anchors:["semiotic"], to:["sign","content","presentation"]},
+  assign:{pos:"v.", def:"to attach a role, meaning, or status by rule or act", anchors:["social"], to:["role","meaning","status","rule","act"]},
+  apply:{pos:"v.", def:"to use a rule, word, or sign in a case", anchors:["social"], to:["use","rule","word","sign","case"]},
+  case:{pos:"n.", def:"an instance treated under a rule, type, or claim", anchors:["logical"], to:["rule","type","claim"]},
+  manifest:{pos:"adj.", def:"made perceptible or available in form", anchors:["perceptual"], to:["perception","form"]}
+};
+
+const LEGAL = {
+  right:{pos:"n.", def:"a recognized claim or liberty held by a person under law", anchors:["institutional"], to:["recognition","claim","liberty","person","law"]},
+  duty:{pos:"n.", def:"an obligation imposed by law, contract, office, or relationship", anchors:["institutional"], to:["obligation","law","contract","office","relation"]},
+  law:{pos:"n.", def:"an institutional system of rules backed by authority and public procedure", anchors:["institutional"], to:["institution","system","rule","authority","procedure"]},
+  obligation:{pos:"n.", def:"a binding duty that gives another person a claim to performance", anchors:["institutional"], to:["duty","person","claim","performance"]},
+  liberty:{pos:"n.", def:"a protected absence of duty or interference within a legal order", anchors:["institutional"], to:["duty","interference","order","right"]},
+  person:{pos:"n.", def:"an entity recognized by law as capable of rights, duties, and standing", anchors:["institutional"], to:["entity","recognition","law","right","duty","standing"]},
+  contract:{pos:"n.", def:"an agreement whose promises create duties and remedies under law", anchors:["institutional","social"], to:["agreement","promise","duty","remedy","law"]},
+  liability:{pos:"n.", def:"legal responsibility for breach, wrong, damage, or unpaid duty", anchors:["institutional"], to:["responsibility","breach","wrong","damage","duty"]},
+  jurisdiction:{pos:"n.", def:"authority of a forum to decide a case and bind legal persons", anchors:["institutional"], to:["authority","forum","decide","case","person"]},
+  precedent:{pos:"n.", def:"a prior decision treated as a rule or warrant for later cases", anchors:["institutional","argument"], to:["decision","rule","warrant","case"]},
+  statute:{pos:"n.", def:"a written law enacted through public legislative procedure", anchors:["textual","institutional"], to:["text","law","enactment","procedure"]},
+  breach:{pos:"n.", def:"failure to perform a duty, promise, or legal requirement", anchors:["institutional"], to:["failure","performance","duty","promise","requirement"]},
+  remedy:{pos:"n.", def:"an institutional response that repairs, enforces, or substitutes for a right", anchors:["institutional"], to:["institution","response","right","repair","enforcement"]},
+  standing:{pos:"n.", def:"recognized status to bring a claim before a forum", anchors:["institutional"], to:["recognition","status","claim","forum"]},
+  consideration:{pos:"n.", def:"a bargained exchange that makes a promise enforceable as contract", anchors:["institutional"], to:["exchange","promise","contract","enforcement"]},
+  property:{pos:"n.", def:"a relation of recognized control, exclusion, and transfer over a thing", anchors:["institutional"], to:["relation","recognition","legal-control","exclusion","transfer","thing"]},
+  tort:{pos:"n.", def:"a civil wrong that creates liability outside contract", anchors:["institutional"], to:["wrong","liability","contract","duty"]},
+  procedure:{pos:"n.", def:"ordered institutional steps for making, contesting, or enforcing a claim", anchors:["institutional"], to:["order","institution","claim","enforcement"]},
+  decision:{pos:"n.", def:"an authoritative resolution of a claim under rule and evidence", anchors:["institutional"], to:["authority","claim","rule","evidence"]},
+  enforcement:{pos:"n.", def:"institutional action that makes a duty, remedy, or decision effective", anchors:["institutional"], to:["institution","action","duty","remedy","decision"]},
+  forum:{pos:"n.", def:"an institution or setting authorized to hear and decide claims", anchors:["institutional"], to:["institution","authority","claim","decision"]},
+  promise:{pos:"n.", def:"an utterance or act undertaking future performance to another person", anchors:["social","textual"], to:["utterance","act","performance","person"]},
+  performance:{pos:"n.", def:"doing what a duty, promise, or rule requires", anchors:["social"], to:["act","duty","promise","requirement"]},
+  agreement:{pos:"n.", def:"mutual recognition that words or acts establish a shared undertaking", anchors:["social"], to:["recognition","word","act","undertaking"]},
+  wrong:{pos:"n.", def:"conduct classified as violating a duty, right, or norm", anchors:["institutional"], to:["classify","duty","right","norm"]},
+  damage:{pos:"n.", def:"recognized loss or injury counted as relevant to remedy", anchors:["institutional"], to:["recognition","loss","injury","remedy"]},
+  enactment:{pos:"n.", def:"institutional act that gives a text the status of law", anchors:["institutional","textual"], to:["institution","act","text","status","law"]},
+  entity:{pos:"n.", def:"a thing treated as capable of bearing status or relation", anchors:["referential"], to:["thing","status","relation"]},
+  interference:{pos:"n.", def:"an action that limits liberty, control, or performance", anchors:["social"], to:["action","limit","liberty","legal-control","performance"]},
+  exchange:{pos:"n.", def:"a reciprocal transfer or undertaking between persons", anchors:["social"], to:["transfer","undertaking","person","relation"]},
+  transfer:{pos:"n.", def:"movement of control, right, property, or status from one person to another", anchors:["institutional"], to:["movement","legal-control","right","property","status","person"]},
+  "legal-control":{pos:"n.", def:"recognized power to use, exclude, or direct a thing or action", anchors:["institutional"], to:["recognition","power","use","exclusion","thing"]},
+  exclusion:{pos:"n.", def:"a rule or act preventing another from use, access, or claim", anchors:["institutional"], to:["rule","act","use","claim"]},
+  repair:{pos:"v.", def:"to restore, substitute, or compensate after recognized damage", anchors:["social"], to:["restore","substitute","damage"]},
+  response:{pos:"n.", def:"an action or decision taken because of a claim, breach, or event", anchors:["social"], to:["action","decision","claim","breach","event"]},
+  failure:{pos:"n.", def:"a nonperformance measured against a duty, promise, or requirement", anchors:["institutional"], to:["performance","duty","promise","requirement"]},
+  undertaking:{pos:"n.", def:"an assumed commitment made by act, promise, or agreement", anchors:["social"], to:["commitment","act","promise","agreement"]},
+  commitment:{pos:"n.", def:"a practical tie by which an agent is answerable for future action", anchors:["social"], to:["practice","agent","responsibility","action"]},
+  loss:{pos:"n.", def:"a change counted as deprivation of property, liberty, or expected benefit", anchors:["social"], to:["change","property","liberty","expectation"]},
+  injury:{pos:"n.", def:"harm to person, property, status, or protected interest", anchors:["social"], to:["harm","person","property","status","interest"]},
+  harm:{pos:"n.", def:"a negative change to condition, interest, or capacity", anchors:["causal"], to:["change","condition","interest","power"]},
+  interest:{pos:"n.", def:"a recognized stake in a thing, status, event, or outcome", anchors:["social"], to:["recognition","thing","status","event","outcome"]},
+  outcome:{pos:"n.", def:"a state or event produced by action, decision, or process", anchors:["causal"], to:["state","event","action","decision"]},
+  restore:{pos:"v.", def:"to return a person, thing, or status toward a prior condition", anchors:["causal"], to:["person","thing","status","condition"]},
+  substitute:{pos:"v.", def:"to replace one performance, remedy, or thing with another", anchors:["logical"], to:["performance","remedy","thing","difference"]}
+};
+
+const SCIENCE = {
+  hypothesis:{pos:"n.", def:"a testable claim proposed to explain a pattern of evidence", anchors:["argument"], to:["claim","test","explanation","pattern","evidence"]},
+  theory:{pos:"n.", def:"an organized model of relations that explains and predicts phenomena", anchors:["conceptual"], to:["model","relation","explanation","prediction","phenomenon"]},
+  model:{pos:"n.", def:"a representation that preserves selected relations for explanation or prediction", anchors:["conceptual"], to:["represent","relation","explanation","prediction"]},
+  measurement:{pos:"n.", def:"assignment of value to a variable by a procedure using an instrument", anchors:["perceptual"], to:["assign","value","variable","procedure","instrument"]},
+  variable:{pos:"n.", def:"a type of quantity or state that can take different values", anchors:["logical"], to:["type","quantity","state","difference","value"]},
+  causation:{pos:"n.", def:"a relation in which change in one condition produces change in another", anchors:["causal"], to:["relation","change","condition","cause"]},
+  experiment:{pos:"n.", def:"a controlled procedure for producing evidence about a hypothesis", anchors:["perceptual","argument"], to:["experimental-control","procedure","evidence","hypothesis"]},
+  observation:{pos:"n.", def:"perception recorded as evidence under a method", anchors:["perceptual"], to:["perception","evidence","method","record"]},
+  replication:{pos:"n.", def:"repetition of a method to test whether a result is stable", anchors:["argument"], to:["repeat","method","test","result"]},
+  falsify:{pos:"v.", def:"to produce evidence that counts against a hypothesis or model", anchors:["argument"], to:["evidence","claim","hypothesis","model"]},
+  prediction:{pos:"n.", def:"a claim about an event or measurement expected under a model", anchors:["temporal","argument"], to:["claim","event","measurement","expectation","model"]},
+  phenomenon:{pos:"n.", def:"an event, pattern, or object presented for explanation", anchors:["perceptual"], to:["event","pattern","object","explanation"]},
+  method:{pos:"n.", def:"ordered practice for producing, measuring, and evaluating evidence", anchors:["institutional"], to:["order","practice","measurement","evidence","evaluation"]},
+  result:{pos:"n.", def:"a recorded outcome of measurement, observation, or experiment", anchors:["textual"], to:["record","outcome","measurement","observation","experiment"]},
+  sample:{pos:"n.", def:"a selected set of cases used to warrant a claim about a class", anchors:["logical"], to:["case","set","warrant","claim","class"]},
+  population:{pos:"n.", def:"the class of cases about which a sample is used to make claims", anchors:["logical"], to:["class","case","sample","claim"]},
+  "experimental-control":{pos:"n.", def:"a condition held fixed so difference can be assigned to a variable", anchors:["logical"], to:["condition","difference","assign","variable"]},
+  instrument:{pos:"n.", def:"a material system used to produce or record a measurement", anchors:["perceptual"], to:["material","system","record","measurement"]},
+  "scientific-data":{pos:"n.", def:"recorded observations or measurements treated as evidence", anchors:["textual","perceptual"], to:["record","observation","measurement","evidence"]},
+  explanation:{pos:"n.", def:"a claim or model showing why a pattern, event, or relation holds", anchors:["argument"], to:["claim","model","pattern","event","relation"]},
+  value:{pos:"n.", def:"a position assigned to a variable under a measurement scale", anchors:["logical"], to:["position","assign","variable","measurement"]},
+  quantity:{pos:"n.", def:"a measurable aspect of a thing, event, or state", anchors:["perceptual"], to:["measurement","thing","event","state"]},
+  record:{pos:"n.", def:"a durable text or mark preserving an observation, result, or decision", anchors:["textual"], to:["text","sign","observation","result"]},
+  evaluation:{pos:"n.", def:"judgment of whether evidence supports, weakens, or changes a claim", anchors:["judgment"], to:["judgment","evidence","support","claim"]},
+  scale:{pos:"n.", def:"an ordered system of values used in measurement", anchors:["logical"], to:["order","system","value","measurement"]},
+  test:{pos:"v.", def:"to use a method to compare claim, model, or prediction with evidence", anchors:["argument"], to:["method","claim","model","prediction","evidence"]},
+  stable:{pos:"adj.", def:"remaining similar under repetition, method, or changed condition", anchors:["temporal"], to:["repeat","method","condition","similarity"]},
+  similarity:{pos:"n.", def:"recognized likeness across cases or measurements", anchors:["perceptual"], to:["recognition","case","measurement"]},
+  position:{pos:"n.", def:"a place in an order, scale, relation, or time", anchors:["logical"], to:["order","scale","relation","time"]},
+  change:{pos:"n.", def:"difference between states, values, or conditions over time", anchors:["temporal"], to:["difference","state","value","condition","time"]}
+};
+
+const COMPUTING = {
+  algorithm:{pos:"n.", def:"an ordered procedure for transforming input into output", anchors:["logical"], to:["order","procedure","input","output","transformation"]},
+  program:{pos:"n.", def:"text that specifies computation for a machine or interpreter", anchors:["textual"], to:["text","specification","computation","machine","interpreter"]},
+  computation:{pos:"n.", def:"rule-governed state transition carried out by an algorithm or machine", anchors:["logical"], to:["rule","state","transition","algorithm","machine"]},
+  input:{pos:"n.", def:"data supplied to a function, program, or computation", anchors:["textual"], to:["data","function","program","computation"]},
+  output:{pos:"n.", def:"data produced by a function, program, or computation", anchors:["textual"], to:["data","function","program","computation"]},
+  data:{pos:"n.", def:"encoded signs or values treated as material for computation", anchors:["textual"], to:["sign","value","material","computation"]},
+  function:{pos:"n.", def:"a rule assigning each input to an output or value", anchors:["logical"], to:["rule","assign","input","output","value"]},
+  specification:{pos:"n.", def:"a text stating required behavior, type, or relation of a program", anchors:["textual","institutional"], to:["text","requirement","behavior","type","relation","program"]},
+  implementation:{pos:"n.", def:"a program or system that realizes a specification through computation", anchors:["textual"], to:["program","system","specification","computation"]},
+  bug:{pos:"n.", def:"a difference between expected behavior and actual program behavior", anchors:["judgment"], to:["difference","expectation","behavior","program"]},
+  "state-machine":{pos:"n.", def:"a model of computation as states connected by transitions", anchors:["conceptual"], to:["model","computation","state","transition"]},
+  transition:{pos:"n.", def:"movement from one state to another under a rule or input", anchors:["logical"], to:["movement","state","rule","input"]},
+  memory:{pos:"n.", def:"material or logical state preserved for later computation", anchors:["temporal"], to:["material","state","computation","time"]},
+  protocol:{pos:"n.", def:"rules for ordered exchange between systems or agents", anchors:["institutional","logical"], to:["rule","order","exchange","system","agent"]},
+  interface:{pos:"n.", def:"a boundary where one system exposes operations or data to another", anchors:["logical"], to:["system","operation","data","relation"]},
+  parser:{pos:"n.", def:"a program that assigns structure to text under a grammar", anchors:["textual"], to:["program","assign","structure","text","grammar"]},
+  compiler:{pos:"n.", def:"a program that transforms source text into executable representation", anchors:["textual"], to:["program","transformation","text","represent"]},
+  runtime:{pos:"n.", def:"the system state and services in which a program executes", anchors:["temporal"], to:["system","state","service","program"]},
+  process:{pos:"n.", def:"an executing program treated as a stateful activity over time", anchors:["temporal"], to:["program","state","action","time"]},
+  thread:{pos:"n.", def:"an ordered flow of execution within a process", anchors:["temporal"], to:["order","process","execution"]},
+  database:{pos:"n.", def:"an organized store of data governed by schema and query rules", anchors:["textual"], to:["system","data","schema","query","rule"]},
+  schema:{pos:"n.", def:"a specification of data types, relations, and constraints", anchors:["logical"], to:["specification","data","type","relation","constrain"]},
+  query:{pos:"n.", def:"a request expressed in language to retrieve or change data", anchors:["textual"], to:["language","request","data","change"]},
+  operation:{pos:"n.", def:"an action defined by a system, interface, or algorithm", anchors:["logical"], to:["action","system","interface","algorithm"]},
+  behavior:{pos:"n.", def:"observable pattern of outputs, transitions, or effects of a system", anchors:["perceptual"], to:["pattern","output","transition","system"]},
+  machine:{pos:"n.", def:"a material or abstract system that performs computation", anchors:["perceptual","logical"], to:["material","system","computation"]},
+  grammar:{pos:"n.", def:"rules for forming and classifying valid strings or expressions", anchors:["logical","textual"], to:["rule","form","classify","valid","expression"]},
+  structure:{pos:"n.", def:"an arrangement of parts and relations recognized by a system", anchors:["logical"], to:["arrangement","part","relation","recognition","system"]},
+  execution:{pos:"n.", def:"the temporal carrying out of program instructions as computation", anchors:["temporal"], to:["time","program","computation"]},
+  service:{pos:"n.", def:"a system capability made available through an interface", anchors:["institutional"], to:["system","power","interface"]},
+  request:{pos:"n.", def:"an utterance or message asking a system or agent for action", anchors:["textual","social"], to:["utterance","sign","system","agent","action"]},
+  transformation:{pos:"n.", def:"a rule-governed change from one representation or state to another", anchors:["logical"], to:["rule","change","represent","state"]},
+  message:{pos:"n.", def:"data or text conveyed between agents, systems, or processes", anchors:["textual"], to:["data","text","convey","agent","system","process"]},
+  string:{pos:"n.", def:"an ordered sequence of signs or characters treated as data", anchors:["textual"], to:["order","sign","data","sequence"]},
+  sequence:{pos:"n.", def:"an ordered relation among items across position or time", anchors:["logical"], to:["order","relation","position","time"]},
+  executable:{pos:"adj.", def:"capable of being run as computation by a machine or runtime", anchors:["logical"], to:["computation","machine","runtime"]}
+};
+
+const DOMAINS = {
+  general:{label:"General", color:"#245c8f", lexicon:BASE},
+  legal:{label:"Legal", color:"#a33c35", lexicon:LEGAL},
+  science:{label:"Scientific", color:"#4f6f42", lexicon:SCIENCE},
+  computing:{label:"Computing", color:"#76528a", lexicon:COMPUTING},
+  custom:{label:"Custom", color:"#9a691e", lexicon:null}
+};
+
+const SENSE_OVERRIDES = {
+  meaning:[
+    {pos:"n.", gloss:"significance / life-importance", def:"felt significance or importance assigned to a life, event, or action", anchors:["cognitive","judgment"], to:["significance","importance","life","event","action","assign"]},
+    {pos:"n.", gloss:"intended message", def:"content intended by a speaker or author rather than inferred by an interpreter", anchors:["textual","social"], to:["content","intention","speaker","text","interpretation"]}
+  ],
+  sense:[
+    {pos:"n.", gloss:"bodily faculty", def:"capacity of perception such as sight or touch", anchors:["perceptual"], to:["power","perception","capacity","object"]},
+    {pos:"n.", gloss:"reasonable judgment", def:"practical judgment about what is fitting in a situation", anchors:["judgment","social"], to:["judgment","practice","situation","acceptable"]}
+  ],
+  reference:[
+    {pos:"n.", gloss:"citation", def:"a textual pointer to a source, record, or authority", anchors:["textual","institutional"], to:["text","record","authority","source"]}
+  ],
+  order:[
+    {pos:"n.", gloss:"command", def:"authoritative direction requiring an act or restraint", anchors:["institutional","social"], to:["authority","requirement","act","constrain"]},
+    {pos:"n.", gloss:"sequence", def:"position of items in a sequence or time", anchors:["logical","temporal"], to:["position","sequence","time","relation"]}
+  ],
+  rule:[
+    {pos:"n.", gloss:"legal rule", def:"institutional norm applied by authority to cases", anchors:["institutional"], to:["institution","norm","authority","case","apply"]},
+    {pos:"n.", gloss:"formal rule", def:"operation governing valid inference or transformation", anchors:["logical"], to:["operation","valid","inference","transformation"]}
+  ],
+  claim:[
+    {pos:"n.", gloss:"legal claim", def:"demand for remedy or recognition before a forum", anchors:["institutional"], to:["remedy","recognition","forum","right"]},
+    {pos:"n.", gloss:"truth-apt assertion", def:"assertion offered as true in an argument", anchors:["argument"], to:["assertion","truth","discourse","warrant"]}
+  ],
+  state:[
+    {pos:"n.", gloss:"polity", def:"institutional political entity with authority over persons and territory", anchors:["institutional"], to:["institution","entity","authority","person","property"]},
+    {pos:"n.", gloss:"machine condition", def:"stored condition of a system or process at a time", anchors:["temporal","logical"], to:["condition","system","process","time","memory"]}
+  ],
+  case:[
+    {pos:"n.", gloss:"legal proceeding", def:"claim or controversy brought before a forum for decision", anchors:["institutional"], to:["claim","forum","decision","procedure"]},
+    {pos:"n.", gloss:"grammatical form", def:"form marking the role of a noun or phrase in grammar", anchors:["textual","logical"], to:["form","role","grammar","classification"]}
+  ],
+  class:[
+    {pos:"n.", gloss:"social stratum", def:"recognized social group ordered by status, power, or property", anchors:["social","institutional"], to:["recognition","status","power","property","order"]},
+    {pos:"n.", gloss:"program type", def:"program structure defining data and behavior for objects", anchors:["textual","logical"], to:["program","structure","data","behavior","object"]}
+  ],
+  consideration:[
+    {pos:"n.", gloss:"attention", def:"careful attention or judgment given to a possible action or claim", anchors:["cognitive","judgment"], to:["attention","judgment","action","claim"]},
+    {pos:"n.", gloss:"regard", def:"social respect or recognition shown toward a person", anchors:["social"], to:["recognition","person","practice"]}
+  ],
+  theory:[
+    {pos:"n.", gloss:"mere speculation", def:"unsupported explanation treated as possible but not warranted", anchors:["argument","judgment"], to:["explanation","claim","support","warrant"]},
+    {pos:"n.", gloss:"scientific model", def:"stable explanatory model supported by evidence and prediction", anchors:["argument","conceptual"], to:["model","evidence","prediction","explanation"]}
+  ],
+  interest:[
+    {pos:"n.", gloss:"attention", def:"directed attention or concern toward a thing or event", anchors:["cognitive"], to:["attention","thing","event"]},
+    {pos:"n.", gloss:"financial return", def:"payment for the use of money or property over time", anchors:["institutional","temporal"], to:["property","use","time","value"]}
+  ],
+  power:[
+    {pos:"n.", gloss:"institutional authority", def:"recognized authority to decide, command, or enforce", anchors:["institutional"], to:["authority","recognition","decision","enforcement"]},
+    {pos:"n.", gloss:"causal capacity", def:"capacity to produce change in a condition or event", anchors:["causal"], to:["cause","change","condition","event"]}
+  ],
+  execution:[
+    {pos:"n.", gloss:"legal enactment", def:"carrying out a judgment, order, contract, or legal duty", anchors:["institutional"], to:["decision","order","contract","duty","enforcement"]},
+    {pos:"n.", gloss:"penalty", def:"state killing as punishment under legal authority", anchors:["institutional","causal"], to:["state","authority","law","person","harm"]}
+  ]
+};
+
+let lexicon = {};
+let selected = "meaning";
+let customMode = false;
+let activeDomains = new Set(["general","legal","science","computing"]);
+let analysis = null;
+const ANCHOR_ORDER = ["perceptual","logical","temporal","causal","social","institutional","textual","semiotic","referential","cognitive","conceptual","argument","judgment","deictic","user"];
+let bedrock = new Set(["perceptual","logical","temporal","causal"]);
+
+const $ = id => document.getElementById(id);
+const norm = s => s.toLowerCase().trim().replace(/[^a-z0-9 -]/g,"").replace(/\s+/g,"-");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function known(w){ return lexicon[w]; }
+function outgoing(w){ return (known(w)?.to || []).filter(x => known(x)); }
+function anchorsOf(w){ return known(w)?.anchors || []; }
+function domainOf(w){ return known(w)?.domain || "general"; }
+function domainLabel(d){ return DOMAINS[d]?.label || d; }
+function isBridge(a,b){ return domainOf(a) !== domainOf(b); }
+function domainClass(d){ return "domain-" + String(d).replace(/[^a-z0-9-]/g,""); }
+function lemmaOf(id){ return String(id).split("#")[0]; }
+function senseNo(id){ return Number(String(id).split("#")[1] || 1); }
+function senseId(lemma, n){ return `${lemma}#${n}`; }
+function senseLabel(id){ const e = known(id); return e?.senseLabel || id; }
+function jaccard(a,b){
+  const A = new Set(a || []), B = new Set(b || []);
+  const union = new Set([...A, ...B]);
+  if(!union.size) return 0;
+  let hit = 0; A.forEach(x => { if(B.has(x)) hit++; });
+  return hit / union.size;
+}
+
+function withDomain(source, domain){
+  return Object.fromEntries(Object.entries(source).map(([k,v]) => [k, {...v, domain}]));
+}
+
+function senseSourcesFromWordLexicon(wordLexicon){
+  const out = {};
+  for(const [lemma, e] of Object.entries(wordLexicon)){
+    out[lemma] = [{
+      sid:senseId(lemma, 1), lemma, sn:1, pos:e.pos, def:e.def,
+      gloss:"primary", anchors:e.anchors || [], domain:e.domain || "general",
+      rawTo:(e.to || []).map(t => ({t}))
+    }];
+    for(const extra of SENSE_OVERRIDES[lemma] || []){
+      out[lemma].push({
+        sid:senseId(lemma, out[lemma].length + 1), lemma, sn:out[lemma].length + 1,
+        pos:extra.pos || e.pos, def:extra.def, gloss:extra.gloss || "alternate",
+        anchors:extra.anchors || e.anchors || [], domain:extra.domain || e.domain || "general",
+        rawTo:(extra.to || []).map(x => typeof x === "string" ? {t:x} : x)
+      });
+    }
+  }
+  return out;
+}
+
+function scoreSenseTarget(source, candidate, sources){
+  const anchor = jaccard(source.anchors, candidate.anchors);
+  const domain = source.domain === candidate.domain ? .5 : 0;
+  const srcTargets = new Set(source.rawTo.map(x => x.t).filter(t => sources[t]));
+  const candTargets = new Set(candidate.rawTo.map(x => x.t).filter(t => sources[t]));
+  let shared = 0; srcTargets.forEach(t => { if(candTargets.has(t)) shared++; });
+  const overlap = srcTargets.size || candTargets.size ? shared / Math.max(srcTargets.size, candTargets.size) : 0;
+  return anchor + domain + overlap * .25;
+}
+
+function buildSenseAutopsy(wordAnalysis, wordLexicon){
+  const sources = senseSourcesFromWordLexicon(wordLexicon);
+  const senseLexicon = {};
+  const decisions = [];
+  for(const arr of Object.values(sources)){
+    for(const s of arr){
+      senseLexicon[s.sid] = {
+        pos:s.pos, def:s.def, anchors:s.anchors, domain:s.domain,
+        lemma:s.lemma, sense:s.sn, senseLabel:`${s.lemma}#${s.sn} ${s.gloss}`,
+        to:[]
+      };
+    }
+  }
+  for(const arr of Object.values(sources)){
+    for(const s of arr){
+      for(const edge of s.rawTo){
+        const targetLemma = norm(edge.t || "");
+        const candidates = sources[targetLemma] || [];
+        if(!candidates.length) continue;
+        let winner = candidates[0], method = "heuristic";
+        let scores = candidates.map(c => ({sid:c.sid, label:`${c.lemma}#${c.sn} ${c.gloss}`, score:scoreSenseTarget(s, c, sources)}));
+        if(edge.sense && candidates[edge.sense - 1]){
+          winner = candidates[edge.sense - 1];
+          method = "forced";
+        } else {
+          scores.sort((a,b) => b.score - a.score || senseNo(a.sid) - senseNo(b.sid));
+          winner = candidates.find(c => c.sid === scores[0].sid) || candidates[0];
+        }
+        const sorted = scores.slice().sort((a,b) => b.score - a.score || senseNo(a.sid) - senseNo(b.sid));
+        const top = sorted[0]?.score || 0, runner = sorted[1]?.score || 0;
+        senseLexicon[s.sid].to.push(winner.sid);
+        decisions.push({
+          from:s.sid, toLemma:targetLemma, winner:winner.sid, method,
+          margin:method === "forced" ? 1 : top - runner,
+          scores:sorted,
+          fragile:method !== "forced" && candidates.length > 1 && top - runner < .15
+        });
+      }
+      senseLexicon[s.sid].to = [...new Set(senseLexicon[s.sid].to)];
+    }
+  }
+  const senseAnalysis = analyzeLexicon(senseLexicon);
+  const wordCycleLemmas = wordAnalysis.comps.map(c => new Set(c.nodes.map(lemmaOf)));
+  const senseCycleLemmas = senseAnalysis.comps.map(c => new Set(c.nodes.map(lemmaOf)));
+  const overlaps = wordAnalysis.comps.map(c => {
+    const wset = new Set(c.nodes.map(lemmaOf));
+    const hits = senseAnalysis.comps.filter(sc => {
+      const ss = new Set(sc.nodes.map(lemmaOf));
+      let count = 0; ss.forEach(x => { if(wset.has(x)) count++; });
+      return count >= Math.min(2, wset.size);
+    });
+    const verdict = hits.length ? "confirmed" : "artifact";
+    return {word:c, sense:hits, verdict};
+  });
+  const emergent = senseAnalysis.comps.filter(sc => !wordCycleLemmas.some(ws => {
+    const ss = new Set(sc.nodes.map(lemmaOf));
+    let count = 0; ss.forEach(x => { if(ws.has(x)) count++; });
+    return count >= Math.min(2, ss.size);
+  }));
+  const byLemma = {};
+  for(const lemma of Object.keys(sources)){
+    const senses = sources[lemma].map(s => s.sid);
+    const fragile = decisions.filter(d => lemmaOf(d.toLemma) === lemma && d.fragile);
+    const collapsedComp = wordAnalysis.comps.find(c => c.nodes.includes(lemma));
+    const senseComps = senseAnalysis.comps.filter(c => c.nodes.some(n => lemmaOf(n) === lemma));
+    const verdict = collapsedComp ? (senseComps.length ? "confirmed" : "artifact") : (senseComps.length ? "emergent" : "acyclic");
+    byLemma[lemma] = {senses, fragile, collapsedComp, senseComps, verdict};
+  }
+  return {
+    sources, senseLexicon, senseAnalysis, decisions, overlaps, emergent, byLemma,
+    confirmed:overlaps.filter(o => o.verdict === "confirmed"),
+    artifact:overlaps.filter(o => o.verdict === "artifact"),
+    fragile:decisions.filter(d => d.fragile)
+  };
+}
+
+function analyzeLexicon(nextLexicon, exclude = new Set()){
+  const prev = lexicon;
+  lexicon = nextLexicon;
+  const out = buildAnalysis(exclude);
+  lexicon = prev;
+  return out;
+}
+
+function buildLexicon(){
+  const out = {};
+  for(const d of ["general","legal","science","computing"]){
+    if(activeDomains.has(d)) Object.assign(out, withDomain(DOMAINS[d].lexicon, d));
+  }
+  if(customMode) Object.assign(out, parseCustom($("customText").value));
+  return out;
+}
+
+function parseCustom(text){
+  const out = {};
+  const raw = text.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  const heads = raw.map(line => norm(line.split(":")[0] || "")).filter(Boolean);
+  const customKey = w => "user-" + w;
+  const builtins = new Set(["general","legal","science","computing"].flatMap(d => activeDomains.has(d) ? Object.keys(DOMAINS[d].lexicon) : []));
+  for (const line of raw) {
+    const [head, ...rest] = line.split(":");
+    const word = norm(head || "");
+    const def = rest.join(":").trim();
+    if (!word || !def) continue;
+    const tokens = def.toLowerCase().match(/[a-z][a-z-]*/g) || [];
+    const key = customKey(word);
+    const to = [...new Set(tokens.map(norm).filter(t => t !== word && (heads.includes(t) || builtins.has(t))).map(t => heads.includes(t) ? customKey(t) : t))];
+    out[key] = {pos:"custom", def, anchors:["user"], to, domain:"custom"};
+  }
+  return out;
+}
+
+function graphAll(exclude = new Set()){
+  const nodes = Object.keys(lexicon).filter(n => !exclude.has(n)).sort();
+  const keep = new Set(nodes), edges = [];
+  for(const a of nodes) for(const b of outgoing(a)) if(keep.has(b)) edges.push([a,b]);
+  return {nodes, edges};
+}
+
+function subgraph(root, depth, exclude = new Set()){
+  if(exclude.has(root)) return {nodes:[], edges:[]};
+  const nodes = new Set([root]), edges = [], q = [{w:root,d:0}];
+  while(q.length){
+    const {w,d} = q.shift();
+    if (d >= depth) continue;
+    for (const t of outgoing(w)) {
+      if(exclude.has(t)) continue;
+      edges.push([w,t]);
+      if (!nodes.has(t)) { nodes.add(t); q.push({w:t,d:d+1}); }
+    }
+  }
+  return {nodes:[...nodes], edges};
+}
+
+function tarjan(nodes, edges){
+  const adj = Object.fromEntries(nodes.map(n=>[n,[]]));
+  edges.forEach(([a,b]) => { if(adj[a]) adj[a].push(b); });
+  let i=0; const stack=[], on=new Set(), idx={}, low={}, comps=[];
+  function dfs(v){
+    idx[v]=low[v]=i++; stack.push(v); on.add(v);
+    for(const w of adj[v]){
+      if(idx[w] === undefined){ dfs(w); low[v]=Math.min(low[v], low[w]); }
+      else if(on.has(w)) low[v]=Math.min(low[v], idx[w]);
+    }
+    if(low[v] === idx[v]){
+      const comp=[]; let w;
+      do { w=stack.pop(); on.delete(w); comp.push(w); } while(w !== v);
+      comps.push(comp.sort());
+    }
+  }
+  nodes.forEach(n => { if(idx[n] === undefined) dfs(n); });
+  return comps.filter(c => c.length > 1 || edges.some(([a,b]) => a===b && c[0]===a)).sort((a,b)=>b.length-a.length || a[0].localeCompare(b[0]));
+}
+
+function hasCycle(nodes, edges, removed = new Set()){
+  const ns = nodes.filter(n => !removed.has(n));
+  const es = edges.filter(([a,b]) => !removed.has(a) && !removed.has(b));
+  return tarjan(ns, es).length > 0;
+}
+
+function combinations(arr, k, fn, start=0, pick=[]){
+  if(pick.length === k) return fn(pick);
+  for(let i=start; i <= arr.length - (k - pick.length); i++){
+    pick.push(arr[i]);
+    if(combinations(arr, k, fn, i+1, pick)) return true;
+    pick.pop();
+  }
+  return false;
+}
+
+function edgeDegree(nodes, edges){
+  const degree = Object.fromEntries(nodes.map(n=>[n,0]));
+  const set = new Set(nodes);
+  for(const [a,b] of edges) if(set.has(a) && set.has(b)){ degree[a]++; degree[b]++; }
+  return degree;
+}
+
+function heuristicKernel(nodes, edges){
+  const degree = edgeDegree(nodes, edges);
+  const ranked = nodes.slice().sort((a,b)=>degree[b]-degree[a] || a.localeCompare(b));
+  const removed = new Set(), kernel = [];
+  while(hasCycle(nodes, edges, removed) && ranked.length){
+    const n = ranked.shift();
+    removed.add(n); kernel.push(n);
+  }
+  return kernel.sort();
+}
+
+function minimumFVS(nodes, edges){
+  const local = edges.filter(([a,b]) => nodes.includes(a) && nodes.includes(b));
+  if(!hasCycle(nodes, local)) return {terms:[], exact:true};
+  if(nodes.length <= 13){
+    for(let k=1; k<=nodes.length; k++){
+      let found = null;
+      combinations(nodes, k, pick => {
+        if(!hasCycle(nodes, local, new Set(pick))){ found = pick.slice().sort(); return true; }
+        return false;
+      });
+      if(found) return {terms:found, exact:true};
+    }
+  }
+  return {terms:heuristicKernel(nodes, local), exact:false};
+}
+
+function shortestPath(start, goal, edges, allowed, maxDepth = 8){
+  const q = [[start, [start]]], seen = new Set([start]);
+  while(q.length){
+    const [n, path] = q.shift();
+    if(path.length > maxDepth) continue;
+    for(const [,b] of edges.filter(([a]) => a === n)){
+      if(!allowed.has(b)) continue;
+      const next = path.concat(b);
+      if(b === goal) return next;
+      if(!seen.has(b)){ seen.add(b); q.push([b,next]); }
+    }
+  }
+  return null;
+}
+
+function cycleCellsFromSccs(g, sccs){
+  const cells = [], seen = new Set();
+  for(const scc of sccs){
+    const allowed = new Set(scc);
+    const internal = g.edges.filter(([a,b]) => allowed.has(a) && allowed.has(b));
+    if(scc.length <= 13){
+      const fvs = minimumFVS(scc, internal);
+      cells.push({id:"L"+(cells.length+1), nodes:scc, edges:internal, kernel:fvs.terms, exact:fvs.exact, coarse:scc.length});
+      continue;
+    }
+    const ranked = internal.slice().sort((a,b) => {
+      const da = outgoing(a[0]).length + outgoing(a[1]).length;
+      const db = outgoing(b[0]).length + outgoing(b[1]).length;
+      return db - da || (a[0]+a[1]).localeCompare(b[0]+b[1]);
+    });
+    for(const [a,b] of ranked){
+      if(cells.length >= 96) break;
+      const path = shortestPath(b, a, internal, allowed, 9);
+      if(!path) continue;
+      const nodes = [...new Set([a].concat(path))].sort();
+      if(nodes.length < 2 || nodes.length > 13) continue;
+      const key = nodes.join("|");
+      if(seen.has(key)) continue;
+      seen.add(key);
+      const set = new Set(nodes);
+      const edges = internal.filter(([x,y]) => set.has(x) && set.has(y));
+      if(!hasCycle(nodes, edges)) continue;
+      const fvs = minimumFVS(nodes, edges);
+      cells.push({id:"L"+(cells.length+1), nodes, edges, kernel:fvs.terms, exact:fvs.exact, coarse:scc.length});
+    }
+  }
+  return cells.sort((a,b)=>b.nodes.length-a.nodes.length || b.edges.length-a.edges.length || a.id.localeCompare(b.id));
+}
+
+function firstBedrockAnchor(w, set){
+  return ANCHOR_ORDER.find(a => set.has(a) && anchorsOf(w).includes(a)) || null;
+}
+
+function groundingPass(g, comps, kernelAll, nodeToComp, set){
+  const cyclicMembers = new Set(comps.flatMap(c => c.nodes));
+  const kernels = new Set(kernelAll);
+  const edgeMap = Object.fromEntries(g.nodes.map(n => [n, []]));
+  g.edges.forEach(([a,b]) => { if(edgeMap[a]) edgeMap[a].push(b); });
+  const byWord = {};
+  for(const start of g.nodes){
+    const q = [{w:start, path:[start]}], seen = new Set([start]);
+    let found = null;
+    while(q.length && !found){
+      const item = q.shift();
+      const hit = firstBedrockAnchor(item.w, set);
+      if(hit){ found = {...item, anchor:hit}; break; }
+      for(const next of edgeMap[item.w] || []){
+        if(seen.has(next)) continue;
+        seen.add(next);
+        q.push({w:next, path:item.path.concat(next)});
+      }
+    }
+    if(!found){
+      byWord[start] = {status:"looped", label:"Looped-only", anchor:"sealed", path:[start], distance:null, mixed:false, throughKernel:false, comp:nodeToComp[start] || "", domains:[domainOf(start)], bridges:0};
+      continue;
+    }
+    const beforeTarget = found.path.slice(0, -1);
+    const throughKernel = beforeTarget.some(n => kernels.has(n));
+    const throughCycle = beforeTarget.some(n => cyclicMembers.has(n));
+    const mixed = found.path.length > 1 && (throughKernel || throughCycle);
+    byWord[start] = {
+      status:mixed ? "mixed" : "anchored",
+      label:mixed ? "Mixed" : "Anchored",
+      anchor:found.anchor,
+      path:found.path,
+      distance:found.path.length - 1,
+      domains:[...new Set(found.path.map(domainOf))],
+      bridges:found.path.slice(1).filter((n,i) => domainOf(n) !== domainOf(found.path[i])).length,
+      mixed,
+      throughKernel,
+      comp:nodeToComp[start] || ""
+    };
+  }
+  const counts = {anchored:0, mixed:0, looped:0};
+  Object.values(byWord).forEach(v => counts[v.status]++);
+  const sealed = {};
+  for(const c of comps){
+    const members = new Set(c.nodes);
+    const direct = c.nodes.some(n => firstBedrockAnchor(n, set));
+    const escape = g.edges.some(([a,b]) => members.has(a) && !members.has(b) && byWord[b]?.status !== "looped");
+    sealed[c.id] = !(direct || escape);
+  }
+  return {byWord, counts, sealed};
+}
+
+function federationFacts(g, grounding, comps){
+  const domains = [...new Set(g.nodes.map(domainOf))].sort((a,b) => Object.keys(DOMAINS).indexOf(a) - Object.keys(DOMAINS).indexOf(b));
+  const edges = g.edges.map(([a,b]) => ({a,b, from:domainOf(a), to:domainOf(b), bridge:isBridge(a,b)}));
+  const bridges = edges.filter(e => e.bridge);
+  const matrix = Object.fromEntries(domains.map(a => [a, Object.fromEntries(domains.map(b => [b,0]))]));
+  const stats = Object.fromEntries(domains.map(d => [d, {words:0, anchored:0, mixed:0, looped:0, internal:0, crossed:0, bridgeOut:0, bridgeIn:0}]));
+  for(const w of g.nodes){
+    const d = domainOf(w), gr = grounding.byWord[w];
+    stats[d].words++;
+    stats[d][gr.status]++;
+    if(gr.bridges) stats[d].crossed++; else stats[d].internal++;
+    for(const pd of gr.domains || [d]) if(matrix[d] && matrix[d][pd] !== undefined) matrix[d][pd]++;
+  }
+  bridges.forEach(e => { stats[e.from].bridgeOut++; stats[e.to].bridgeIn++; });
+  const compDomains = {};
+  comps.forEach(c => {
+    const ds = [...new Set(c.nodes.map(domainOf))];
+    const internalBridges = c.edges.filter(([a,b]) => isBridge(a,b)).length;
+    const outgoingBridge = g.edges.some(([a,b]) => c.nodes.includes(a) && !c.nodes.includes(b) && isBridge(a,b));
+    compDomains[c.id] = {domains:ds, home:ds.length === 1 ? ds[0] : "mixed", internalBridges, outgoingBridge};
+  });
+  return {domains, edges, bridges, matrix, stats, compDomains};
+}
+
+function withGroundingStress(g, comps, kernelAll, nodeToComp, set){
+  const current = groundingPass(g, comps, kernelAll, nodeToComp, set);
+  const active = [...set];
+  const flips = Object.fromEntries(g.nodes.map(n => [n, []]));
+  for(const cat of active){
+    const next = new Set(active.filter(a => a !== cat));
+    const pass = groundingPass(g, comps, kernelAll, nodeToComp, next);
+    g.nodes.forEach(n => {
+      const a = current.byWord[n], b = pass.byWord[n];
+      if(a.status !== b.status || a.anchor !== b.anchor) flips[n].push(cat);
+    });
+  }
+  g.nodes.forEach(n => current.byWord[n].fragile = flips[n]);
+  current.fragileWords = Object.entries(flips).filter(([,v]) => v.length).map(([n]) => n).sort();
+  current.active = active.sort((a,b) => ANCHOR_ORDER.indexOf(a) - ANCHOR_ORDER.indexOf(b));
+  return current;
+}
+
+function buildAnalysis(exclude = new Set()){
+  const g = graphAll(exclude);
+  const sccs = tarjan(g.nodes, g.edges);
+  const comps = cycleCellsFromSccs(g, sccs).map((c, i) => ({...c, id:"L"+(i+1), anchors:[...new Set(c.nodes.flatMap(anchorsOf))].sort()}));
+  const kernelAll = [...new Set(comps.flatMap(c => c.kernel))].sort();
+  const nodeToComp = {};
+  comps.slice().sort((a,b)=>a.nodes.length-b.nodes.length).forEach(c => c.nodes.forEach(n => { if(!nodeToComp[n]) nodeToComp[n] = c.id; }));
+  const hubCounts = {};
+  comps.forEach(c => c.kernel.forEach(k => hubCounts[k] = (hubCounts[k] || 0) + 1));
+  const hubs = Object.entries(hubCounts).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0]));
+  const grounding = withGroundingStress(g, comps, kernelAll, nodeToComp, bedrock);
+  const federation = federationFacts(g, grounding, comps);
+  return {global:g, sccs, comps, kernelAll, nodeToComp, hubs, exactCount:comps.filter(c=>c.exact).length, grounding, federation};
+}
+
+function selectedComp(){
+  return analysis.comps.find(c => c.nodes.includes(selected)) || analysis.comps[0] || null;
+}
+
+function componentFor(idOrWord){
+  return analysis.comps.find(c => c.id === idOrWord || c.nodes.includes(idOrWord)) || null;
+}
+
+function cyclicEdgeSet(comps, edges){
+  const out = new Set();
+  comps.forEach(c => {
+    const set = new Set(Array.isArray(c) ? c : c.nodes);
+    edges.forEach(([a,b]) => { if(set.has(a) && set.has(b)) out.add(a+"->"+b); });
+  });
+  return out;
+}
+
+function depthPositions(nodes, edges, root, layout){
+  const w = $("graph").clientWidth || 820, h = $("graph").clientHeight || 410;
+  const depth = {[root]:0}, q=[root];
+  while(q.length){
+    const n=q.shift();
+    for(const [,b] of edges.filter(e=>e[0]===n)){
+      if(depth[b]===undefined){ depth[b]=depth[n]+1; q.push(b); }
+    }
+  }
+  const by = {};
+  nodes.forEach(n => { const d = depth[n] ?? 5; (by[d] ||= []).push(n); });
+  const pos = {};
+  if(layout === "bands"){
+    const ds = Object.keys(by).map(Number).sort((a,b)=>a-b);
+    ds.forEach((d,di) => by[d].forEach((n,i) => {
+      pos[n] = {x:58 + di*((w-116)/Math.max(1,ds.length-1)), y:38 + i*((h-76)/Math.max(1,by[d].length-1 || 1))};
+    }));
+  } else {
+    pos[root] = {x:w/2, y:h/2};
+    nodes.filter(n=>n!==root).forEach((n,i,arr) => {
+      const d = depth[n] ?? 3, ring = Math.min(w,h) * (0.12 + Math.min(d,5)*0.075);
+      const a = -Math.PI/2 + (i/Math.max(1,arr.length))*Math.PI*2;
+      pos[n] = {x:w/2 + Math.cos(a)*ring, y:h/2 + Math.sin(a)*ring};
+    });
+  }
+  return pos;
+}
+
+function clusterPositions(items){
+  const w = $("graph").clientWidth || 820, h = $("graph").clientHeight || 410;
+  const pos = {};
+  const cols = Math.max(4, Math.ceil(Math.sqrt(items.length * 1.85)));
+  const rows = Math.max(1, Math.ceil(items.length / cols));
+  const cellW = (w - 70) / Math.max(1, cols - 1);
+  const cellH = (h - 118) / Math.max(1, rows - 1);
+  items.forEach((item, i) => {
+    const col = i % cols, row = Math.floor(i / cols);
+    const jitter = (row % 2) * Math.min(10, cellW * .18);
+    pos[item.id] = {x:35 + col * cellW + jitter, y:34 + row * cellH};
+  });
+  return pos;
+}
+
+function render(){
+  lexicon = buildLexicon();
+  if(!Object.keys(lexicon).length){ activeDomains.add("general"); lexicon = buildLexicon(); }
+  if(!known(selected)) selected = Object.keys(lexicon).sort()[0];
+  $("query").value = selected;
+  analysis = buildAnalysis();
+  analysis.autopsy = buildSenseAutopsy(analysis, lexicon);
+  $("customBox").classList.toggle("open", customMode);
+  $("customBtn").classList.toggle("active", customMode);
+  fillAblate();
+  renderBedrockControls();
+  renderDomainControls();
+  renderList();
+  if($("view").value === "word") renderWordView();
+  else if($("view").value === "ablate") renderAblationView();
+  else if($("view").value === "flow") renderFlowView();
+  else if($("view").value === "sense") renderSenseAutopsyView();
+  else if($("view").value === "federation") renderFederationView();
+  else renderAtlasView();
+  renderRight();
+  const senseMode = $("view").value === "sense";
+  $("lScc").textContent = senseMode ? "confirmed" : "loop cells";
+  $("lKernel").textContent = senseMode ? "anchored" : "anchored";
+  $("lExact").textContent = senseMode ? "artifacts" : "mixed";
+  $("lHubs").textContent = senseMode ? "fragile edges" : "sealed";
+  $("sNodes").textContent = analysis.global.nodes.length;
+  $("sEdges").textContent = analysis.global.edges.length;
+  $("sScc").textContent = $("view").value === "sense" ? analysis.autopsy.confirmed.length : analysis.comps.length;
+  $("sKernel").textContent = analysis.grounding.counts.anchored;
+  $("sExact").textContent = $("view").value === "sense" ? analysis.autopsy.artifact.length : analysis.grounding.counts.mixed;
+  $("sHubs").textContent = $("view").value === "sense" ? analysis.autopsy.fragile.length : Object.values(analysis.grounding.sealed).filter(Boolean).length;
+  $("lexCount").textContent = `${analysis.global.nodes.length} entries / ${analysis.federation.bridges.length} bridges / ${analysis.comps.length} cyclic clusters`;
+}
+
+function renderBedrockControls(){
+  const present = new Set(Object.values(lexicon).flatMap(e => e.anchors || []));
+  const used = ANCHOR_ORDER.filter(a => present.has(a) || bedrock.has(a));
+  $("bedrockToggles").innerHTML = used.map(a => {
+    const fragile = analysis.grounding.fragileWords.some(w => analysis.grounding.byWord[w]?.fragile.includes(a));
+    return `<button class="${bedrock.has(a) ? "on" : ""} ${fragile ? "fragile" : ""}" data-anchor="${esc(a)}" title="toggle ${esc(a)} as bedrock">${esc(a)}</button>`;
+  }).join("");
+  document.querySelectorAll("[data-anchor]").forEach(b => b.onclick = () => {
+    const a = b.dataset.anchor;
+    bedrock.has(a) ? bedrock.delete(a) : bedrock.add(a);
+    if(!bedrock.size) bedrock.add(a);
+    render();
+  });
+  const g = analysis.grounding;
+  $("stanceReadout").textContent = `${g.active.join(" + ")}\n${g.counts.anchored} anchored / ${g.counts.mixed} mixed / ${g.counts.looped} sealed-path`;
+}
+
+function renderDomainControls(){
+  $("domainToggles").innerHTML = Object.entries(DOMAINS).map(([d, meta]) => {
+    const active = d === "custom" ? customMode : activeDomains.has(d);
+    const count = d === "custom" ? Object.values(lexicon).filter(e => e.domain === "custom").length : Object.keys(meta.lexicon || {}).length;
+    return `<button class="${active ? "on" : ""} ${domainClass(d)}" data-domain="${esc(d)}" title="toggle ${esc(meta.label)} domain">${esc(meta.label)} ${count}</button>`;
+  }).join("");
+  document.querySelectorAll("[data-domain]").forEach(b => b.onclick = () => {
+    const d = b.dataset.domain;
+    if(d === "custom") customMode = !customMode;
+    else activeDomains.has(d) ? activeDomains.delete(d) : activeDomains.add(d);
+    if(!activeDomains.size && !customMode) activeDomains.add("general");
+    render();
+  });
+}
+
+function fillAblate(){
+  const current = $("ablate").value;
+  const opts = ['<option value="">none</option>'].concat(analysis.kernelAll.map(w => `<option value="${esc(w)}">${esc(w)}</option>`));
+  $("ablate").innerHTML = opts.join("");
+  if(analysis.kernelAll.includes(current)) $("ablate").value = current;
+}
+
+function renderList(){
+  $("wordOptions").innerHTML = Object.keys(lexicon).sort().map(w=>`<option value="${esc(w)}"></option>`).join("");
+  const kernel = new Set(analysis.kernelAll);
+  const rows = [];
+  analysis.comps.forEach(c => rows.push({
+    kind:"cluster", key:c.id, label:`${c.id} ${c.exact ? "exact" : "approx"}`,
+    body:`${analysis.federation.compDomains[c.id]?.home || "mixed"} / ${analysis.grounding.sealed[c.id] ? "sealed" : "escaping"} / ${c.nodes.length} terms / kernel: ${c.kernel.join(", ") || "none"}`,
+    code:c.nodes.includes(selected) ? "open" : (analysis.grounding.sealed[c.id] ? "sealed" : "escape")
+  }));
+  Object.keys(lexicon).sort().forEach(w => {
+    const e = lexicon[w], comp = analysis.nodeToComp[w] || "";
+    const gv = analysis.grounding.byWord[w];
+    const auto = analysis.autopsy.byLemma[w];
+    const senseCode = auto && auto.senses.length > 1 ? auto.verdict : "";
+    rows.push({kind:"word", key:w, label:w, body:`${domainLabel(e.domain)} / ${gv.label.toLowerCase()} via ${gv.anchor} / ${e.pos} ${e.def}`, code:kernel.has(w) ? "kernel" : (senseCode || (gv.bridges ? `${gv.bridges} bridge` : (gv.fragile.length ? "fragile" : comp))), status:gv.status});
+    if(auto && auto.senses.length > 1){
+      auto.senses.forEach(sid => {
+        const se = analysis.autopsy.senseLexicon[sid];
+        rows.push({kind:"sense", key:w, label:"  " + se.senseLabel, body:`${domainLabel(se.domain)} / ${se.pos} ${se.def}`, code:auto.fragile.some(d => d.winner === sid) ? "fragile sense" : auto.verdict, status:auto.verdict === "artifact" ? "looped" : auto.verdict === "confirmed" ? "anchored" : "mixed"});
+      });
+    }
+  });
+  $("wordList").innerHTML = rows.map(r => {
+    const active = r.kind === "word" && r.key === selected;
+    const classes = [active ? "active" : "", r.status === "anchored" ? "grounded" : r.status === "mixed" ? "mixed" : r.status === "looped" ? "looped" : "", r.code === "kernel" ? "kernel" : "", r.code && !r.status ? "cyclic" : ""].join(" ");
+    return `<div class="word-row ${classes}" data-kind="${r.kind}" data-key="${esc(r.key)}"><div><strong>${esc(r.label)}</strong><br><em>${esc(r.body)}</em></div><code>${esc(r.code)}</code></div>`;
+  }).join("");
+  document.querySelectorAll(".word-row").forEach(r => r.onclick = () => {
+    if(r.dataset.kind === "cluster"){
+      const c = componentFor(r.dataset.key);
+      if(c) selected = c.kernel[0] || c.nodes[0];
+      $("view").value = "atlas";
+    } else if(r.dataset.kind === "sense") {
+      selected = r.dataset.key;
+      $("view").value = "sense";
+    } else {
+      selected = r.dataset.key;
+      $("view").value = "word";
+    }
+    $("query").value = selected;
+    render();
+  });
+}
+
+function federationPositions(nodes){
+  const svg = $("graph"), w = svg.clientWidth || 820, h = svg.clientHeight || 410;
+  const domains = analysis.federation.domains;
+  const gap = 12, top = 38, bottom = 30;
+  const colW = (w - gap * (domains.length + 1)) / Math.max(1, domains.length);
+  const pos = {}, hulls = {};
+  domains.forEach((d, di) => {
+    const arr = nodes.filter(n => domainOf(n) === d).sort();
+    const x0 = gap + di * (colW + gap);
+    const rows = Math.max(2, Math.ceil(Math.sqrt(arr.length * 1.35)));
+    const cols = Math.max(2, Math.ceil(arr.length / rows));
+    hulls[d] = {x:x0, y:top-21, w:colW, h:h-top-bottom+23, count:arr.length};
+    arr.forEach((n, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      pos[n] = {
+        x:x0 + 18 + col * ((colW - 36) / Math.max(1, cols - 1)),
+        y:top + 17 + row * ((h - top - bottom - 34) / Math.max(1, rows - 1))
+      };
+    });
+  });
+  return {pos, hulls};
+}
+
+function renderFederationView(){
+  $("graphTitle").textContent = "Lexicon Federation Map";
+  $("graphNote").textContent = "territories are domains; cyan roads are derived bridge edges";
+  $("ledgerTitle").textContent = "Domain Grounding Matrix";
+  const svg = $("graph"), w = svg.clientWidth || 820, h = svg.clientHeight || 410;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const nodes = analysis.global.nodes;
+  const {pos, hulls} = federationPositions(nodes);
+  const ground = analysis.grounding.byWord[selected];
+  const pathEdges = new Set((ground?.path || []).slice(1).map((n,i) => ground.path[i] + "->" + n));
+  const bridges = analysis.federation.bridges.slice().sort((a,b) => (a.from+a.to+a.a).localeCompare(b.from+b.to+b.a));
+  let html = markerDef();
+  for(const d of analysis.federation.domains){
+    const box = hulls[d], meta = DOMAINS[d] || {};
+    html += `<rect class="domain-hull ${domainClass(d)}" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" style="stroke:${meta.color || "#999"}"></rect>`;
+    html += `<text class="domain-label" x="${box.x+7}" y="${box.y+14}">${esc(domainLabel(d))} ${box.count}</text>`;
+  }
+  for(const e of bridges){
+    const a = pos[e.a], b = pos[e.b];
+    if(!a || !b) continue;
+    const hot = pathEdges.has(e.a+"->"+e.b);
+    html += `<line class="edge bridge" style="stroke-width:${hot ? 3.4 : 1.45};stroke-opacity:${hot ? .95 : .48}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"><title>${esc(e.a)} (${e.from}) -> ${esc(e.b)} (${e.to})</title></line>`;
+  }
+  for(const [a,b] of analysis.global.edges){
+    if(isBridge(a,b) || !pathEdges.has(a+"->"+b)) continue;
+    const pa = pos[a], pb = pos[b];
+    if(pa && pb) html += `<line class="edge mixed" style="stroke-width:3;stroke-opacity:.72" x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}"><title>${esc(a)} -> ${esc(b)}</title></line>`;
+  }
+  const kernel = new Set(analysis.kernelAll);
+  for(const n of nodes){
+    const p = pos[n], e = known(n), g = analysis.grounding.byWord[n];
+    const cls = [domainClass(e.domain), n === selected ? "root" : "", kernel.has(n) ? "kernel" : "", g.bridges ? "bridge" : "", g.status === "looped" ? "sealed" : ""].join(" ");
+    const r = n === selected ? 16 : kernel.has(n) ? 11 : Math.max(5, Math.min(9, 4 + outgoing(n).length * .45));
+    const label = n === selected || kernel.has(n) || g.bridges ? n.slice(0, 10) : "";
+    html += `<g class="node ${cls}" data-word="${esc(n)}" tabindex="0"><circle cx="${p.x}" cy="${p.y}" r="${r}" style="stroke:${DOMAINS[e.domain]?.color || "#222"}"></circle>${label ? `<text x="${p.x}" y="${p.y}">${esc(label)}</text>` : ""}<title>${esc(n)} / ${domainLabel(e.domain)} / ${g.label} / ${g.bridges} bridge(s)</title></g>`;
+  }
+  const stats = analysis.federation.stats;
+  let y = h - 13, x = 10;
+  for(const d of analysis.federation.domains){
+    const s = stats[d], pct = s.words ? Math.round((s.crossed / s.words) * 100) : 0;
+    html += `<text class="flow-label" style="text-anchor:start;fill:${DOMAINS[d]?.color || "#333"}" x="${x}" y="${y}">${esc(domainLabel(d))}: ${s.internal} home / ${s.crossed} crossed (${pct}%)</text>`;
+    x += Math.max(150, w / Math.max(2, analysis.federation.domains.length));
+  }
+  svg.innerHTML = html;
+  svg.querySelectorAll("[data-word]").forEach(n => n.onclick = () => { selected = n.dataset.word; $("query").value = selected; render(); });
+  $("caption").textContent = `${selected}: ${ground.label} through ${ground.domains.map(domainLabel).join(" -> ")}; ${ground.bridges} bridge crossing${ground.bridges === 1 ? "" : "s"}. Federation has ${analysis.federation.bridges.length} derived bridge edges across ${analysis.federation.domains.length} active domains.`;
+  renderFederationTable();
+}
+
+function renderFederationTable(){
+  const domains = analysis.federation.domains;
+  const head = domains.map(d => `<th>${esc(domainLabel(d))}</th>`).join("");
+  const rows = domains.map(d => {
+    const cells = domains.map(t => `<td>${analysis.federation.matrix[d][t]}</td>`).join("");
+    const s = analysis.federation.stats[d];
+    const verdict = `${s.internal}/${s.words} stay home; ${s.crossed} cross; ${s.looped} sealed`;
+    return `<tr><td>${esc(domainLabel(d))}</td>${cells}<td>${esc(verdict)}</td><td>${s.bridgeOut} out / ${s.bridgeIn} in</td></tr>`;
+  });
+  $("edgeTable").innerHTML = `<thead><tr><th>Start domain</th>${head}<th>Insularity</th><th>Bridge degree</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+}
+
+function renderSenseAutopsyView(){
+  $("graphTitle").textContent = "Sense Autopsy";
+  $("graphNote").textContent = "left: collapsed word cycles; right: disambiguated sense cycles";
+  $("ledgerTitle").textContent = "Disambiguation Ledger";
+  const svg = $("graph"), w = svg.clientWidth || 820, h = svg.clientHeight || 410;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const aut = analysis.autopsy;
+  const rows = aut.overlaps.map(o => ({id:o.word.id, kind:o.verdict, word:o.word, sense:o.sense[0] || null}))
+    .concat(aut.emergent.map((c,i) => ({id:"E"+(i+1), kind:"emergent", word:null, sense:c})));
+  const cols = Math.max(3, Math.ceil(Math.sqrt(rows.length * 1.2)));
+  const cellW = (w - 54) / Math.max(1, cols - 1);
+  const cellH = (h - 86) / Math.max(1, Math.ceil(rows.length / cols) - 1 || 1);
+  let html = markerDef();
+  html += `<text class="flow-label" x="${w*.25}" y="16">word-collapsed</text><text class="flow-label" x="${w*.75}" y="16">sense-disambiguated</text>`;
+  rows.forEach((row, i) => {
+    const col = i % cols, rrow = Math.floor(i / cols);
+    const cx = 27 + col * cellW, cy = 42 + rrow * cellH;
+    const lx = cx - Math.min(42, cellW*.2), rx = cx + Math.min(42, cellW*.2);
+    const wordR = row.word ? 9 + Math.min(14, row.word.nodes.length * .85) : 7;
+    const senseR = row.sense ? 9 + Math.min(14, row.sense.nodes.length * .85) : 7;
+    const label = row.word?.id || row.id;
+    const senseLabelText = row.sense ? `${row.sense.nodes.length}s` : "none";
+    html += `<line class="edge autopsy" x1="${lx}" y1="${cy}" x2="${rx}" y2="${cy}"></line>`;
+    if(row.word){
+      html += `<g class="node ${row.kind}" data-word="${esc(row.word.nodes[0])}" tabindex="0"><circle cx="${lx}" cy="${cy}" r="${wordR}"></circle><text x="${lx}" y="${cy-3}">${esc(label)}</text><text x="${lx}" y="${cy+9}">${row.word.nodes.length}w</text><title>${esc(row.word.nodes.join(", "))}</title></g>`;
+    } else {
+      html += `<g class="node artifact"><circle cx="${lx}" cy="${cy}" r="${wordR}"></circle><text x="${lx}" y="${cy}">new</text></g>`;
+    }
+    if(row.sense){
+      const word = lemmaOf(row.sense.nodes[0]);
+      html += `<g class="node ${row.kind}" data-word="${esc(word)}" tabindex="0"><circle cx="${rx}" cy="${cy}" r="${senseR}"></circle><text x="${rx}" y="${cy-3}">${esc(row.kind === "emergent" ? row.id : row.word.id)}</text><text x="${rx}" y="${cy+9}">${esc(senseLabelText)}</text><title>${esc(row.sense.nodes.map(n => aut.senseLexicon[n]?.senseLabel || n).join(", "))}</title></g>`;
+    } else {
+      html += `<g class="node artifact" data-word="${esc(row.word.nodes[0])}" tabindex="0"><circle cx="${rx}" cy="${cy}" r="${senseR}"></circle><text x="${rx}" y="${cy-3}">ghost</text><text x="${rx}" y="${cy+9}">0s</text><title>dissolved after sense split</title></g>`;
+    }
+  });
+  const selectedAuto = aut.byLemma[selected];
+  if(selectedAuto){
+    html += `<text class="flow-label" style="text-anchor:start" x="10" y="${h-30}">${esc(selected)}: ${selectedAuto.senses.map(s => aut.senseLexicon[s]?.senseLabel || s).join(" | ")}</text>`;
+    html += `<text class="flow-label" style="text-anchor:start" x="10" y="${h-14}">verdict: ${selectedAuto.verdict}; fragile incoming decisions: ${selectedAuto.fragile.length}</text>`;
+  }
+  svg.innerHTML = html;
+  svg.querySelectorAll("[data-word]").forEach(n => n.onclick = () => { selected = n.dataset.word; $("query").value = selected; render(); });
+  $("caption").textContent = `Autopsy pass: ${aut.confirmed.length} collapsed cycle(s) survive sense split, ${aut.artifact.length} dissolve as polysemy artifacts, ${aut.emergent.length} sense-only cycle(s) emerge, ${aut.fragile.length} low-margin sense decisions.`;
+  renderSenseTable();
+}
+
+function renderSenseTable(){
+  const aut = analysis.autopsy;
+  const selectedDecisions = aut.decisions.filter(d => d.from.startsWith(selected + "#") || d.toLemma === selected);
+  const rows = (selectedDecisions.length ? selectedDecisions : aut.decisions)
+    .slice(0, selectedDecisions.length ? 120 : 180)
+    .map(d => {
+      const scoreText = d.scores.map(s => `${s.label}:${s.score.toFixed(2)}`).join(" | ");
+      return `<tr><td>${esc(aut.senseLexicon[d.from]?.senseLabel || d.from)}</td><td>${esc(d.toLemma)}</td><td>${esc(aut.senseLexicon[d.winner]?.senseLabel || d.winner)}</td><td>${esc(d.method)}</td><td>${d.margin.toFixed(2)}</td><td>${d.fragile ? "fragile" : "stable"}</td><td>${esc(scoreText)}</td></tr>`;
+    });
+  $("edgeTable").innerHTML = `<thead><tr><th>Source sense</th><th>Target lemma</th><th>Chosen sense</th><th>Provenance</th><th>Margin</th><th>Risk</th><th>Candidate scores</th></tr></thead><tbody>${rows.join("") || "<tr><td colspan='7'>No sense decisions.</td></tr>"}</tbody>`;
+}
+
+function renderAtlasView(){
+  $("graphTitle").textContent = "Whole-Lexicon Cycle Atlas";
+  $("graphNote").textContent = "cluster nodes; hub links show shared kernel terms";
+  $("ledgerTitle").textContent = "Cluster Ledger";
+  const svg = $("graph"), w = svg.clientWidth || 820, h = svg.clientHeight || 410;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const comps = analysis.comps, pos = clusterPositions(comps);
+  const selectedId = selectedComp()?.id;
+  let html = markerDef();
+  let shareLines = 0;
+  for(let i=0; i<comps.length; i++) for(let j=i+1; j<comps.length; j++){
+    const shared = comps[i].kernel.filter(k => comps[j].kernel.includes(k));
+    if(shared.length && shareLines < 180){
+      const a=pos[comps[i].id], b=pos[comps[j].id];
+      html += `<line class="edge share" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"><title>${esc(shared.join(", "))}</title></line>`;
+      shareLines++;
+    }
+  }
+  comps.forEach(c => {
+    const p = pos[c.id], r = 10 + Math.min(14, c.nodes.length*.8 + c.edges.length*.12);
+    const cls = `cluster ${c.exact ? "exact" : ""} ${c.id === selectedId ? "root" : ""}`;
+    html += `<g class="node ${cls}" data-word="${esc(c.nodes[0])}" tabindex="0"><circle cx="${p.x}" cy="${p.y}" r="${r}"></circle><text x="${p.x}" y="${p.y-4}">${c.id}</text><text x="${p.x}" y="${p.y+9}">${c.kernel.length}k/${c.nodes.length}n</text></g>`;
+  });
+  analysis.hubs.slice(0,8).forEach(([hub,count], i) => {
+    const x = 58 + i * Math.max(78, (w-116)/Math.max(1, Math.min(8,analysis.hubs.length)-1));
+    const y = h - 35;
+    html += `<g class="node hub" data-word="${esc(hub)}" tabindex="0"><circle cx="${x}" cy="${y}" r="${14 + count*2}"></circle><text x="${x}" y="${y}">${esc(hub.slice(0,10))}</text></g>`;
+  });
+  svg.innerHTML = html;
+  svg.querySelectorAll(".node").forEach(n => n.onclick = () => { selected = n.dataset.word; $("query").value = selected; $("view").value = "word"; render(); });
+  $("caption").textContent = `Global pass: ${analysis.comps.length} cyclic components across ${analysis.global.nodes.length} entries and ${analysis.federation.bridges.length} derived bridge edges. Red clusters have exact minimum feedback kernels; cyan bottom nodes are shared kernel hubs.`;
+  renderClusterTable();
+}
+
+function renderFlowView(){
+  $("graphTitle").textContent = "Grounding Flow";
+  $("graphNote").textContent = "one thread per word; stance toggles decide terminal bedrock";
+  $("ledgerTitle").textContent = "Grounding Witness Ledger";
+  const svg = $("graph"), w = svg.clientWidth || 820, h = svg.clientHeight || 410;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const words = analysis.global.nodes.slice().sort((a,b) => {
+    const sa = analysis.grounding.byWord[a].status, sb = analysis.grounding.byWord[b].status;
+    return sa.localeCompare(sb) || a.localeCompare(b);
+  });
+  const terminalOrder = analysis.grounding.active.concat("sealed");
+  const bins = Object.fromEntries(terminalOrder.map(a => [a, []]));
+  words.forEach(word => {
+    const g = analysis.grounding.byWord[word];
+    (bins[g.status === "looped" ? "sealed" : g.anchor] ||= []).push(word);
+  });
+  const liveBins = terminalOrder.filter(a => (bins[a] || []).length);
+  const top = 26, bottom = h - 28;
+  const leftX = 54, midX = w * .48, rightX = w - 142;
+  const startY = {};
+  words.forEach((word, i) => startY[word] = top + i * ((bottom - top) / Math.max(1, words.length - 1)));
+  const bandY = {};
+  liveBins.forEach((bin, i) => {
+    const span = (bottom - top) / Math.max(1, liveBins.length);
+    bandY[bin] = {top:top + i*span + 4, bottom:top + (i+1)*span - 4};
+  });
+  const endY = {};
+  liveBins.forEach(bin => {
+    const arr = bins[bin] || [], b = bandY[bin];
+    arr.forEach((word, i) => endY[word] = b.top + i * ((b.bottom - b.top) / Math.max(1, arr.length - 1 || 1)));
+  });
+  const compWords = {};
+  words.forEach(word => {
+    const c = analysis.grounding.byWord[word].comp;
+    if(c) (compWords[c] ||= []).push(word);
+  });
+  const compY = {};
+  Object.entries(compWords).forEach(([id, arr]) => compY[id] = arr.reduce((n,w)=>n+startY[w],0)/arr.length);
+  let html = markerDef();
+  for(const word of words){
+    const g = analysis.grounding.byWord[word];
+    const sy = startY[word], ey = endY[word] ?? sy;
+    const cls = g.status === "mixed" ? "mixed" : g.status === "looped" ? "sealed" : "flow";
+    const weight = word === selected ? 4.2 : 1 + Math.min(2.2, Math.max(0, 4 - (g.distance ?? 5)) * .22);
+    if(g.comp && compY[g.comp] !== undefined && g.status !== "anchored"){
+      const cy = compY[g.comp];
+      html += `<path class="edge ${cls}" data-word="${esc(word)}" style="stroke-width:${weight}" d="M${leftX},${sy} C${leftX+70},${sy} ${midX-58},${cy} ${midX},${cy} C${midX+70},${cy} ${rightX-78},${ey} ${rightX},${ey}"><title>${esc(word)}: ${g.label} via ${g.anchor}; ${g.path.join(" -> ")}</title></path>`;
+    } else {
+      html += `<path class="edge ${cls}" data-word="${esc(word)}" style="stroke-width:${weight}" d="M${leftX},${sy} C${w*.28},${sy} ${w*.72},${ey} ${rightX},${ey}"><title>${esc(word)}: ${g.label} via ${g.anchor}; ${g.path.join(" -> ")}</title></path>`;
+    }
+  }
+  Object.entries(compY).slice(0, 28).forEach(([id, y]) => {
+    const c = componentFor(id), sealed = analysis.grounding.sealed[id];
+    html += `<g class="node ${sealed ? "sealed" : "flow"}" data-word="${esc(c?.nodes[0] || selected)}" tabindex="0"><circle cx="${midX}" cy="${y}" r="${Math.min(23, 9 + (c?.nodes.length || 1))}"></circle><text x="${midX}" y="${y}">${esc(id)}</text></g>`;
+  });
+  liveBins.forEach(bin => {
+    const b = bandY[bin], cy = (b.top + b.bottom) / 2, count = (bins[bin] || []).length;
+    const cls = bin === "sealed" ? "sealed" : "anchor";
+    html += `<rect x="${rightX+13}" y="${b.top}" width="100" height="${Math.max(18, b.bottom-b.top)}" fill="${bin === "sealed" ? "#fff1ee" : "#f2faed"}" stroke="#c5bcad"></rect>`;
+    html += `<text class="flow-label" x="${rightX+63}" y="${cy-5}">${esc(bin)}</text><text class="flow-label" x="${rightX+63}" y="${cy+8}">${count} words</text>`;
+    html += `<g class="node ${cls}" tabindex="0"><circle cx="${rightX}" cy="${cy}" r="${12 + Math.min(12,count*.35)}"></circle><text x="${rightX}" y="${cy}">${count}</text></g>`;
+  });
+  html += `<text class="flow-label" x="${leftX}" y="14">lexicon</text><text class="flow-label" x="${midX}" y="14">cycle cells crossed</text><text class="flow-label" x="${rightX+48}" y="14">bedrock / sealed</text>`;
+  html += `<text class="flow-label" style="text-anchor:end" x="${leftX}" y="${startY[selected] || top}">${esc(selected)}</text>`;
+  svg.innerHTML = html;
+  svg.querySelectorAll("[data-word]").forEach(n => n.onclick = () => { selected = n.dataset.word; $("query").value = selected; render(); });
+  const selectedGround = analysis.grounding.byWord[selected];
+  $("caption").textContent = `${selected}: ${selectedGround.label}. Witness path: ${selectedGround.path.join(" -> ")}. Domain trail: ${selectedGround.domains.map(domainLabel).join(" -> ")}. Fragility: ${selectedGround.fragile.length ? "flips if " + selectedGround.fragile.join(", ") + " is removed" : "unchanged under every single active-category removal"}.`;
+  renderGroundingTable();
+}
+
+function renderWordView(){
+  $("graphTitle").textContent = "Definition Descent";
+  $("graphNote").textContent = "arrows point from term to defining material";
+  $("ledgerTitle").textContent = "Edge Ledger";
+  const depth = Number($("depth").value);
+  const g = subgraph(selected, depth);
+  const comps = tarjan(g.nodes, g.edges);
+  const local = comps.map(nodes => ({nodes, kernel:minimumFVS(nodes, g.edges.filter(([a,b])=>nodes.includes(a)&&nodes.includes(b))).terms}));
+  const kernel = new Set(local.flatMap(c => c.kernel));
+  const cyclicEdges = cyclicEdgeSet(local, g.edges);
+  renderNodeGraph(g, local, kernel, cyclicEdges, selected);
+  renderEdgeTable(g, cyclicEdges);
+}
+
+function renderAblationView(){
+  $("graphTitle").textContent = "Ablation Lab";
+  $("graphNote").textContent = "remove one kernel term and recompute global loops";
+  $("ledgerTitle").textContent = "Ablation Ledger";
+  const drop = $("ablate").value || analysis.kernelAll[0] || "";
+  if(drop) $("ablate").value = drop;
+  const ablated = buildAnalysis(drop ? new Set([drop]) : new Set());
+  const svg = $("graph"), w = svg.clientWidth || 820, h = svg.clientHeight || 410;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const before = analysis.comps, afterIds = new Set(ablated.comps.map(c=>c.nodes.join("|")));
+  const pos = clusterPositions(before);
+  let html = markerDef();
+  before.forEach(c => {
+    const p=pos[c.id], survives = afterIds.has(c.nodes.filter(n=>n!==drop).sort().join("|"));
+    const cls = `cluster ${c.exact ? "exact" : ""} ${survives ? "" : "ablated"}`;
+    const r = 10 + Math.min(14, c.nodes.length*.8 + c.edges.length*.12);
+    html += `<g class="node ${cls}" data-word="${esc(c.nodes[0])}" tabindex="0"><circle cx="${p.x}" cy="${p.y}" r="${r}"></circle><text x="${p.x}" y="${p.y-4}">${c.id}</text><text x="${p.x}" y="${p.y+9}">${survives ? "survives" : "breaks"}</text></g>`;
+  });
+  svg.innerHTML = html;
+  svg.querySelectorAll(".node").forEach(n => n.onclick = () => { selected = n.dataset.word; $("view").value = "word"; $("query").value = selected; render(); });
+  $("caption").textContent = drop ? `Counterfactual: remove "${drop}". Cyclic clusters fall from ${analysis.comps.length} to ${ablated.comps.length}; global kernel terms fall from ${analysis.kernelAll.length} to ${ablated.kernelAll.length}.` : "No kernel term is available to ablate.";
+  const rows = before.map(c => {
+    const remaining = c.nodes.filter(n=>n!==drop);
+    const still = remaining.length ? tarjan(remaining, c.edges.filter(([a,b])=>a!==drop&&b!==drop)).length : 0;
+    return `<tr><td>${esc(c.id)}</td><td>${esc(c.kernel.join(", "))}</td><td>${c.nodes.includes(drop) ? "hit" : "miss"}</td><td>${still ? "cycle survives" : "cycle breaks"}</td></tr>`;
+  });
+  $("edgeTable").innerHTML = `<thead><tr><th>Cluster</th><th>Original kernel</th><th>Ablation</th><th>After</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+}
+
+function markerDef(){
+  return `<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8f877a"></path></marker></defs>`;
+}
+
+function renderNodeGraph(g, comps, kernel, cyclicEdges, root){
+  const svg = $("graph"), w = svg.clientWidth || 820, h = svg.clientHeight || 410;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const pos = depthPositions(g.nodes, g.edges, root, $("layout").value);
+  const compNodes = new Set(comps.flatMap(c=>c.nodes));
+  let html = markerDef();
+  for(const [a,b] of g.edges){
+    const pa=pos[a], pb=pos[b], key=a+"->"+b;
+    if(!pa || !pb) continue;
+    html += `<line class="edge ${isBridge(a,b) ? "bridge" : cyclicEdges.has(key)?"cyclic":""}" x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}"></line>`;
+  }
+  for(const n of g.nodes){
+    const p=pos[n], e=known(n);
+    const cls = n===root ? "root" : kernel.has(n) ? "kernel" : (e.anchors||[]).some(a=>bedrock.has(a)) ? "anchor" : compNodes.has(n) ? "kernel" : "";
+    const r = Math.max(17, Math.min(33, 10 + n.length*2.1));
+    html += `<g class="node ${cls}" data-word="${esc(n)}" tabindex="0"><circle cx="${p.x}" cy="${p.y}" r="${r}"></circle><text x="${p.x}" y="${p.y}">${esc(n.length>13?n.slice(0,12)+"...":n)}</text></g>`;
+  }
+  svg.innerHTML = html;
+  svg.querySelectorAll(".node").forEach(n => n.onclick = () => { selected = n.dataset.word; $("query").value = selected; render(); });
+  $("caption").textContent = `${selected}: ${known(selected).def} Red edges are cyclic inside the visible descent; red nodes are exact local feedback-kernel terms when the component is small enough.`;
+}
+
+function renderClusterTable(){
+  const rows = analysis.comps.map(c => {
+    const fd = analysis.federation.compDomains[c.id];
+    const domainText = fd.domains.map(domainLabel).join(" + ") + (fd.outgoingBridge ? " / road out" : "");
+    return `<tr><td>${esc(c.id)}</td><td>${esc(domainText)}</td><td>${c.nodes.length}</td><td>${c.edges.length}</td><td>${analysis.grounding.sealed[c.id] ? "sealed" : "escaping"}</td><td>${esc(c.kernel.join(", ") || "none")}</td><td>${c.exact ? "exact" : "approx"}</td><td>${esc(c.nodes.join(", "))}</td></tr>`;
+  });
+  $("edgeTable").innerHTML = `<thead><tr><th>Set</th><th>Domain</th><th>Nodes</th><th>Edges</th><th>Grounding</th><th>Minimum kernel</th><th>Proof</th><th>Members</th></tr></thead><tbody>${rows.join("") || "<tr><td colspan='8'>No cyclic components.</td></tr>"}</tbody>`;
+}
+
+function renderGroundingTable(){
+  const rows = analysis.global.nodes.slice().sort((a,b) => {
+    const ga = analysis.grounding.byWord[a], gb = analysis.grounding.byWord[b];
+    return ga.status.localeCompare(gb.status) || ga.anchor.localeCompare(gb.anchor) || a.localeCompare(b);
+  }).map(w => {
+    const g = analysis.grounding.byWord[w];
+    return `<tr><td>${esc(w)}</td><td>${esc(domainLabel(domainOf(w)))}</td><td>${esc(g.label)}</td><td>${esc(g.anchor)}</td><td>${g.distance ?? "none"}</td><td>${g.bridges}</td><td>${esc(g.domains.map(domainLabel).join(" -> "))}</td><td>${esc(g.path.join(" -> "))}</td><td>${g.fragile.length ? esc(g.fragile.join(", ")) : "robust"}</td></tr>`;
+  });
+  $("edgeTable").innerHTML = `<thead><tr><th>Word</th><th>Domain</th><th>Verdict</th><th>Terminal</th><th>Steps</th><th>Bridges</th><th>Domain trail</th><th>Shortest witness</th><th>Single-drop stress</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+}
+
+function renderEdgeTable(g, cyclicEdges){
+  const rows = g.edges.map(([a,b]) => `<tr><td>${esc(a)}</td><td>${esc(domainLabel(domainOf(a)))}</td><td>${esc(b)}</td><td>${esc(domainLabel(domainOf(b)))}</td><td>${isBridge(a,b) ? "bridge" : cyclicEdges.has(a+"->"+b) ? "cyclic" : "descent"}</td><td>${esc(anchorsOf(b).join(", "))}</td></tr>`);
+  $("edgeTable").innerHTML = `<thead><tr><th>Term</th><th>From</th><th>Uses</th><th>To</th><th>Status</th><th>Anchor hints</th></tr></thead><tbody>${rows.join("") || "<tr><td colspan='6'>No known outgoing definition edges.</td></tr>"}</tbody>`;
+}
+
+function renderRight(){
+  const e = known(selected), comp = selectedComp();
+  const kernel = comp?.kernel || [];
+  const ground = analysis.grounding.byWord[selected];
+  const fstats = analysis.federation.stats[e.domain];
+  const compFed = comp ? analysis.federation.compDomains[comp.id] : null;
+  const auto = analysis.autopsy.byLemma[selected] || {senses:[selected+"#1"], verdict:"acyclic", fragile:[], senseComps:[]};
+  const selectedSenseLabels = auto.senses.map(s => analysis.autopsy.senseLexicon[s]?.senseLabel || s);
+  const receipt = [
+    "GROUNDING RECEIPT / ROUND 5 SENSE AUTOPSY",
+    "term: " + selected + " (" + e.pos + ")",
+    "domain: " + domainLabel(e.domain),
+    "sense split: " + selectedSenseLabels.join(" | "),
+    "collapsed verdict: " + (comp ? `${comp.id} cyclic cell / ${comp.nodes.length} word nodes` : "acyclic in word graph"),
+    "disambiguated verdict: " + (auto.senseComps.length ? `${auto.senseComps.length} sense cycle(s): ${auto.senseComps.map(c => c.id + "/" + c.nodes.length + " senses").join(", ")}` : "no sense cycle containing this lemma"),
+    "autopsy verdict: " + auto.verdict.toUpperCase(),
+    "sense confidence: " + (auto.fragile.length ? `${auto.fragile.length} low-margin incoming edge(s)` : "stable for incoming scored edges"),
+    "definition: " + e.def,
+    "bedrock stance: " + analysis.grounding.active.join(", "),
+    "verdict: " + ground.label + " via " + ground.anchor,
+    "domain trail: " + ground.domains.map(domainLabel).join(" -> "),
+    "bridge crossings: " + ground.bridges,
+    "shortest witness: " + ground.path.join(" -> "),
+    "single-drop stress: " + (ground.fragile.length ? "fragile if " + ground.fragile.join(", ") + " is removed" : "robust under every single active-category removal"),
+    "global nodes: " + analysis.global.nodes.length + "   edges: " + analysis.global.edges.length + "   bridges: " + analysis.federation.bridges.length,
+    "home-domain insularity: " + fstats.internal + "/" + fstats.words + " stay inside " + domainLabel(e.domain) + "; " + fstats.crossed + " cross a bridge",
+    "global cycle-cells: " + analysis.comps.length + "   sealed: " + Object.values(analysis.grounding.sealed).filter(Boolean).length,
+    "sense autopsy: " + analysis.autopsy.confirmed.length + " confirmed / " + analysis.autopsy.artifact.length + " artifact / " + analysis.autopsy.emergent.length + " emergent / " + analysis.autopsy.fragile.length + " fragile edges",
+    "selected cycle-cell: " + (comp ? `${comp.id} / ${compFed.domains.map(domainLabel).join("+")} / ${comp.nodes.length} terms / ${comp.edges.length} edges / ${analysis.grounding.sealed[comp.id] ? "sealed" : "escaping"}` : "none"),
+    "minimum feedback kernel: " + (kernel.join(", ") || "none"),
+    "kernel proof: " + (comp ? (comp.exact ? "exact exhaustive search" : "degree-pruned heuristic fallback") : "none"),
+    "component members:",
+    comp ? comp.nodes.join(", ") : "none"
+  ].join("\n");
+  $("receipt").textContent = receipt;
+  $("definition").textContent = `${selected} ${e.pos} ${e.def}`;
+  const selectedChips = [
+    `<span class="chip domain ${domainClass(e.domain)}">${esc(domainLabel(e.domain))}</span>`,
+    `<span class="chip ${ground.status === "anchored" ? "grounded" : ground.status === "mixed" ? "mixed" : "looped"}">${esc(ground.label)}:${esc(ground.anchor)}</span>`,
+    `<span class="chip ${ground.bridges ? "hub" : "grounded"}">${ground.bridges} bridge${ground.bridges === 1 ? "" : "s"}</span>`,
+    `<span class="chip ${ground.fragile.length ? "mixed" : "grounded"}">${ground.fragile.length ? "fragile" : "robust"}</span>`,
+    `<span class="chip ${auto.verdict === "confirmed" ? "confirmed" : auto.verdict === "artifact" ? "artifact" : auto.verdict === "emergent" ? "emergent" : ""}">sense:${esc(auto.verdict)}</span>`,
+    ...e.anchors.map(a=>`<span class="chip anchor">${esc(a)}</span>`),
+    ...(comp ? [`<span class="chip exact">${comp.exact ? "exact kernel" : "approx kernel"}</span>`] : []),
+    ...kernel.map(k=>`<span class="chip kernel">${esc(k)}</span>`)
+  ];
+  $("chips").innerHTML = selectedChips.join("");
+  $("hubs").innerHTML = analysis.hubs.slice(0,14).map(([h,n]) => `<span class="chip hub" data-hub="${esc(h)}">${esc(h)}:${n}</span>`).join("") || `<span class="chip">no shared hubs</span>`;
+  document.querySelectorAll("[data-hub]").forEach(h => h.onclick = () => { selected = h.dataset.hub; $("query").value = selected; $("view").value = "word"; render(); });
+  $("atlasMetrics").innerHTML = [
+    ["anchored", analysis.grounding.counts.anchored],
+    ["mixed", analysis.grounding.counts.mixed],
+    ["looped-only", analysis.grounding.counts.looped],
+    ["domains", analysis.federation.domains.length],
+    ["bridges", analysis.federation.bridges.length],
+    ["home-only", Object.values(analysis.federation.stats).reduce((n,s)=>n+s.internal,0)],
+    ["fragile words", analysis.grounding.fragileWords.length],
+    ["sealed cells", Object.values(analysis.grounding.sealed).filter(Boolean).length],
+    ["confirmed cycles", analysis.autopsy.confirmed.length],
+    ["artifact cycles", analysis.autopsy.artifact.length],
+    ["sense-fragile", analysis.autopsy.fragile.length],
+    ["exact kernels", `${analysis.exactCount}/${analysis.comps.length}`]
+  ].map(([k,v]) => `<div class="metric"><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join("");
+  const risks = [];
+  if(auto.verdict === "artifact") risks.push(["polysemy artifact", "The collapsed word cycle containing this lemma dissolves when edges point to explicit senses."]);
+  if(auto.verdict === "confirmed") risks.push(["confirmed circularity", "At least one disambiguated sense cycle survives the split, so the loop is not merely a headword-collapsing artifact."]);
+  if(auto.verdict === "emergent") risks.push(["sense-only loop", "The word graph looked acyclic here, but a specific sense enters a cycle after disambiguation."]);
+  if(auto.fragile.length) risks.push(["sense-fragile", `Some incoming edge choices have thin score margins: ${auto.fragile.slice(0,3).map(d => d.from + "->" + d.toLemma).join(", ")}.`]);
+  if(ground.status === "looped") risks.push(["sealed path", "Under the current bedrock stance, no reachable definition node terminates outside the lexical network."]);
+  if(ground.status === "mixed") risks.push(["cycle-mediated", "The shortest grounding witness passes through a cyclic neighborhood before reaching bedrock."]);
+  if(ground.fragile.length) risks.push(["stance-fragile", `The verdict or terminal anchor changes if ${ground.fragile.join(", ")} is no longer counted as bedrock.`]);
+  if(ground.bridges) risks.push(["domain-borrowed", `The shortest witness leaves ${domainLabel(e.domain)} through ${ground.bridges} bridge edge${ground.bridges === 1 ? "" : "s"}: ${ground.domains.map(domainLabel).join(" -> ")}.`]);
+  else risks.push(["domain-internal", `The shortest witness never leaves ${domainLabel(e.domain)}; this term is locally grounded or locally sealed under the active stance.`]);
+  if(compFed && compFed.domains.length === 1 && analysis.grounding.sealed[comp.id] && compFed.outgoingBridge) risks.push(["available escape refused", "This cycle cell has a bridge road nearby but its shortest grounding structure still classifies as sealed."]);
+  if(comp && kernel.includes(selected)) risks.push(["load-bearing", "The selected term is inside the exact feedback set for its cyclic component; removing it breaks that loop in this lexicon."]);
+  if(comp && comp.nodes.length > 8) risks.push(["large knot", "This component is too broad for a simple local definition story; the receipt should be read as structure, not essence."]);
+  if(analysis.hubs.some(([h,n]) => h === selected && n > 1)) risks.push(["shared hub", "The term recurs across multiple kernels, so disputes about it propagate outside one definition family."]);
+  if((e.anchors||[]).includes("social")) risks.push(["use-dependence", "Meaning depends on practice or recognition, so a dictionary-only explanation is under-specified."]);
+  if((e.anchors||[]).includes("logical")) risks.push(["formal primitive", "The term behaves like a structural operator. Definitions may clarify use without reducing it."]);
+  if(!risks.length) risks.push(["peripheral", "Within the current lexicon this word is outside the minimum circular kernel, though it may still feed a cyclic descent."]);
+  $("risks").innerHTML = risks.map(r=>`<div class="risk"><b>${esc(r[0])}</b><span>${esc(r[1])}</span></div>`).join("");
+  $("kernelReading").textContent = comp
+    ? `Round 5 asks whether "${selected}" is really circular or only headword-collapsed. Word graph: ${comp.id}. Sense graph: ${auto.verdict}; ${auto.senseComps.length ? auto.senseComps.map(c => c.nodes.map(n => analysis.autopsy.senseLexicon[n]?.senseLabel || n).join(" / ")).join(" ; ") : "no matching sense cycle"}. The grounding witness remains ${ground.path.join(" -> ")}.`
+    : `No global word component contains "${selected}". Sense autopsy verdict: ${auto.verdict}. Its witness is ${ground.path.join(" -> ")} and its domain trail is ${ground.domains.map(domainLabel).join(" -> ")} under the active stance.`;
+}
+
+$("analyze").onclick = () => { const q = norm($("query").value); selected = known(q) ? q : selected; $("query").value = selected; $("view").value = "word"; render(); };
+$("atlasBtn").onclick = () => { $("view").value = "atlas"; render(); };
+$("customBtn").onclick = () => { customMode = !customMode; selected = customMode ? Object.keys(parseCustom($("customText").value))[0] || "law" : "meaning"; $("query").value = selected; render(); };
+$("query").addEventListener("keydown", e => { if(e.key === "Enter") $("analyze").click(); });
+$("depth").onchange = render; $("layout").onchange = render; $("view").onchange = render; $("ablate").onchange = () => { $("view").value = "ablate"; render(); };
+$("customText").oninput = () => { if(customMode) render(); };
+$("sample").onclick = () => { customMode = true; selected = "user-law"; $("query").value = "user-law"; $("view").value = "ablate"; render(); };
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,1560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounding Atlas</title>
+<style>
+:root{
+  --ink:#141414; --muted:#60656a; --line:#aeb6bc; --fine:#dfe4e7;
+  --paper:#fbfaf5; --panel:#fff; --wash:#eef2f3; --hot:#c9362d;
+  --path:#145d88; --edge:#6d747a; --primitive:#22764b; --core:#111; --stip:#6b2d83;
+  --mgs:#7b5a12; --soft:#f6f7f7; --shadow:0 1px 2px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:12px/1.32 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--ink);background:#fff;padding:5px 7px;cursor:pointer;border-radius:0;min-height:28px}
+button:hover{background:#edf2f4}
+button.active{background:var(--ink);color:#fff}
+.app{display:grid;grid-template-columns:268px minmax(640px,1fr) 378px;grid-template-rows:auto 1fr;min-height:100vh}
+header{grid-column:1/-1;display:grid;grid-template-columns:268px 1fr 378px;gap:10px;align-items:end;background:#fff;border-bottom:2px solid var(--ink);padding:7px 9px}
+h1{font-size:20px;line-height:1;margin:0;font-weight:800;letter-spacing:0}
+.sub{color:var(--muted);font-size:11px}
+.claim{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;border-left:3px solid var(--hot);padding-left:7px;color:#333}
+.metrics{display:grid;grid-template-columns:repeat(6,minmax(72px,1fr));gap:5px}
+.metric{border:1px solid var(--line);background:var(--wash);padding:4px 6px;min-height:39px}
+.metric b{display:block;font-size:16px;line-height:1.05}
+.metric span{display:block;color:var(--muted);font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+aside,.right{background:#fff;padding:9px;overflow:auto}
+aside{border-right:1px solid var(--line)}
+.right{border-left:1px solid var(--line)}
+main{padding:9px;overflow:auto}
+.section{border-top:2px solid var(--ink);padding-top:7px;margin-top:9px}
+.section:first-child{border-top:0;margin-top:0;padding-top:0}
+h2{font-size:11px;line-height:1.1;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
+label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+select,input,textarea{width:100%;border:1px solid var(--line);background:#fff;padding:5px;border-radius:0}
+textarea{height:74px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px}
+.probeEdit{height:88px;margin-top:6px}
+.compilerGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:5px}
+.compilerGrid div{border:1px solid var(--fine);background:#fcfcfb;padding:4px;min-height:35px}
+.compilerGrid b{display:block;font-size:14px}
+.compilerGrid span{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.evidenceList{max-height:190px;overflow:auto;border:1px solid var(--line);background:#fcfcfb}
+.evidenceRow{display:grid;grid-template-columns:88px 1fr;border-bottom:1px solid var(--fine);font-size:10.5px}
+.evidenceRow b{padding:4px 5px;border-right:1px solid var(--fine);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.evidenceRow span{padding:4px 5px}
+.tokenMark{background:#fff5b8;border:1px solid #d2b34e;padding:0 2px}
+.leakMark{background:#fff0f0;border:1px solid #d78b86;padding:0 2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px}
+.buttonrow{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px}
+.tworow{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px}
+.presetGrid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.wideBtn{width:100%;margin-top:5px}
+.termList{display:grid;grid-template-columns:1fr;gap:2px;max-height:310px;overflow:auto;border:1px solid var(--line);padding:3px;background:#fcfcfb}
+.termBtn{display:grid;grid-template-columns:1fr auto;gap:4px;border:1px solid transparent;background:transparent;text-align:left;padding:3px 5px;min-height:24px}
+.termBtn:hover,.termBtn.active{border-color:var(--ink);background:#eef3f5;color:var(--ink)}
+.badge{font-size:9.5px;border:1px solid var(--line);padding:1px 4px;color:#333;background:#fff;align-self:center}
+.def{font-size:12px;border:1px solid var(--line);background:#fff;padding:6px;margin-top:5px}
+.chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+.chip{border:1px solid var(--line);background:#f7f8f8;padding:1px 5px;font-size:10.5px}
+.chip.core{border-color:var(--core);color:#fff;background:#222}
+.chip.kernel{border-color:var(--hot);color:var(--hot);background:#fff5f3}
+.chip.primitive{border-color:var(--primitive);color:var(--primitive);background:#f3fbf5}
+.chip.mgs{border-color:var(--mgs);color:var(--mgs);background:#fff8df}
+.chip.stip{border-color:var(--stip);color:var(--stip);background:#fbf0ff}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px}
+.key{display:flex;align-items:center;gap:5px;border:1px solid var(--fine);padding:3px;background:#fff}
+.sw{width:13px;height:10px;border:1px solid #333}
+.graphWrap{height:58vh;min-height:500px;border:1px solid var(--ink);background:#fff;box-shadow:var(--shadow);position:relative;overflow:hidden;touch-action:none}
+svg{display:block;width:100%;height:100%}
+.atlasCanvas{display:none;width:100%;height:100%;background:#fff;cursor:grab}
+.atlasCanvas.dragging{cursor:grabbing}
+.miniMap{display:none;position:absolute;right:7px;bottom:7px;width:168px;height:112px;border:1px solid var(--line);background:rgba(255,255,255,.92)}
+.graphNote{position:absolute;left:7px;top:7px;background:rgba(255,255,255,.94);border:1px solid var(--line);padding:5px 7px;font-size:10.5px;color:#333;max-width:560px}
+.grid2{display:grid;grid-template-columns:minmax(340px,1fr) minmax(340px,1fr);gap:9px;margin-top:9px}
+.panel{border:1px solid var(--line);background:#fff;padding:7px;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{border-bottom:1px solid var(--fine);padding:3px 4px;text-align:left;vertical-align:top}
+th{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:#f3f5f6}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.borehole{display:grid;grid-template-columns:42px 1fr;border:1px solid var(--line);background:#fff}
+.depth{border-right:1px solid var(--line);border-bottom:1px solid var(--fine);padding:4px;text-align:right;color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.layer{border-bottom:1px solid var(--fine);padding:4px;display:flex;gap:3px;flex-wrap:wrap;min-height:27px}
+.pill{border:1px solid var(--line);padding:1px 5px;background:#fff;cursor:pointer;font-size:11px}
+.pill.core{background:#222;color:#fff;border-color:#000}
+.pill.kernel{border-color:var(--hot);color:var(--hot);box-shadow:inset 0 -2px 0 rgba(201,54,45,.16)}
+.pill.path{border-color:var(--path);color:var(--path)}
+.pill.primitive{border-color:var(--primitive);color:var(--primitive)}
+.pill.stip{border-color:var(--stip);color:var(--stip);background:#fbf0ff}
+.finding{display:grid;grid-template-columns:118px 1fr;gap:6px;border-bottom:1px solid var(--fine);padding:5px 0}
+.finding b{font-size:9.5px;text-transform:uppercase;letter-spacing:.04em}
+.warn{color:var(--hot)}
+.ok{color:var(--primitive)}
+.small{font-size:10.5px;color:var(--muted)}
+.nodeLabel{font-size:10.5px;font-weight:700;pointer-events:none}
+.nodeDef{font-size:8.5px;fill:#555;pointer-events:none}
+.atlasNode{cursor:pointer}
+.microNode{cursor:pointer}
+.labStat{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px}
+.labStat div{border:1px solid var(--fine);background:#fcfcfb;padding:4px;min-height:34px}
+.labStat b{display:block;font-size:14px}
+.labStat span{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.ledger{max-height:210px;overflow:auto;border:1px solid var(--line);background:#fcfcfb}
+.ledgerEntry{border-bottom:1px solid var(--fine);padding:5px 6px;font-size:10.5px}
+.ledgerEntry b{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.deltaPlus{color:var(--primitive)}
+.deltaMinus{color:var(--hot)}
+.deltaNeutral{color:var(--muted)}
+.sourceAuthored{color:#145d88}
+.sourceSeed{color:#22764b}
+.sourceScaffold{color:#7b5a12}
+@media (max-width:1160px){
+  .app{grid-template-columns:250px 1fr;grid-template-rows:auto auto 1fr}
+  header{grid-template-columns:1fr;gap:6px}
+  .right{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);max-height:none}
+  .grid2{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:760px){
+  .app{display:block}
+  aside,.right,main{border:0;border-bottom:1px solid var(--line)}
+  .metrics{grid-template-columns:1fr 1fr}
+  .graphWrap{height:520px;min-height:400px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>Grounding Atlas</h1>
+      <div class="sub">whole-dictionary grounding cartography / local borehole drilldown</div>
+    </div>
+    <div class="metrics" id="metrics"></div>
+    <div class="claim">Round 5 leap: provenance-aware honest atlas; whole-dictionary canvas layout exposes compiled prose, scaffolded entries, leakage, and counterfactual grounding in one instrument.</div>
+  </header>
+
+  <aside>
+    <div class="section">
+      <h2>Probe</h2>
+      <label for="termSelect">selected term</label>
+      <select id="termSelect"></select>
+      <div class="def" id="definition"></div>
+      <div class="chips" id="chips"></div>
+      <textarea id="selectedDef" class="probeEdit" aria-label="selected definition"></textarea>
+      <div class="tworow">
+        <button id="applyDef">compile edit</button>
+        <button id="revertDef">revert text</button>
+      </div>
+      <button id="toggleSelected" class="wideBtn">stipulate selected</button>
+    </div>
+
+    <div class="section">
+      <h2>Controls</h2>
+      <div class="row">
+        <div>
+          <label for="depth">drill depth</label>
+          <select id="depth"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>8</option></select>
+        </div>
+        <div>
+          <label for="layout">main view</label>
+          <select id="layout"><option value="atlas" selected>atlas</option><option value="radial">drill radial</option><option value="bore">drill bore</option></select>
+        </div>
+      </div>
+      <div class="buttonrow">
+        <button id="showAll">all</button>
+        <button id="showPath" class="active">path</button>
+        <button id="showKernel">kernel</button>
+        <button id="showMgs">mgs</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Stipulation Lab</h2>
+      <div class="presetGrid">
+        <button data-preset="empiricist">empiricist</button>
+        <button data-preset="practice">practice</button>
+        <button data-preset="atomism">atomism</button>
+        <button data-preset="social">social</button>
+      </div>
+      <div class="tworow">
+        <button id="greedyBreak">greedy break</button>
+        <button id="clearStip">clear</button>
+      </div>
+      <div class="labStat" id="labStats"></div>
+      <div class="small">Stipulated terms keep their node but expose no outgoing definition edges. All Kernel/Core/MGS facts below are recomputed under that mask.</div>
+    </div>
+
+    <div class="section">
+      <h2>Lexicon</h2>
+      <input id="filter" placeholder="filter terms, roles, classes">
+      <div class="termList" id="termList"></div>
+    </div>
+
+    <div class="section">
+      <h2>Legend</h2>
+      <div class="legend">
+        <div class="key"><span class="sw" style="background:#222"></span>core</div>
+        <div class="key"><span class="sw" style="background:#fff5f3;border-color:var(--hot)"></span>kernel</div>
+        <div class="key"><span class="sw" style="background:#fff8df;border-color:var(--mgs)"></span>MGS ground</div>
+        <div class="key"><span class="sw" style="background:#f3fbf5;border-color:var(--primitive)"></span>labeled primitive</div>
+        <div class="key"><span class="sw" style="background:#fbf0ff;border-color:var(--stip)"></span>stipulated</div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="graphWrap">
+      <div class="graphNote" id="graphNote"></div>
+      <canvas id="atlasCanvas" class="atlasCanvas" aria-label="force-directed whole dictionary atlas"></canvas>
+      <canvas id="miniMap" class="miniMap" aria-label="atlas minimap"></canvas>
+      <svg id="graph" role="img" aria-label="dictionary grounding atlas"></svg>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h2>Definition Borehole</h2>
+        <div id="borehole" class="borehole"></div>
+      </div>
+      <div class="panel">
+        <h2>Mechanical Findings</h2>
+        <div id="findings"></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="right">
+    <div class="section">
+      <h2>Counterfactual Delta</h2>
+      <table>
+        <thead><tr><th>measure</th><th>baseline</th><th>current</th><th>delta</th></tr></thead>
+        <tbody id="deltaTable"></tbody>
+      </table>
+    </div>
+    <div class="section">
+      <h2>Definition Compiler</h2>
+      <div class="compilerGrid" id="compilerStats"></div>
+      <div id="compiledDefinition" class="def"></div>
+      <div class="evidenceList" id="compilerEvidence"></div>
+    </div>
+    <div class="section">
+      <h2>Stipulation Ledger</h2>
+      <div id="ledger" class="ledger"></div>
+    </div>
+    <div class="section">
+      <h2>Cycle-Break Certificate</h2>
+      <table>
+        <thead><tr><th>mode</th><th>terms</th><th>reading</th></tr></thead>
+        <tbody id="breakerTable"></tbody>
+      </table>
+    </div>
+    <div class="section">
+      <h2>Dictionary Kernel Ledger</h2>
+      <table>
+        <thead><tr><th>class</th><th>members / representatives</th><th>reading</th></tr></thead>
+        <tbody id="kernelTable"></tbody>
+      </table>
+    </div>
+    <div class="section">
+      <h2>Dependency Trace</h2>
+      <table>
+        <thead><tr><th>from</th><th>depends on</th><th>status</th></tr></thead>
+        <tbody id="traceTable"></tbody>
+      </table>
+    </div>
+    <div class="section">
+      <h2>Editable Probe</h2>
+      <label for="customTerm">temporary term</label>
+      <input id="customTerm" value="justice">
+      <label for="customDef">definition text; atlas terms are detected literally</label>
+      <textarea id="customDef">a social virtue concerned with fairness, rule, right, and duty</textarea>
+      <button id="addProbe">insert / recompute</button>
+      <div class="small">The temporary term joins the same whole-dictionary computation. No model invents edges; absent dependency words become missing primitive candidates.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const seedTerms = {
+  meaning:{def:"the use or interpretation that lets a sign count as about something in a language game", role:"metalanguage", deps:["use","interpretation","sign","aboutness","language-game"]},
+  sign:{def:"a perceivable form taken as standing for an object, action, idea, or rule", role:"semiotic", deps:["form","object","idea","rule"]},
+  symbol:{def:"a sign whose force depends on convention and shared interpretation", role:"semiotic", deps:["sign","convention","interpretation"]},
+  word:{def:"a linguistic sign with repeatable form and conventional use", role:"linguistic", deps:["sign","form","convention","use"]},
+  definition:{def:"a linguistic rule that explains a word by using other words", role:"metalanguage", deps:["rule","word","explanation"]},
+  explanation:{def:"an interpretation that reduces uncertainty by relating a sign to known rules or causes", role:"metalanguage", deps:["interpretation","uncertainty","sign","rule","cause"]},
+  interpretation:{def:"the act of assigning meaning to a sign in a context", role:"process", deps:["meaning","sign","context"]},
+  use:{def:"the patterned employment of a sign within action and practice", role:"practice", deps:["sign","action","practice"]},
+  "language-game":{def:"a practice in which words, actions, rules, and purposes make each other intelligible", role:"practice", deps:["practice","word","action","rule","purpose"]},
+  practice:{def:"a repeated social use of actions governed by norms", role:"social", deps:["use","action","norm"]},
+  rule:{def:"a norm that guides action by licensing or forbidding moves", role:"normative", deps:["norm","action","permission"]},
+  norm:{def:"a shared rule for evaluating action within a practice", role:"normative", deps:["rule","action","practice"]},
+  convention:{def:"a shared practice that stabilizes a sign without requiring natural resemblance", role:"social", deps:["practice","sign","resemblance"]},
+  context:{def:"the surrounding situation that changes which interpretation is available", role:"situational", deps:["situation","interpretation"]},
+  aboutness:{def:"the relation by which a sign is taken as directed toward an object or state", role:"semantic", deps:["relation","sign","object","state"]},
+  relation:{def:"a structured connection between objects, signs, or states", role:"abstract", deps:["structure","object","sign","state"]},
+  object:{def:"something treated as a stable target of reference or action", role:"ontic", deps:["reference","action","stability"]},
+  reference:{def:"the directed use of a sign toward an object", role:"semantic", deps:["use","sign","object"]},
+  idea:{def:"a mental or public content that can be expressed by a sign", role:"abstract", deps:["content","expression","sign"]},
+  content:{def:"what an expression is taken to carry across contexts", role:"semantic", deps:["expression","context"]},
+  expression:{def:"a form used to make content available to interpretation", role:"linguistic", deps:["form","content","interpretation"]},
+  form:{def:"a perceivable pattern such as sound, mark, gesture, or shape", role:"perceptual primitive", deps:["pattern","sound","mark","gesture","shape"], primitive:true},
+  action:{def:"a change or move attributable to an agent within a situation", role:"event primitive", deps:["change","agent","situation"], primitive:true},
+  situation:{def:"a bounded arrangement of objects, agents, actions, and constraints", role:"situational primitive", deps:["object","agent","action","constraint"], primitive:true},
+  agent:{def:"a participant treated as capable of action", role:"social primitive", deps:["action"], primitive:true},
+  state:{def:"a condition of an object or situation at a time", role:"ontic primitive", deps:["object","situation","time"], primitive:true},
+  purpose:{def:"an end that organizes action and interpretation", role:"teleological", deps:["action","interpretation"]},
+  cause:{def:"a relation in which one state or action helps produce another", role:"causal", deps:["relation","state","action"]},
+  uncertainty:{def:"a condition in which multiple interpretations remain live", role:"epistemic", deps:["interpretation","state"]},
+  permission:{def:"a rule-status by which an action is allowed", role:"normative", deps:["rule","action"]},
+  resemblance:{def:"a perceived similarity of form, action, or structure", role:"perceptual", deps:["form","action","structure"]},
+  structure:{def:"an arrangement of relations among parts", role:"abstract", deps:["relation","part"]},
+  stability:{def:"persistence of form or state across time", role:"temporal", deps:["form","state","time"]},
+  pattern:{def:"repeatable form or arrangement", role:"perceptual primitive", deps:["form"], primitive:true},
+  sound:{def:"auditory form", role:"perceptual primitive", deps:[], primitive:true},
+  mark:{def:"visible form", role:"perceptual primitive", deps:[], primitive:true},
+  gesture:{def:"bodily form used in action", role:"perceptual primitive", deps:["form","action"], primitive:true},
+  shape:{def:"spatial form", role:"perceptual primitive", deps:["form"], primitive:true},
+  change:{def:"difference of state across time", role:"event primitive", deps:["state","time"], primitive:true},
+  constraint:{def:"a limit on available action", role:"modal", deps:["action"], primitive:true},
+  time:{def:"ordering of change", role:"temporal primitive", deps:["change"], primitive:true},
+  part:{def:"a component treated as belonging to a structure", role:"mereology", deps:["structure"], primitive:true},
+  quality:{def:"a stable way an object, action, or situation can be compared", role:"abstract", deps:["object","action","situation","comparison"]},
+  comparison:{def:"a relation that makes likeness, difference, order, or degree available", role:"abstract", deps:["relation","resemblance","difference","order","degree"]},
+  difference:{def:"a comparison in which two forms, states, or actions fail to match", role:"abstract", deps:["comparison","form","state","action"]},
+  order:{def:"a structured relation of before, after, rank, or arrangement", role:"abstract", deps:["structure","relation","time"]},
+  degree:{def:"a position on a scale of comparison", role:"abstract", deps:["comparison","scale"]},
+  scale:{def:"an ordered structure for comparing degree", role:"abstract", deps:["order","structure","comparison"]},
+  value:{def:"a status by which actions, objects, or states matter to agents", role:"normative", deps:["status","action","object","state","agent"]},
+  status:{def:"a rule-governed standing assigned within a practice", role:"social", deps:["rule","practice","assignment"]},
+  assignment:{def:"an action that links a sign, role, or status to an object", role:"process", deps:["action","sign","relation","object"]},
+  fairness:{def:"a norm of comparison in which like cases receive like treatment", role:"normative", deps:["norm","comparison","treatment"]},
+  treatment:{def:"an action pattern directed toward an agent or object", role:"social", deps:["action","pattern","agent","object"]},
+  duty:{def:"a rule-bound requirement for action within a role", role:"normative", deps:["rule","action","role"]},
+  right:{def:"a status that licenses action or claim within a practice", role:"normative", deps:["status","permission","action","practice"]},
+  role:{def:"a position in a practice with expected actions and permissions", role:"social", deps:["practice","action","permission","status"]}
+};
+
+const families = [
+  ["perception","perceptual field",["form","situation","agent"],"perceptual",["color","brightness","darkness","edge","surface","texture","tone","pitch","loudness","silence","smell","taste","warmth","coldness","pressure","pain","pleasure","distance","nearness","roughness","smoothness","gloss","shadow","flicker","motion-sense","touch","visibility","clarity","blur","contrast"]],
+  ["space","spatial field",["shape","object","relation"],"spatial",["place","area","region","boundary","inside","outside","front","back","left","right-side","above","below","between","near","far","path","route","crossing","center","edge-place","corner","line","plane","volume","height","width","depth","orientation","direction","position","gap"]],
+  ["timefield","temporal field",["time","change","state"],"temporal",["moment","duration","interval","before","after","during","sequence","cycle","rhythm","frequency","speed","delay","deadline","origin","ending","continuity","pause","return","memory-time","expectation-time","age","period","phase","schedule","history","future","present","past","simultaneity","succession"]],
+  ["causation","causal field",["cause","state","action"],"causal",["force","pressure-cause","trigger","condition","effect","result","process","mechanism","feedback","inhibition","enablement","prevention","production","transformation","growth","decay","repair","damage","risk","chance","necessity","possibility","tendency","capacity","failure","success","interruption","resistance","release","accident"]],
+  ["mind","cognitive field",["idea","interpretation","agent"],"cognitive",["belief","doubt","attention","memory","imagination","desire","intention","choice","judgment","inference","question","answer","problem","solution","knowledge","ignorance","recognition","confusion","surprise","expectation","plan","skill","habit","learning","forgetting","reason","evidence","assumption","model","attention-shift"]],
+  ["society","social field",["practice","agent","rule"],"social",["group","person","family","friend","stranger","teacher","student","worker","leader","member","meeting","promise","contract","gift","debt","trade","price","money","property","law","court","office","institution","custom","ceremony","conflict","cooperation","trust","reputation","authority"]],
+  ["valuefield","value field",["value","norm","comparison"],"normative",["good","bad","better","worse","harm","benefit","care","respect","blame","praise","honor","shame","virtue","vice","justice","mercy","loyalty","freedom","equality","responsibility","need","want","interest","preference","beauty","ugliness","importance","priority","cost","worth"]],
+  ["language","linguistic field",["word","sign","meaning"],"linguistic",["sentence","phrase","name","pronoun","verb","noun","adjective","grammar","syntax","voice","speaker","listener","utterance","text","story","argument","description","translation","metaphor","example","quote","question-mark","answer-word","topic","comment","reference-chain","ambiguity","precision","vagueness","paraphrase"]],
+  ["number","quantitative field",["comparison","scale","order"],"quantitative",["one","two","many","few","more","less","amount","count","measure","unit","ratio","fraction","whole","zero","increase","decrease","average","limit","maximum","minimum","range","sample","probability","distribution","rank","score","size","weight","density","rate"]],
+  ["artifact","artifact field",["object","purpose","action"],"artifact",["tool","handle","blade","container","door","key","lock","wheel","engine","screen","button","switch","signal","map","book","table-object","chair","house","road","bridge","machine","instrument","device","clothing","bag","box","wire","pipe","lamp","clock"]],
+  ["body","embodied field",["agent","action","state"],"embodied",["body","hand","eye","ear","mouth","skin","heart","breath","step","grip","reach","look","listen","speak","eat","drink","sleep","wake","walk","run","sit","stand","carry","push","pull","throw","catch","bend","turn","rest"]],
+  ["life","living field",["state","change","agent"],"biological",["organism","plant","animal","birth","death","health","illness","hunger","thirst","fear","anger","joy","sadness","growth-life","reproduction","adaptation","environment","habitat","food","water","blood","bone","seed","leaf","root","movement-life","shelter","danger","survival","care-life"]],
+  ["material","material field",["object","form","state"],"material",["matter","solid","liquid","gas","metal","stone","wood","glass","cloth","paper","plastic","earth","air","fire","water-material","dust","grain","fiber","surface-material","mass","temperature","hardness","softness","wetness","dryness","elasticity","fracture","mixture","layer-material","piece"]],
+  ["governance","institutional field",["rule","status","practice"],"institutional",["citizen","state-power","office-holder","vote","policy","tax","public","private","record","license","border","crime","punishment","hearing","appeal","procedure","committee","agency","standard","inspection","permit","charter","registry","rank-office","order-command","service","beneficiary","case-file","mandate","jurisdiction"]]
+];
+
+const authoredProse = `
+perception|perceptual hub|perceptual|the field of sensory access in which form, contrast, attention, and recognition become available
+space|spatial hub|spatial|the field of place, boundary, distance, direction, and relation among bodies or regions
+timefield|temporal hub|temporal|the field of duration, sequence, change, memory, expectation, and historical order
+causation|causal hub|causal|the field of conditions, forces, processes, and results by which change is explained
+mind|cognitive hub|cognitive|the field of belief, attention, memory, inference, desire, and interpretation in an agent
+society|social hub|social|the field of persons, groups, roles, exchange, authority, trust, and shared practice
+valuefield|normative hub|normative|the field of value, harm, benefit, responsibility, freedom, respect, and judgment
+language|linguistic hub|linguistic|the field of words, grammar, utterance, text, reference, ambiguity, and paraphrase
+number|quantitative hub|quantitative|the field of counting, measure, ratio, probability, rank, scale, and amount
+artifact|artifact hub|artifact|the field of tools, containers, machines, signs, roads, and made objects organized by purpose
+body|embodied hub|embodied|the field of bodily action, perception, posture, movement, health, and practical capacity
+life|biological hub|biological|the field of organisms, growth, reproduction, adaptation, danger, care, and survival
+material|material hub|material|the field of matter, surface, mass, temperature, mixture, hardness, and physical state
+governance|institutional hub|institutional|the field of public rule, office, law, procedure, mandate, record, and jurisdiction
+color|perceptual|perception|a visible quality by which surfaces differ under light for an observer
+brightness|perceptual|perception|the apparent intensity of light carried by a visible form
+darkness|perceptual|perception|a condition of low visibility in which form and boundary become harder to distinguish
+edge|perceptual|perception|a perceived boundary where one surface, color, or region gives way to another
+surface|perceptual|perception|the exposed outer part of an object available to touch or sight
+texture|perceptual|perception|a surface quality felt or seen as roughness, smoothness, grain, or pattern
+tone|perceptual|perception|a sound quality distinguished by pitch, color, or expressive force
+pitch|perceptual|perception|the heard highness or lowness of a sound in relation to frequency
+loudness|perceptual|perception|the perceived strength of a sound for a listener
+silence|perceptual|perception|an absence or suppression of audible sound in a situation
+touch|perceptual|perception|bodily contact through which pressure, texture, warmth, or pain is sensed
+visibility|perceptual|perception|the condition under which an object or mark can be seen
+clarity|perceptual|perception|the perceptual state in which form, difference, or meaning is easy to distinguish
+blur|perceptual|perception|loss of sharp visible boundary or conceptual precision
+contrast|perceptual|perception|a perceptible difference that makes one form stand out against another
+place|spatial|space|a located region treated as where an object, event, or action occurs
+area|spatial|space|a bounded extent of space measured or treated as a region
+region|spatial|space|a part of space distinguished by boundary, relation, use, or quality
+boundary|spatial|space|a limit that separates inside from outside or one region from another
+inside|spatial|space|the spatial relation of being within a boundary or container
+outside|spatial|space|the spatial relation of being beyond a boundary or excluded region
+between|spatial|space|the relation of lying in the interval separating two or more things
+near|spatial|space|close in distance or relation to a place, object, or event
+far|spatial|space|distant in space, relation, or practical access
+path|spatial|space|a route through places by which movement or dependency can proceed
+center|spatial|space|a position treated as middle, focus, or organizing point of a region
+line|spatial|space|an extended narrow mark, path, or abstract one-dimensional form
+direction|spatial|space|an orientation toward which movement, attention, or relation points
+position|spatial|space|the place or status occupied by something in an arrangement
+moment|temporal|timefield|a short treated point or interval in the order of time
+duration|temporal|timefield|the amount of time through which a state, action, or process continues
+interval|temporal|timefield|the stretch of time between two moments, events, or limits
+before|temporal|timefield|earlier than another event or position in an ordered sequence
+after|temporal|timefield|later than another event or position in an ordered sequence
+sequence|temporal|timefield|an order in which events, signs, or states follow one another
+cycle|temporal|timefield|a sequence that returns to an earlier state or position
+rhythm|temporal|timefield|a patterned recurrence of timing, stress, movement, or sound
+speed|temporal|timefield|the rate at which motion, change, or action occurs
+delay|temporal|timefield|a postponement or slowing of an expected action or event
+history|temporal|timefield|an ordered account of past events and their interpreted relations
+future|temporal|timefield|the time or possible states treated as not yet actual
+present|temporal|timefield|the time or situation treated as currently actual
+past|temporal|timefield|the time or states treated as already having occurred
+force|causal|causation|a capacity or pressure that can alter motion, state, or action
+trigger|causal|causation|an event or condition that initiates a process or response
+condition|causal|causation|a state of affairs on which a process, judgment, or permission depends
+effect|causal|causation|a change or state produced by a cause, action, or process
+result|causal|causation|the outcome reached after an action, process, or calculation
+process|causal|causation|an ordered course of changes through which something happens or is made
+mechanism|causal|causation|an arrangement of parts and relations that produces a regular effect
+feedback|causal|causation|a return of output or result that alters the ongoing process
+prevention|causal|causation|an action or condition that stops a possible harm or event
+transformation|causal|causation|a change by which form, state, role, or meaning becomes different
+risk|causal|causation|a possibility of harm evaluated under uncertainty
+chance|causal|causation|an uncertain possibility not fully controlled by intention or rule
+necessity|causal|causation|a condition in which an outcome cannot be otherwise under given rules
+possibility|causal|causation|a state or event that can occur under some condition
+belief|cognitive|mind|a mental commitment that treats a proposition or interpretation as true
+doubt|cognitive|mind|a state in which belief, interpretation, or evidence remains unsettled
+attention|cognitive|mind|selective orientation of mind or perception toward an object, sign, or task
+memory|cognitive|mind|retained access to a past experience, fact, skill, or sign
+imagination|cognitive|mind|the capacity to form images, situations, or possibilities not presently perceived
+desire|cognitive|mind|a directed want that can organize attention, choice, or action
+intention|cognitive|mind|a purpose held by an agent as guiding present or future action
+choice|cognitive|mind|selection among possible actions, interpretations, or goods
+judgment|cognitive|mind|an act of taking something to be the case under reasons or standards
+inference|cognitive|mind|movement from premises, evidence, or signs to a further claim
+question|cognitive|mind|a linguistic or practical demand for information, choice, or explanation
+answer|cognitive|mind|a response that resolves or addresses a question under a context
+knowledge|cognitive|mind|a warranted grasp of fact, skill, relation, or interpretation
+evidence|cognitive|mind|a sign, fact, or observation that supports or challenges a judgment
+model|cognitive|mind|a simplified structure used to represent, explain, or predict something
+group|social|society|a plurality of agents treated as connected by relation, purpose, or practice
+person|social|society|an agent recognized as a bearer of action, status, responsibility, and perspective
+family|social|society|a social group organized by kinship, care, household, or descent
+friend|social|society|a person related by mutual affection, trust, or chosen association
+stranger|social|society|a person not yet integrated into a relevant relation or practice
+teacher|social|society|a person whose role is to guide learning, skill, or interpretation
+student|social|society|a person whose role is to learn from teaching, practice, or study
+worker|social|society|a person acting within labor, service, production, or employment
+leader|social|society|an agent or role that directs action, attention, or decision for a group
+member|social|society|a person or part counted as belonging to a group or institution
+promise|social|society|a speech act that creates an expectation or duty for future action
+contract|social|society|an agreement that assigns rights, duties, and remedies among parties
+property|social|society|an object or right governed by ownership, use, exclusion, and transfer
+law|social|society|an institutional rule backed by public authority and procedure
+court|social|society|an institution that hears claims and applies law through procedure
+institution|social|society|a stable social practice with roles, rules, records, and authority
+trust|social|society|a reliance on another agent, practice, or sign under risk
+authority|social|society|recognized power to decide, command, interpret, or license action
+good|normative|valuefield|a value by which something is approved, desired, or treated as beneficial
+bad|normative|valuefield|a value by which something is rejected, harmful, or defective
+harm|normative|valuefield|damage or setback to an agent, body, interest, or valued state
+benefit|normative|valuefield|a gain or help to an agent, interest, or valued state
+care|normative|valuefield|attentive action directed toward need, vulnerability, or maintenance
+respect|normative|valuefield|recognition of status, limit, dignity, role, or claim in another
+blame|normative|valuefield|negative judgment assigning responsibility for fault or harm
+praise|normative|valuefield|positive judgment assigning credit for action, quality, or achievement
+virtue|normative|valuefield|a stable quality of character valued within a practice
+vice|normative|valuefield|a stable disposition judged harmful or defective within a practice
+justice|normative|valuefield|a norm of right order in claims, duties, treatment, and institutions
+freedom|normative|valuefield|the status or capacity of acting without certain constraints or domination
+equality|normative|valuefield|a norm that compares persons or cases under the same relevant measure
+responsibility|normative|valuefield|answerability for action, role, outcome, or entrusted duty
+sentence|linguistic|language|a grammatical unit that can express a claim, question, command, or thought
+phrase|linguistic|language|a group of words functioning as a unit within a sentence
+name|linguistic|language|a word or phrase used to identify a person, object, place, or kind
+pronoun|linguistic|language|a word that stands in for a noun phrase by context or grammar
+verb|linguistic|language|a word class typically marking action, state, occurrence, or relation
+noun|linguistic|language|a word class typically naming a person, thing, place, quality, or kind
+grammar|linguistic|language|the rule system governing how words combine and vary in a language
+syntax|linguistic|language|the arrangement of words and phrases into grammatical structure
+speaker|linguistic|language|an agent who produces an utterance in a context
+listener|linguistic|language|an agent who receives and interprets an utterance
+utterance|linguistic|language|a situated act of producing words, signs, or speech
+text|linguistic|language|a structured sequence of signs treated as readable or interpretable
+story|linguistic|language|an ordered account of events involving agents, actions, and change
+argument|linguistic|language|a structured attempt to support a claim by reasons or evidence
+metaphor|linguistic|language|a figure in which one domain is interpreted through another
+ambiguity|linguistic|language|a condition in which a sign or sentence allows more than one interpretation
+precision|linguistic|language|control of language that reduces unwanted ambiguity or vagueness
+vagueness|linguistic|language|indeterminacy in boundary, degree, or application of a term
+one|quantitative|number|the count of a single unit or individual
+two|quantitative|number|the count formed by one and another one
+many|quantitative|number|a quantity greater than few and not fixed by exact count
+amount|quantitative|number|how much of a substance, quality, or quantity is present
+count|quantitative|number|an act or result of assigning number to discrete units
+measure|quantitative|number|comparison of quantity with a unit or scale
+unit|quantitative|number|a standard quantity by which counting or measuring proceeds
+ratio|quantitative|number|a relation comparing one quantity to another by division or proportion
+zero|quantitative|number|the number marking absence of counted units in a place or measure
+probability|quantitative|number|a measure of how likely an event is under a model or evidence
+distribution|quantitative|number|an arrangement of values, cases, or probabilities across a range
+rank|quantitative|number|a position in an ordered comparison of status, value, or measure
+tool|artifact|artifact|an object made or used to perform a task or extend action
+container|artifact|artifact|an object whose form holds, carries, or encloses other things
+door|artifact|artifact|a movable barrier controlling passage through an opening
+key|artifact|artifact|an object, code, or sign that opens access under a lock or rule
+lock|artifact|artifact|a device or rule that restricts access until a key or permission is supplied
+screen|artifact|artifact|a surface or device that displays images, text, or signals
+button|artifact|artifact|a small control that initiates an action when pressed or selected
+signal|artifact|artifact|a sign or transmitted form used to prompt interpretation or action
+map|artifact|artifact|a representation of spatial, conceptual, or relational structure
+book|artifact|artifact|a durable text object organized for reading, record, or study
+machine|artifact|artifact|an arranged artifact whose parts transform force, signal, or material
+device|artifact|artifact|a made object designed for a specific practical function
+body|embodied|body|the living material form through which an agent perceives and acts
+hand|embodied|body|a bodily part used for grasping, touching, making, and gesture
+eye|embodied|body|an organ of sight and a metonym for attention or perspective
+ear|embodied|body|an organ of hearing and a metonym for listening or reception
+mouth|embodied|body|a bodily opening used for eating, breathing, and speech
+breath|embodied|body|the movement of air by which a living body sustains itself
+step|embodied|body|a single movement of the foot or a stage in a process
+look|embodied|body|an act of directing sight or attention toward something
+listen|embodied|body|an act of attending to sound or speech
+speak|embodied|body|to produce words or signs by voice or communicative action
+walk|embodied|body|to move by repeated bodily steps
+organism|biological|life|a living body whose parts maintain growth, response, and reproduction
+plant|biological|life|a living organism that typically grows by photosynthesis and rooted form
+animal|biological|life|a living organism capable of sensation, movement, and metabolism
+birth|biological|life|the event by which a living organism begins independent life
+death|biological|life|the end of the life processes of an organism
+health|biological|life|a condition of bodily or systemic functioning judged adequate or flourishing
+illness|biological|life|a condition in which bodily function is impaired or disordered
+growth-life|biological|life|increase or development in a living organism over time
+reproduction|biological|life|the process by which organisms generate new living organisms
+adaptation|biological|life|a trait or process fitting an organism to an environment
+environment|biological|life|the surrounding conditions in which an organism, action, or practice exists
+matter|material|material|physical substance treated as occupying space and bearing properties
+solid|material|material|a material state with stable shape and resistance to flow
+liquid|material|material|a material state that flows while keeping volume under ordinary conditions
+gas|material|material|a material state that expands to fill available space
+metal|material|material|a material commonly hard, conductive, and workable by heat or force
+stone|material|material|hard mineral matter shaped by earth, fracture, or human use
+wood|material|material|fibrous material from trees used as structure, fuel, or artifact
+glass|material|material|hard often transparent material made by cooling fused substance
+paper|material|material|thin material used for writing, wrapping, record, or surface
+temperature|material|material|a measure of heat state affecting warmth, coldness, and change
+mass|material|material|the quantity of matter in a body under physical description
+mixture|material|material|a material combination whose parts remain distinguishable in some respect
+citizen|institutional|governance|a person recognized as a member of a political community with status and duties
+vote|institutional|governance|a formal choice counted within a collective decision procedure
+policy|institutional|governance|a rule or plan guiding institutional action over cases
+tax|institutional|governance|a required payment imposed by public authority for collective purposes
+public|institutional|governance|open to, concerning, or authorized by a political community
+private|institutional|governance|belonging to persons or groups outside public office or common access
+record|institutional|governance|a durable inscription used as evidence, memory, or administrative fact
+license|institutional|governance|an official permission to perform an action otherwise restricted
+crime|institutional|governance|an action defined by law as punishable through public procedure
+punishment|institutional|governance|an imposed deprivation or burden in response to wrongdoing
+procedure|institutional|governance|an ordered rule-governed way of carrying out institutional action
+agency|institutional|governance|an organization authorized to perform public or delegated functions
+standard|institutional|governance|a rule or measure used to judge quality, compliance, or comparison
+mandate|institutional|governance|an authorization or command assigning duty to an office or agent
+jurisdiction|institutional|governance|the authorized scope within which a court or office may decide
+set|formal|number|a collection treated as a single object for membership and comparison
+function|formal|number|a rule assigning each input in a domain to an output
+proof|formal|language|a structured demonstration that a claim follows from accepted premises or rules
+theorem|formal|language|a claim established by proof within a formal system
+variable|formal|language|a symbol whose value can vary within a rule or expression
+equation|formal|number|a statement that two expressions have the same value
+algorithm|computing|language|a finite rule-governed procedure for transforming input into output
+protocol|computing|governance|a rule system for ordered exchange between agents or machines
+interface|computing|artifact|a boundary where systems, users, or components exchange action and signal
+database|computing|record|an organized collection of records structured for storage and query
+encryption|computing|rule|a method of transforming information so access depends on a key
+network|computing|relation|a structure of connected nodes through which signals, resources, or influence move
+statute|legal|law|a law formally enacted by a legislative authority
+precedent|legal|court|a prior decision used as authority for later judgment
+liability|legal|responsibility|legal responsibility for harm, debt, duty, or remedy
+testimony|legal|language|evidence given by a person in speech or writing under procedure
+species|scientific|life|a biological kind whose members are grouped by descent, reproduction, or classification
+element|scientific|material|a substance defined by atoms with the same number of protons
+gene|scientific|life|a heritable sequence affecting biological form, function, or development
+wave|scientific|process|a patterned disturbance that transfers energy through a medium or field
+reaction|scientific|causation|a process in which substances, organisms, or agents respond to conditions
+ecosystem|scientific|environment|a system of organisms and material conditions interacting in a region
+premise|rhetorical|argument|a claim offered as support for another claim in an argument
+fallacy|rhetorical|argument|a pattern of reasoning judged defective under standards of inference
+irony|rhetorical|language|a contrast between said meaning, intended meaning, and situation
+connotation|rhetorical|meaning|an associated meaning or value carried by a word beyond direct reference
+genre|rhetorical|text|a recognizable kind of text or practice with expected form and purpose
+`;
+
+let terms = buildLexicon();
+let selected = "meaning";
+let view = "path";
+let globalFacts = null;
+let baselineFacts = null;
+let stipulated = new Set();
+let ledger = [];
+let lastFacts = null;
+let lastAction = "baseline";
+let prevAtlasPositions = new Map();
+let compiler = null;
+let atlasState = {nodes:new Map(), edges:[], focusSet:new Set(), running:false, zoom:1, panX:0, panY:0, hover:null, drag:null, signature:""};
+
+const $ = id => document.getElementById(id);
+const allTerms = () => Object.keys(terms).sort((a,b)=>a.localeCompare(b));
+const knownDeps = t => (compiler?.entries.get(t)?.deps || []).filter(d => terms[d]);
+const activeDeps = t => stipulated.has(t) ? [] : knownDeps(t);
+
+function buildLexicon(){
+  const out = JSON.parse(JSON.stringify(seedTerms));
+  Object.values(out).forEach(entry => { delete entry.deps; entry.source = "seed"; });
+  families.forEach(([root,label,anchors,role,words], familyIndex) => {
+    out[root] = {def:`a ${label} vocabulary scaffold awaiting authored definition evidence`, role:`${role} hub`, source:"scaffold"};
+    words.forEach((word,i) => {
+      const prev = words[(i + words.length - 1) % words.length];
+      const next = words[(i + 1) % words.length];
+      const anchor = anchors[i % anchors.length];
+      const bridge = families[(familyIndex + i + 3) % families.length][0];
+      const nearby = [root, anchor, prev, next, bridge].filter(Boolean).slice(0,3);
+      out[word] = {def:`a provisional ${role} scaffold entry; inspect or replace it before treating ${nearby.join(", ")} as evidence`, role, source:"scaffold"};
+    });
+  });
+  parseAuthoredProse().forEach(entry => {
+    out[entry.term] = {def:entry.def, role:entry.role, source:"authored", family:entry.family};
+  });
+  return out;
+}
+
+function parseAuthoredProse(){
+  return authoredProse.trim().split(/\n+/).map(line=>{
+    const [term,role,family,...rest] = line.split("|");
+    return {term:term.trim(), role:role.trim(), family:family.trim(), def:rest.join("|").trim()};
+  }).filter(x=>x.term && x.def);
+}
+
+const stopWords = new Set(("a an the and or but if then else as at by for from in into of on onto over under with without within through to toward towards " +
+  "is are was were be being been this that these those whose which who whom what when where why how it its itself their them they he she his her " +
+  "case term vocabulary local shared dictionary neighboring treated taken such other another multiple can may might make makes made lets whose across").split(/\s+/));
+rebuildCompiler();
+
+function rebuildCompiler(){
+  const names = allTerms();
+  const phraseIndex = names.map(name => ({
+    name,
+    raw: name.replace(/-/g," "),
+    stems: tokenize(name.replace(/-/g," ")).map(t=>t.stem).filter(Boolean)
+  })).filter(p=>p.stems.length).sort((a,b)=>b.stems.length-a.stems.length || a.name.localeCompare(b.name));
+  const maxPhrase = phraseIndex.reduce((m,p)=>Math.max(m,p.stems.length),1);
+  const entries = new Map();
+  names.forEach(name => entries.set(name, compileDefinition(name, phraseIndex, maxPhrase)));
+  const leaks = new Map();
+  const selfRefs = [];
+  entries.forEach((entry,name)=>{
+    if(entry.selfRef) selfRefs.push(name);
+    entry.leaks.forEach(w=>leaks.set(w,(leaks.get(w)||0)+1));
+  });
+  compiler = {phraseIndex,maxPhrase,entries,leaks,selfRefs:selfRefs.sort((a,b)=>a.localeCompare(b))};
+}
+
+function tokenize(text){
+  return String(text).toLowerCase()
+    .replace(/['’]s\b/g,"")
+    .replace(/[^a-z0-9-]+/g," ")
+    .replace(/-/g," ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(raw => ({raw, stem: stem(raw), stop: stopWords.has(raw) || raw.length < 2}));
+}
+
+function stem(raw){
+  let w = String(raw).toLowerCase();
+  if(w.length > 5 && /(tion|sion)$/.test(w)) w = w.replace(/(tion|sion)$/,"t");
+  if(w.length > 6 && /ment$/.test(w)) w = w.slice(0,-4);
+  if(w.length > 5 && /ness$/.test(w)) w = w.slice(0,-4);
+  if(w.length > 5 && /ing$/.test(w)) w = w.slice(0,-3);
+  else if(w.length > 4 && /ed$/.test(w)) w = w.slice(0,-2);
+  if(w.length > 4 && /ly$/.test(w)) w = w.slice(0,-2);
+  if(w.length > 4 && /ies$/.test(w)) w = w.slice(0,-3) + "y";
+  else if(w.length > 3 && /s$/.test(w) && !/ss$/.test(w)) w = w.slice(0,-1);
+  return w;
+}
+
+function compileDefinition(name, phraseIndex, maxPhrase){
+  const tokens = tokenize(terms[name]?.def || "");
+  const deps = new Set(), evidence = [], matched = new Set();
+  for(let i=0; i<tokens.length; i++){
+    if(matched.has(i) || tokens[i].stop) continue;
+    if(tokens[i].raw === "count" && tokens[i+1]?.raw === "as") continue;
+    let hit = null;
+    for(let len=Math.min(maxPhrase,tokens.length-i); len>=1 && !hit; len--){
+      const stems = tokens.slice(i,i+len).map(t=>t.stem);
+      if(stems.some((s,j)=>tokens[i+j].stop && len===1)) continue;
+      hit = phraseIndex.find(p => p.stems.length === len && p.stems.every((s,j)=>s === stems[j]));
+    }
+    if(hit){
+      deps.add(hit.name);
+      const phrase = tokens.slice(i,i+hit.stems.length).map(t=>t.raw).join(" ");
+      evidence.push({dep:hit.name, phrase, at:i});
+      for(let j=0; j<hit.stems.length; j++) matched.add(i+j);
+      i += hit.stems.length - 1;
+    }
+  }
+  const leaks = [...new Set(tokens.filter((t,i)=>!t.stop && !matched.has(i)).map(t=>t.raw))]
+    .filter(w=>w.length>2 && !/^\d+$/.test(w)).sort((a,b)=>a.localeCompare(b));
+  return {deps:[...deps].sort((a,b)=>a.localeCompare(b)), evidence, leaks, selfRef:deps.has(name), tokens};
+}
+
+function reachable(root, maxDepth, adj=activeDeps){
+  const seen = new Map([[root,0]]);
+  const edges = [];
+  const q = [root];
+  while(q.length){
+    const from = q.shift();
+    const depth = seen.get(from);
+    if(depth >= maxDepth) continue;
+    for(const to of adj(from)){
+      edges.push([from,to]);
+      if(!seen.has(to)){ seen.set(to, depth+1); q.push(to); }
+    }
+  }
+  return {nodes:[...seen.keys()], edges, depth:seen};
+}
+
+function tarjan(nodes, adj=knownDeps){
+  const nodeSet = new Set(nodes);
+  let index = 0; const stack = [], on = new Set(), idx = new Map(), low = new Map(), comps = [];
+  function strong(v){
+    idx.set(v,index); low.set(v,index); index++; stack.push(v); on.add(v);
+    for(const w of adj(v).filter(x=>nodeSet.has(x))){
+      if(!idx.has(w)){ strong(w); low.set(v, Math.min(low.get(v), low.get(w))); }
+      else if(on.has(w)){ low.set(v, Math.min(low.get(v), idx.get(w))); }
+    }
+    if(low.get(v) === idx.get(v)){
+      const comp = []; let w;
+      do { w = stack.pop(); on.delete(w); comp.push(w); } while(w !== v);
+      if(comp.length > 1 || adj(v).includes(v)) comps.push(comp.sort((a,b)=>a.localeCompare(b)));
+    }
+  }
+  nodes.forEach(n => { if(!idx.has(n)) strong(n); });
+  return comps.sort((a,b)=>b.length-a.length || a[0].localeCompare(b[0]));
+}
+
+function allSccs(nodes, adj=knownDeps){
+  const nodeSet = new Set(nodes);
+  let index = 0; const stack = [], on = new Set(), idx = new Map(), low = new Map(), comps = [];
+  function strong(v){
+    idx.set(v,index); low.set(v,index); index++; stack.push(v); on.add(v);
+    for(const w of adj(v).filter(x=>nodeSet.has(x))){
+      if(!idx.has(w)){ strong(w); low.set(v, Math.min(low.get(v), low.get(w))); }
+      else if(on.has(w)){ low.set(v, Math.min(low.get(v), idx.get(w))); }
+    }
+    if(low.get(v) === idx.get(v)){
+      const comp = []; let w;
+      do { w = stack.pop(); on.delete(w); comp.push(w); } while(w !== v);
+      comps.push(comp.sort((a,b)=>a.localeCompare(b)));
+    }
+  }
+  nodes.forEach(n => { if(!idx.has(n)) strong(n); });
+  return comps;
+}
+
+function computeGlobal(stipSet=stipulated){
+  const nodes = allTerms();
+  const adj = t => stipSet.has(t) ? [] : knownDeps(t);
+  const edges = nodes.flatMap(a => adj(a).map(b => [a,b]));
+  const sccs = allSccs(nodes, adj);
+  const compOf = new Map();
+  sccs.forEach((c,i)=>c.forEach(n=>compOf.set(n,i)));
+  const compEdges = new Map(sccs.map((_,i)=>[i,new Set()]));
+  const indeg = new Map(sccs.map((_,i)=>[i,0]));
+  const outdeg = new Map(sccs.map((_,i)=>[i,0]));
+  edges.forEach(([a,b])=>{
+    const ca = compOf.get(a), cb = compOf.get(b);
+    if(ca !== cb && !compEdges.get(ca).has(cb)){
+      compEdges.get(ca).add(cb);
+      indeg.set(cb, indeg.get(cb)+1);
+      outdeg.set(ca, outdeg.get(ca)+1);
+    }
+  });
+  const cyclicCompIds = sccs.map((c,i)=>({c,i})).filter(x=>x.c.length>1 || x.c.some(n=>adj(n).includes(n))).map(x=>x.i);
+  const kernelSet = new Set(cyclicCompIds.flatMap(i=>sccs[i]));
+  const kernelCompSet = new Set(cyclicCompIds);
+  const kernelOutgoing = new Map(cyclicCompIds.map(i=>[i,0]));
+  cyclicCompIds.forEach(i=>{
+    cyclicCompIds.forEach(j=>{ if(i !== j && compEdges.get(i).has(j)) kernelOutgoing.set(i, kernelOutgoing.get(i)+1); });
+  });
+  const coreCompIds = cyclicCompIds.filter(i=>kernelOutgoing.get(i) === 0);
+  const coreSet = new Set(coreCompIds.flatMap(i=>sccs[i]));
+  const groundingCompIds = [...outdeg.entries()].filter(([,d])=>d===0).map(([i])=>i);
+  const mgs = groundingCompIds.map(i => representative(sccs[i], adj, stipSet)).sort((a,b)=>a.localeCompare(b));
+  const mgsSet = new Set(mgs);
+  const classOf = new Map();
+  nodes.forEach(n => classOf.set(n, "periphery"));
+  kernelSet.forEach(n => classOf.set(n, "kernel"));
+  coreSet.forEach(n => classOf.set(n, "core"));
+  mgs.forEach(n => { if(!coreSet.has(n) && !kernelSet.has(n)) classOf.set(n, "mgs"); });
+  stipSet.forEach(n => { if(terms[n]) classOf.set(n, "stipulated"); });
+  const primitiveSet = new Set(nodes.filter(n=>terms[n].primitive));
+  const primitiveNotMgs = [...primitiveSet].filter(n=>!mgsSet.has(n)).sort();
+  const mgsNotPrimitive = [...mgsSet].filter(n=>!primitiveSet.has(n)).sort();
+  const atlasDepth = distanceFromSeeds(nodes, [...new Set([...kernelSet, ...mgsSet, ...stipSet])], adj);
+  const provenance = sourceCounts(nodes);
+  return {nodes,edges,sccs,compOf,compEdges,indeg,outdeg,cyclicCompIds,kernelCompSet,kernelSet,coreCompIds,coreSet,groundingCompIds,mgs,mgsSet,classOf,primitiveSet,primitiveNotMgs,mgsNotPrimitive,atlasDepth,stipSet:new Set(stipSet),adj,provenance};
+}
+
+function sourceCounts(nodes=allTerms()){
+  return nodes.reduce((acc,n)=>{
+    const key = terms[n]?.source || "unknown";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  },{seed:0,authored:0,scaffold:0,temporary:0,unknown:0});
+}
+
+function representative(comp, adj=activeDeps, stipSet=stipulated){
+  const stip = comp.find(n=>stipSet.has(n));
+  if(stip) return stip;
+  const prim = comp.find(n=>terms[n].primitive);
+  return prim || comp.slice().sort((a,b)=>adj(a).length-adj(b).length || a.localeCompare(b))[0];
+}
+
+function distanceFromSeeds(nodes,seeds,adj=activeDeps){
+  const rev = new Map(nodes.map(n=>[n,[]]));
+  nodes.forEach(a=>adj(a).forEach(b=>rev.get(b)?.push(a)));
+  const dist = new Map();
+  const q = [];
+  seeds.forEach(s=>{ if(!dist.has(s)){ dist.set(s,0); q.push(s); } });
+  while(q.length){
+    const n = q.shift();
+    for(const p of rev.get(n) || []) if(!dist.has(p)){ dist.set(p,dist.get(n)+1); q.push(p); }
+  }
+  return dist;
+}
+
+function minFeedbackVertexSet(comp, adj=activeDeps){
+  const nodes = [...comp];
+  if(nodes.length > 12) return ["too-large-for-exact-seed"];
+  for(let size=1; size<=nodes.length; size++){
+    for(const cut of combinations(nodes,size)){
+      const left = nodes.filter(n=>!cut.includes(n));
+      if(!hasCycle(left, adj)) return cut;
+    }
+  }
+  return nodes;
+}
+
+function combinations(arr,size,start=0,prefix=[],out=[]){
+  if(prefix.length === size){ out.push(prefix); return out; }
+  for(let i=start; i<arr.length; i++) combinations(arr,size,i+1,prefix.concat(arr[i]),out);
+  return out;
+}
+
+function hasCycle(nodes, adj=activeDeps){
+  const allowed = new Set(nodes), visiting = new Set(), visited = new Set();
+  function dfs(n){
+    if(visiting.has(n)) return true;
+    if(visited.has(n)) return false;
+    visiting.add(n);
+    for(const d of adj(n)) if(allowed.has(d) && dfs(d)) return true;
+    visiting.delete(n); visited.add(n); return false;
+  }
+  return nodes.some(dfs);
+}
+
+function shortestCyclePath(root, kernel, adj=activeDeps){
+  const kernelSet = new Set(kernel);
+  const q = [[root,[root]]], seen = new Set([root]);
+  while(q.length){
+    const [n,path] = q.shift();
+    if(n !== root && kernelSet.has(n)) return path;
+    for(const d of adj(n)){
+      if(!seen.has(d)){ seen.add(d); q.push([d,path.concat(d)]); }
+    }
+  }
+  return [root];
+}
+
+function layers(root, maxDepth, adj=activeDeps){
+  const r = reachable(root,maxDepth,adj);
+  const out = Array.from({length:maxDepth+1},()=>[]);
+  for(const [node,d] of r.depth.entries()) out[d].push(node);
+  out.forEach(a=>a.sort((x,y)=>x.localeCompare(y)));
+  return out;
+}
+
+function render(){
+  if(!baselineFacts) baselineFacts = computeGlobal(new Set());
+  const before = lastFacts || computeGlobal(new Set(stipulated));
+  globalFacts = computeGlobal(stipulated);
+  if(lastAction !== "baseline") recordLedger(lastAction,before,globalFacts);
+  lastFacts = globalFacts;
+  lastAction = "baseline";
+  const maxDepth = Number($("depth").value);
+  const r = reachable(selected,maxDepth,activeDeps);
+  const localKernels = tarjan(r.nodes,activeDeps);
+  const localKernelSet = new Set(localKernels.flat());
+  const path = localKernels[0] ? shortestCyclePath(selected,localKernels[0],activeDeps) : [selected];
+  const pathSet = new Set(path);
+  renderSelectors();
+  renderMetrics(r,localKernels);
+  renderLabStats();
+  renderDefinition();
+  renderGraph(r,localKernelSet,pathSet,localKernels);
+  renderBorehole(layers(selected,maxDepth),localKernelSet,pathSet);
+  renderFindings(r,localKernels,path);
+  renderDeltaAndLedger();
+  renderTables(r,localKernels,localKernelSet);
+}
+
+function renderSelectors(){
+  $("termSelect").innerHTML = allTerms().map(t=>`<option value="${esc(t)}" ${t===selected?"selected":""}>${esc(t)}</option>`).join("");
+  const filter = $("filter").value.trim().toLowerCase();
+  $("termList").innerHTML = allTerms().filter(t=>{
+    const hay = `${t} ${terms[t].role} ${terms[t].source || ""} ${globalFacts.classOf.get(t)}`.toLowerCase();
+    return !filter || hay.includes(filter);
+  }).map(t=>{
+    const cls = globalFacts.classOf.get(t);
+    const badge = stipulated.has(t) ? "stip" : cls === "periphery" ? (terms[t].source === "scaffold" ? "scaf" : terms[t].primitive ? "prim" : terms[t].role.split(" ")[0]) : cls;
+    return `<button class="termBtn ${t===selected?"active":""}" data-term="${esc(t)}"><span>${esc(t)}</span><span class="badge">${esc(badge)}</span></button>`;
+  }).join("");
+  document.querySelectorAll(".termBtn").forEach(b=>b.onclick=()=>{selected=b.dataset.term; render();});
+}
+
+function renderMetrics(r,localKernels){
+  const g = globalFacts;
+  const p = g.provenance;
+  const kernelShare = Math.round(g.kernelSet.size / g.nodes.length * 100);
+  const compression = g.kernelSet.size ? `${Math.max(1,Math.round(g.kernelSet.size / Math.max(1,g.coreSet.size)))}:1` : "0";
+  $("metrics").innerHTML = [
+    ["dict terms",g.nodes.length],["active edges",g.edges.length],["kernel",`${g.kernelSet.size} / ${kernelShare}%`],["core",`${g.coreSet.size} (${compression})`],["mgs",g.mgs.length],["stipulated",stipulated.size],
+    ["authored prose",p.authored + p.seed],["scaffolded",p.scaffold],["local SCC",localKernels.length],["drill depth",$("depth").value],["leak tokens",compiler.leaks.size],["ground comps",g.groundingCompIds.length]
+  ].map(([k,v])=>`<div class="metric"><b>${v}</b><span>${k}</span></div>`).join("");
+  $("toggleSelected").textContent = stipulated.has(selected) ? "unstipulate selected" : "stipulate selected";
+}
+
+function renderDefinition(){
+  const t = terms[selected];
+  const cls = globalFacts.classOf.get(selected);
+  const entry = compiler.entries.get(selected);
+  $("definition").innerHTML = `<b>${esc(selected)}</b><br>${esc(t.def)}`;
+  if(document.activeElement !== $("selectedDef")) $("selectedDef").value = t.def;
+  const atoms = [`class: ${cls}`,`role: ${t.role}`,`source: ${t.source || "unknown"}`,`compiled edges: ${stipulated.has(selected) ? "masked" : knownDeps(selected).length}`]
+    .concat(entry.deps.map(d=>`dep: ${d}`))
+    .concat(entry.selfRef ? ["self-reference: yes"] : [])
+    .concat(entry.leaks.slice(0,8).map(d=>`leak: ${d}`));
+  $("chips").innerHTML = atoms.map(c=>{
+    const raw = c.split(": ").pop();
+    let klass = "";
+    if(stipulated.has(raw)) klass = " stip";
+    else if(globalFacts.coreSet.has(raw)) klass = " core";
+    else if(globalFacts.kernelSet.has(raw)) klass = " kernel";
+    else if(globalFacts.mgsSet.has(raw)) klass = " mgs";
+    else if(terms[raw]?.primitive) klass = " primitive";
+    return `<span class="chip${klass}">${esc(c)}</span>`;
+  }).join("");
+  renderCompiler();
+}
+
+function renderCompiler(){
+  const entry = compiler.entries.get(selected);
+  const leakTotal = [...compiler.leaks.values()].reduce((a,b)=>a+b,0);
+  const p = globalFacts.provenance;
+  $("compilerStats").innerHTML = [
+    ["terms",globalFacts.nodes.length],
+    ["compiled edges",globalFacts.edges.length],
+    ["leak tokens",leakTotal],
+    ["self refs",compiler.selfRefs.length],
+    ["authored+seed",p.authored+p.seed],
+    ["scaffold",p.scaffold]
+  ].map(([k,v])=>`<div><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join("");
+  $("compiledDefinition").innerHTML = highlightCompiledDefinition(selected,entry);
+  $("compilerEvidence").innerHTML = entry.evidence.length
+    ? entry.evidence.map(e=>`<div class="evidenceRow"><b>${esc(e.dep)}</b><span>matched phrase <span class="tokenMark">${esc(e.phrase)}</span> at token ${e.at}</span></div>`).join("")
+    : `<div class="evidenceRow"><b>none</b><span>no atlas headword was detected in this definition</span></div>`;
+  if(entry.leaks.length){
+    $("compilerEvidence").innerHTML += `<div class="evidenceRow"><b>leaks</b><span>${entry.leaks.slice(0,42).map(w=>`<span class="leakMark">${esc(w)}</span>`).join(" ")}</span></div>`;
+  }
+}
+
+function highlightCompiledDefinition(name,entry){
+  let html = esc(terms[name].def);
+  const phrases = [...entry.evidence].sort((a,b)=>b.phrase.length-a.phrase.length).slice(0,80);
+  phrases.forEach(e=>{
+    const re = new RegExp(`\\b${escapeRegExp(e.phrase).replace(/\\ /g,"[-\\\\s]+")}\\b`,"i");
+    html = html.replace(re, m=>`<span class="tokenMark">${esc(m)}</span>`);
+  });
+  entry.leaks.slice(0,18).forEach(w=>{
+    const re = new RegExp(`\\b${escapeRegExp(w)}\\b`,"i");
+    html = html.replace(re, m=>`<span class="leakMark">${esc(m)}</span>`);
+  });
+  return html;
+}
+
+function renderGraph(r,localKernelSet,pathSet,localKernels){
+  const mode = $("layout").value;
+  if(mode === "atlas") renderAtlas(r,localKernelSet,pathSet,localKernels);
+  else renderDrillGraph(r,localKernelSet,pathSet,localKernels,mode);
+}
+
+function renderAtlas(r,localKernelSet,pathSet,localKernels){
+  const svg = $("graph"), canvas = $("atlasCanvas"), mini = $("miniMap");
+  svg.style.display = "none"; svg.innerHTML = "";
+  canvas.style.display = "block"; mini.style.display = "block";
+  const focusSet = graphFocusSet(r,localKernelSet,pathSet);
+  syncAtlasState(focusSet);
+  fitCanvas(canvas); fitCanvas(mini);
+  drawAtlasCanvas(focusSet);
+  startAtlasPhysics(focusSet);
+  const cls = globalFacts.classOf.get(selected);
+  const p = globalFacts.provenance;
+  $("graphNote").innerHTML = `<b>Honest Atlas.</b> Force layout over ${globalFacts.nodes.length} terms and ${globalFacts.edges.length} compiled edges. Sources: <span class="sourceSeed">${p.seed} seed</span>, <span class="sourceAuthored">${p.authored} authored</span>, <span class="sourceScaffold">${p.scaffold} scaffold</span>. Drag/pan, wheel zoom, click a node. Selected <span class="mono">${esc(selected)}</span> is <span class="mono">${esc(cls)}</span>.`;
+}
+
+function syncAtlasState(focusSet){
+  const sig = `${globalFacts.nodes.length}:${globalFacts.edges.length}:${[...stipulated].sort().join(",")}:${view}`;
+  const reset = atlasState.signature !== sig;
+  atlasState.signature = sig;
+  atlasState.focusSet = new Set(focusSet);
+  const old = atlasState.nodes;
+  atlasState.nodes = new Map();
+  globalFacts.nodes.forEach(n=>{
+    const prev = old.get(n);
+    const cls = globalFacts.classOf.get(n);
+    const angle = (hash(n) % 6283) / 1000;
+    const ring = cls === "stipulated" ? 30 : cls === "core" ? 80 : cls === "kernel" ? 145 : cls === "mgs" ? 230 : 330 + (hash(n+"r")%180);
+    atlasState.nodes.set(n,{
+      id:n, x: reset || !prev ? Math.cos(angle)*ring : prev.x, y: reset || !prev ? Math.sin(angle)*ring : prev.y,
+      vx: prev?.vx || 0, vy: prev?.vy || 0, cls, focus:focusSet.has(n), source:terms[n].source || "unknown"
+    });
+  });
+  atlasState.edges = globalFacts.edges.filter(([a,b]) => shouldShowAtlasEdge(a,b,focusSet));
+  if(reset && !atlasState.panX && !atlasState.panY){ atlasState.panX = 0; atlasState.panY = 0; atlasState.zoom = 1; }
+}
+
+function drawCurrentAtlas(){ drawAtlasCanvas(atlasState.focusSet); }
+
+function fitCanvas(canvas){
+  const box = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1,Math.floor(box.width*dpr)), h = Math.max(1,Math.floor(box.height*dpr));
+  if(canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  canvas._css = {w:box.width,h:box.height,dpr};
+}
+
+function startAtlasPhysics(focusSet){
+  if(atlasState.running) return;
+  atlasState.running = true;
+  let ticks = 0;
+  function frame(){
+    ticks++;
+    stepAtlasPhysics();
+    drawAtlasCanvas(focusSet);
+    if(ticks < 160){ requestAnimationFrame(frame); }
+    else atlasState.running = false;
+  }
+  requestAnimationFrame(frame);
+}
+
+function stepAtlasPhysics(){
+  const nodes = [...atlasState.nodes.values()];
+  const byId = atlasState.nodes, n = nodes.length;
+  const kRepel = 5200 / Math.sqrt(Math.max(1,n));
+  for(let i=0;i<n;i++){
+    for(let j=i+1;j<n;j++){
+      const a=nodes[i], b=nodes[j], dx=a.x-b.x, dy=a.y-b.y, d2=Math.max(36,dx*dx+dy*dy), f=kRepel/d2;
+      const fx=dx*f, fy=dy*f; a.vx+=fx; a.vy+=fy; b.vx-=fx; b.vy-=fy;
+    }
+  }
+  atlasState.edges.forEach(([from,to])=>{
+    const a=byId.get(from), b=byId.get(to); if(!a||!b) return;
+    const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1;
+    const target = (a.focus || b.focus) ? 70 : 118;
+    const f=(d-target)*.0028, fx=dx/d*f, fy=dy/d*f;
+    a.vx+=fx; a.vy+=fy; b.vx-=fx; b.vy-=fy;
+  });
+  nodes.forEach(a=>{
+    const clsPull = a.cls === "core" || a.cls === "stipulated" ? .010 : a.cls === "kernel" ? .006 : a.cls === "mgs" ? .003 : .0015;
+    a.vx += -a.x*clsPull; a.vy += -a.y*clsPull;
+    a.vx *= .82; a.vy *= .82; a.x += Math.max(-5,Math.min(5,a.vx)); a.y += Math.max(-5,Math.min(5,a.vy));
+  });
+}
+
+function drawAtlasCanvas(focusSet){
+  const canvas = $("atlasCanvas"); if(canvas.style.display === "none") return;
+  fitCanvas(canvas);
+  const {w,h} = canvas._css, ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,w,h);
+  ctx.save();
+  ctx.translate(w/2 + atlasState.panX, h/2 + atlasState.panY);
+  ctx.scale(atlasState.zoom, atlasState.zoom);
+  drawAtlasGrid(ctx);
+  atlasState.edges.forEach(([a,b])=>{
+    const p=atlasState.nodes.get(a), q=atlasState.nodes.get(b); if(!p||!q) return;
+    const hot = focusSet.has(a) && focusSet.has(b);
+    ctx.strokeStyle = hot ? "rgba(20,93,136,.58)" : "rgba(109,116,122,.10)";
+    ctx.lineWidth = hot ? 1.45/atlasState.zoom : .65/atlasState.zoom;
+    ctx.beginPath();
+    const hub = (p.cls === "core" || q.cls === "core") ? {x:0,y:0} : {x:(p.x+q.x)/2*.18,y:(p.y+q.y)/2*.18};
+    ctx.moveTo(p.x,p.y); ctx.quadraticCurveTo(hub.x,hub.y,q.x,q.y); ctx.stroke();
+  });
+  [...atlasState.nodes.values()].sort((a,b)=>nodeRadius(a)-nodeRadius(b)).forEach(n=>{
+    const focused = n.focus || view === "all" || n.id === selected || n.id === atlasState.hover || (view === "mgs" && globalFacts.mgsSet.has(n.id));
+    ctx.globalAlpha = focused ? 1 : .32;
+    ctx.beginPath(); ctx.arc(n.x,n.y,nodeRadius(n),0,Math.PI*2);
+    ctx.fillStyle = nodeFill(n); ctx.strokeStyle = nodeStroke(n); ctx.lineWidth = n.id===selected ? 2.4/atlasState.zoom : 1/atlasState.zoom;
+    ctx.fill(); ctx.stroke(); ctx.globalAlpha = 1;
+    if(focused && (n.focus || n.id===selected || n.id===atlasState.hover || n.cls==="core" || n.cls==="stipulated")){
+      ctx.font = `${10/atlasState.zoom}px ui-sans-serif, system-ui, sans-serif`;
+      ctx.fillStyle = "#111"; ctx.fillText(n.id,n.x+nodeRadius(n)+4/atlasState.zoom,n.y+3/atlasState.zoom);
+    }
+  });
+  ctx.restore();
+  drawMiniMap();
+}
+
+function drawAtlasGrid(ctx){
+  ctx.strokeStyle = "rgba(174,182,188,.22)"; ctx.lineWidth = 1/atlasState.zoom;
+  [70,140,240,360,520].forEach(r=>{ ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke(); });
+}
+
+function nodeRadius(n){
+  return n.cls === "stipulated" ? 7 : n.cls === "core" ? 6.4 : n.cls === "kernel" ? 5 : n.cls === "mgs" ? 4.8 : terms[n.id]?.primitive ? 4 : n.source === "authored" ? 3.6 : 2.8;
+}
+function nodeFill(n){ return n.cls === "stipulated" ? "#fbf0ff" : n.cls === "core" ? "#222" : n.cls === "kernel" ? "#fff5f3" : n.cls === "mgs" ? "#fff8df" : terms[n.id]?.primitive ? "#f3fbf5" : n.source === "authored" ? "#eef6fb" : "#fff"; }
+function nodeStroke(n){ return n.cls === "stipulated" ? "#6b2d83" : n.cls === "core" ? "#000" : n.cls === "kernel" ? "#c9362d" : n.cls === "mgs" ? "#7b5a12" : terms[n.id]?.primitive ? "#22764b" : n.source === "authored" ? "#145d88" : "#9b8a55"; }
+
+function drawMiniMap(){
+  const mini = $("miniMap"); if(mini.style.display === "none") return;
+  fitCanvas(mini);
+  const ctx=mini.getContext("2d"), {w,h}=mini._css, nodes=[...atlasState.nodes.values()];
+  ctx.clearRect(0,0,w,h); ctx.fillStyle="rgba(255,255,255,.86)"; ctx.fillRect(0,0,w,h);
+  if(!nodes.length) return;
+  const xs=nodes.map(n=>n.x), ys=nodes.map(n=>n.y), minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+  const scale=.86*Math.min(w/Math.max(1,maxX-minX),h/Math.max(1,maxY-minY));
+  nodes.forEach(n=>{
+    ctx.fillStyle = n.id === selected ? "#c9362d" : nodeStroke(n);
+    ctx.globalAlpha = n.focus ? .9 : .35;
+    ctx.fillRect((n.x-minX)*scale + w*.07, (n.y-minY)*scale + h*.07, 2, 2);
+  });
+  ctx.globalAlpha = 1;
+}
+
+function prepSvg(){
+  $("atlasCanvas").style.display = "none";
+  $("miniMap").style.display = "none";
+  const svg = $("graph"); svg.innerHTML = "";
+  svg.style.display = "block";
+  const box = svg.getBoundingClientRect();
+  const w = Math.max(760, box.width || 980), h = Math.max(500, box.height || 580);
+  svg.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  svg._box = {w,h};
+  const defs = document.createElementNS("http://www.w3.org/2000/svg","defs");
+  defs.innerHTML = `<marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6d747a"/></marker>`;
+  svg.appendChild(defs);
+  return svg;
+}
+
+function atlasPositions(w,h){
+  const cx=w/2, cy=h/2+8, min=Math.min(w,h), pos=new Map();
+  const buckets = new Map();
+  globalFacts.nodes.forEach(n=>{
+    const cls = globalFacts.classOf.get(n);
+    let key = cls;
+    if(cls === "periphery") key = `p${Math.min(5, globalFacts.atlasDepth.get(n) ?? 5)}`;
+    if(!buckets.has(key)) buckets.set(key,[]);
+    buckets.get(key).push(n);
+  });
+  buckets.forEach(a=>a.sort((x,y)=>x.localeCompare(y)));
+  const rings = [
+    ["stipulated", min*.045, .0],
+    ["core", min*.085, -.2],
+    ["kernel", min*.15, .15],
+    ["mgs", min*.22, .42],
+    ["p1", min*.29, .0],
+    ["p2", min*.35, .21],
+    ["p3", min*.41, .39],
+    ["p4", min*.46, .13],
+    ["p5", min*.50, .32]
+  ];
+  rings.forEach(([key,radius,offset])=>{
+    const arr = buckets.get(key) || [];
+    arr.forEach((n,i)=>{
+      const a = -Math.PI/2 + offset + Math.PI*2*i/Math.max(1,arr.length);
+      const jitter = ((hash(n)%17)-8) * .9;
+      pos.set(n,{x:cx+Math.cos(a)*(radius+jitter), y:cy+Math.sin(a)*(radius+jitter)});
+    });
+  });
+  return pos;
+}
+
+function drawAtlasBands(svg,cx,cy,w,h){
+  const min=Math.min(w,h);
+  [[.045,"Stip"],[.085,"Core"],[.15,"Kernel"],[.22,"MGS"],[.29,"d1"],[.35,"d2"],[.41,"d3"],[.46,"d4"],[.50,"d5+"]].forEach(([r,label],i)=>{
+    const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx",cx); c.setAttribute("cy",cy); c.setAttribute("r",min*r);
+    c.setAttribute("fill","none"); c.setAttribute("stroke",i<3 ? "#b8bfc5" : "#d8dee2"); c.setAttribute("stroke-width",i<3 ? "1.2" : ".8");
+    svg.appendChild(c);
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x",cx+min*r+5); t.setAttribute("y",cy-3); t.setAttribute("class","nodeDef"); t.textContent = label;
+    svg.appendChild(t);
+  });
+}
+
+function shouldShowAtlasEdge(a,b,focusSet){
+  if(view === "all") return globalFacts.classOf.get(a) !== "periphery" || globalFacts.classOf.get(b) !== "periphery" || hash(a+b)%9===0;
+  if(view === "mgs") return globalFacts.mgsSet.has(a) || globalFacts.mgsSet.has(b) || stipulated.has(a) || stipulated.has(b);
+  if(view === "kernel") return globalFacts.kernelSet.has(a) || globalFacts.kernelSet.has(b) || stipulated.has(a) || stipulated.has(b);
+  return focusSet.has(a) && focusSet.has(b);
+}
+
+function renderDrillGraph(r,localKernelSet,pathSet,localKernels,mode){
+  const svg = prepSvg();
+  const {w,h} = svg._box;
+  const positions = new Map();
+  const focusSet = graphFocusSet(r,localKernelSet,pathSet);
+  if(mode === "bore"){
+    const layerData = layers(selected,Number($("depth").value));
+    layerData.forEach((arr,d)=>arr.forEach((n,i)=>positions.set(n,{x:82+d*((w-160)/Math.max(1,layerData.length-1)),y:52+(i+1)*((h-100)/(arr.length+1))})));
+  } else {
+    positions.set(selected,{x:w/2,y:h/2});
+    layers(selected,Number($("depth").value)).forEach((arr,d)=>{
+      if(d===0) return;
+      const radius = Math.min(w,h) * (.12 + d*.105);
+      arr.forEach((n,i)=>{
+        const angle = -Math.PI/2 + (Math.PI*2*i/Math.max(1,arr.length)) + d*.23;
+        positions.set(n,{x:w/2+Math.cos(angle)*radius,y:h/2+Math.sin(angle)*radius});
+      });
+    });
+  }
+  r.edges.forEach(([a,b])=>{
+    const p = positions.get(a), q = positions.get(b); if(!p||!q) return;
+    const pathEdge = pathSet.has(a) && pathSet.has(b);
+    const focused = focusSet.has(a) && focusSet.has(b);
+    line(svg,p.x,p.y,q.x,q.y,pathEdge? "#145d88":"#8a9298",pathEdge?2.2:1.1,focused ? 1 : .18, true);
+  });
+  r.nodes.forEach(n=>{
+    const p = positions.get(n); if(!p) return;
+    const cls = globalFacts.classOf.get(n);
+    const fill = stipulated.has(n) ? "#fbf0ff" : cls === "core" ? "#222" : localKernelSet.has(n) ? "#fff5f3" : globalFacts.mgsSet.has(n) ? "#fff8df" : terms[n].primitive ? "#f3fbf5" : "#fff";
+    const stroke = stipulated.has(n) ? "#6b2d83" : cls === "core" ? "#000" : localKernelSet.has(n) ? "#c9362d" : pathSet.has(n) ? "#145d88" : globalFacts.mgsSet.has(n) ? "#7b5a12" : terms[n].primitive ? "#22764b" : "#333";
+    const fg = cls === "core" ? "#fff" : "#111";
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.classList.add("microNode"); g.setAttribute("opacity", focusSet.has(n) ? "1" : ".24"); g.onclick = () => { selected = n; render(); };
+    g.innerHTML = `<rect x="${p.x-55}" y="${p.y-18}" width="110" height="36" fill="${fill}" stroke="${stroke}" stroke-width="${localKernelSet.has(n)?2:1}"></rect>
+      <text class="nodeLabel" x="${p.x}" y="${p.y-3}" text-anchor="middle" fill="${fg}">${esc(n)}</text>
+      <text class="nodeDef" x="${p.x}" y="${p.y+10}" text-anchor="middle">${esc(terms[n].role.slice(0,25))}</text>`;
+    svg.appendChild(g);
+  });
+  $("graphNote").innerHTML = localKernels[0]
+    ? `<b class="warn">Local non-well-founded descent:</b> ${esc(selected)} reaches ${localKernels.length} visible SCC(s). Focus: <span class="mono">${view}</span>.`
+    : `<b class="ok">No circular kernel in visible depth.</b> This bounded drilldown found no cycle. Focus: <span class="mono">${view}</span>.`;
+}
+
+function graphFocusSet(r,localKernelSet,pathSet){
+  if(view === "all") return new Set(r.nodes);
+  if(view === "mgs") return new Set([...globalFacts.mgsSet, ...stipulated, selected, ...r.nodes.filter(n=>globalFacts.mgsSet.has(n))]);
+  if(view === "path") return new Set([selected, ...pathSet, ...localKernelSet]);
+  const focus = new Set([selected, ...stipulated, ...localKernelSet]);
+  r.edges.forEach(([a,b]) => { if(localKernelSet.has(a) || localKernelSet.has(b)){ focus.add(a); focus.add(b); } });
+  return focus;
+}
+
+function line(svg,x1,y1,x2,y2,color,width,opacity=1,arrow=true){
+  const dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy)||1;
+  const sx=x1+dx/len*8, sy=y1+dy/len*8, tx=x2-dx/len*8, ty=y2-dy/len*8;
+  const el = document.createElementNS("http://www.w3.org/2000/svg","line");
+  el.setAttribute("x1",sx); el.setAttribute("y1",sy); el.setAttribute("x2",tx); el.setAttribute("y2",ty);
+  el.setAttribute("stroke",color); el.setAttribute("stroke-width",width); el.setAttribute("opacity",opacity);
+  if(arrow) el.setAttribute("marker-end","url(#arrow)");
+  svg.appendChild(el);
+}
+
+function renderBorehole(layerData,localKernelSet,pathSet){
+  $("borehole").innerHTML = layerData.map((arr,i)=>`
+    <div class="depth">d${i}</div>
+    <div class="layer">${arr.map(n=>`<button class="pill ${stipulated.has(n)?"stip":globalFacts.coreSet.has(n)?"core":localKernelSet.has(n)?"kernel":pathSet.has(n)?"path":terms[n].primitive?"primitive":""}" data-term="${esc(n)}">${esc(n)}</button>`).join("") || "<span class='small'>no visible terms</span>"}</div>
+  `).join("");
+  document.querySelectorAll(".pill").forEach(p=>p.onclick=()=>{selected=p.dataset.term; render();});
+}
+
+function renderFindings(r,localKernels,path){
+  const g = globalFacts;
+  const leaks = [...new Set(r.nodes.flatMap(n => compiler.entries.get(n)?.leaks || []))].sort();
+  const selfRefs = r.nodes.filter(n=>compiler.entries.get(n)?.selfRef).sort((a,b)=>a.localeCompare(b));
+  const cuts = localKernels.map(k => minFeedbackVertexSet(k,activeDeps));
+  const broke = baselineFacts.cyclicCompIds.length - g.cyclicCompIds.length;
+  const p = g.provenance;
+  const facts = [
+    ["det-sem.compiler.prose-source.v1", `${g.edges.length} graph edge(s) are compiled from definition prose; authored deps arrays are not used as graph input`],
+    ["det-sem.compiler.provenance.v1", `${p.seed} seed, ${p.authored} authored prose, ${p.scaffold} visible scaffold, ${p.temporary} temporary entries; scaffold results are marked as weaker evidence`],
+    ["det-sem.compiler.self-reference.v1", selfRefs.length ? `visible definitions naming their own headword: ${sample(selfRefs,20)}` : "no visible direct self-reference found"],
+    ["det-sem.compiler.leakage.v1", leaks.length ? `visible content words outside the lexicon: ${sample(leaks,28)}` : "no visible unmatched content tokens after stopword filtering"],
+    ["det-sem.dict.kernel-share.v1", `${g.kernelSet.size}/${g.nodes.length} terms (${Math.round(g.kernelSet.size/g.nodes.length*100)}%) are in non-trivial whole-dictionary SCCs`],
+    ["det-sem.dict.counterfactual.v1", `${stipulated.size} stipulated term(s) mask outgoing edges; SCC components changed by ${signed(-broke)} versus baseline`],
+    ["det-sem.dict.core.v1", `${g.coreSet.size} core terms across ${g.coreCompIds.length} zero-outgoing kernel component(s): ${sample([...g.coreSet],18)}`],
+    ["det-sem.dict.minimal-grounding-set.v1", `${g.mgs.length} zero-outdegree grounding representative(s): ${sample(g.mgs,22)}`],
+    ["det-sem.dict.primitive-mismatch.v1", `MGS not hand-primitive: ${sample(g.mgsNotPrimitive,14)}; hand-primitive not MGS: ${sample(g.primitiveNotMgs,14)}`],
+    ["det-sem.dep.circular-def.v1", localKernels.length ? `local SCC found: ${localKernels.map(k=>sample(k,14)).join("; ")}` : "no cycle in bounded local subgraph"],
+    ["det-sem.dep.feedback-cut.v1", cuts.length ? `minimum visible stipulation cut: ${cuts.map(c=>c.join(", ")).join(" / ")}` : "no feedback cut required in visible local graph"],
+    ["det-sem.dep.non-well-founded.v1", localKernels[0] ? `selected descent reaches SCC via ${path.join(" -> ")}` : "no reachable local kernel at current depth"],
+    ["det-sem.fake-primitive.v1", leaks.length ? `unclosed vocabulary candidates: ${sample(leaks,28)}` : "visible definition vocabulary closes under the atlas parser"],
+    ["wall", "dictionary and drilldown facts are graph facts; philosophical damage or acceptability is not asserted here"]
+  ];
+  $("findings").innerHTML = facts.map(([k,v])=>`<div class="finding"><b>${esc(k)}</b><div>${esc(v)}</div></div>`).join("");
+}
+
+function renderTables(r,localKernels,localKernelSet){
+  const g = globalFacts;
+  const topComps = g.cyclicCompIds.slice(0,8);
+  const rows = [
+    `<tr><td>Core</td><td class="mono">${sample([...g.coreSet],28).replace(/, /g,"<br>")}</td><td>Zero-outgoing SCC members inside the whole-dictionary Kernel; the atlas center under the dependency-edge convention.</td></tr>`,
+    `<tr><td>MGS</td><td class="mono">${sample(g.mgs,28).replace(/, /g,"<br>")}</td><td>One representative for each zero-outdegree component in the full condensation graph, because edges point from defined term to dependency.</td></tr>`
+  ].concat(topComps.map((id,i)=>{
+    const comp = g.sccs[id];
+    return `<tr><td>K${i+1}</td><td class="mono">${sample(comp,28).replace(/, /g,"<br>")}</td><td>${comp.length} mutually dependent term(s); ${g.coreCompIds.includes(id) ? "core grounding component" : "kernel component"}.</td></tr>`;
+  }));
+  $("kernelTable").innerHTML = rows.join("");
+  $("traceTable").innerHTML = r.edges.map(([a,b])=>{
+    const status = stipulated.has(b) ? "enters stipulation" : g.coreSet.has(b) ? "enters core" : localKernelSet.has(a)&&localKernelSet.has(b) ? "inside local SCC" : g.kernelSet.has(b) ? "enters dictionary kernel" : g.mgsSet.has(b) ? "grounding representative" : terms[b].primitive ? "primitive label" : "continues";
+    return `<tr><td class="mono">${esc(a)}</td><td class="mono">${esc(b)}</td><td>${esc(status)}</td></tr>`;
+  }).join("");
+}
+
+function renderLabStats(){
+  const g = globalFacts, b = baselineFacts;
+  const entered = diffSet(g.mgsSet,b.mgsSet);
+  const left = diffSet(b.mgsSet,g.mgsSet);
+  $("labStats").innerHTML = [
+    ["stip",stipulated.size],
+    ["cycles",g.cyclicCompIds.length],
+    ["kernel",signed(g.kernelSet.size-b.kernelSet.size)],
+    ["mgs",`${signed(g.mgs.length-b.mgs.length)}`]
+  ].map(([k,v])=>`<div><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join("");
+  if(entered.length || left.length){
+    $("labStats").title = `MGS entered: ${entered.join(", ") || "none"}; left: ${left.join(", ") || "none"}`;
+  } else {
+    $("labStats").title = "No MGS membership delta versus baseline.";
+  }
+}
+
+function renderDeltaAndLedger(){
+  const g = globalFacts, b = baselineFacts;
+  const rows = [
+    ["active edges",b.edges.length,g.edges.length],
+    ["cyclic SCCs",b.cyclicCompIds.length,g.cyclicCompIds.length],
+    ["kernel terms",b.kernelSet.size,g.kernelSet.size],
+    ["core terms",b.coreSet.size,g.coreSet.size],
+    ["MGS reps",b.mgs.length,g.mgs.length],
+    ["ground comps",b.groundingCompIds.length,g.groundingCompIds.length]
+  ];
+  $("deltaTable").innerHTML = rows.map(([k,base,cur])=>{
+    const d = cur - base;
+    const cls = d < 0 ? "deltaPlus" : d > 0 ? "deltaMinus" : "deltaNeutral";
+    return `<tr><td>${esc(k)}</td><td>${base}</td><td>${cur}</td><td class="${cls}">${signed(d)}</td></tr>`;
+  }).join("");
+  const greedy = approximateGlobalMFVS(new Set(stipulated), 80);
+  const localExact = globalFacts.cyclicCompIds.slice(0,3).map(id=>globalFacts.sccs[id]).filter(c=>c.length<=12).map(c=>minFeedbackVertexSet(c,activeDeps));
+  $("breakerTable").innerHTML = [
+    `<tr><td>current stipulations</td><td class="mono">${sample([...stipulated],34)}</td><td>Terms currently treated as given; their outgoing definition edges are masked.</td></tr>`,
+    `<tr><td>greedy upper bound</td><td class="mono">${sample(greedy.cut,34)}</td><td>Heuristic cycle breaker after current mask: ${greedy.cut.length} added terms leave ${greedy.remaining} cyclic SCC(s). Not a proof of minimum.</td></tr>`,
+    `<tr><td>small exact cuts</td><td class="mono">${localExact.length ? localExact.map(c=>c.join(", ")).join(" / ") : "none"}</td><td>Exact only for currently visible whole-dictionary SCCs of 12 terms or fewer.</td></tr>`
+  ].join("");
+  $("ledger").innerHTML = ledger.length ? ledger.map(e=>`
+    <div class="ledgerEntry">
+      <b>${esc(e.action)}</b> <span class="${e.kernelDelta<0?"deltaPlus":e.kernelDelta>0?"deltaMinus":"deltaNeutral"}">kernel ${signed(e.kernelDelta)}</span>,
+      <span class="${e.cycleDelta<0?"deltaPlus":e.cycleDelta>0?"deltaMinus":"deltaNeutral"}">cycles ${signed(e.cycleDelta)}</span>,
+      <span class="${e.edgeDelta<0?"deltaPlus":e.edgeDelta>0?"deltaMinus":"deltaNeutral"}">edges ${signed(e.edgeDelta)}</span><br>
+      <span>MGS +${esc(sample(e.mgsEntered,8))}; -${esc(sample(e.mgsLeft,8))}</span>
+    </div>`).join("") : `<div class="ledgerEntry"><b>no moves</b><br><span class="deltaNeutral">Choose a preset, stipulate a term, or run the greedy breaker.</span></div>`;
+}
+
+function recordLedger(action,before,after){
+  const entry = {
+    action,
+    edgeDelta: after.edges.length - before.edges.length,
+    cycleDelta: after.cyclicCompIds.length - before.cyclicCompIds.length,
+    kernelDelta: after.kernelSet.size - before.kernelSet.size,
+    mgsEntered: diffSet(after.mgsSet,before.mgsSet),
+    mgsLeft: diffSet(before.mgsSet,after.mgsSet)
+  };
+  ledger.unshift(entry);
+  ledger = ledger.slice(0,24);
+}
+
+function diffSet(a,b){
+  return [...a].filter(x=>!b.has(x)).sort((x,y)=>x.localeCompare(y));
+}
+
+function approximateGlobalMFVS(seed=new Set(), limit=60){
+  const cut = [];
+  const mask = new Set(seed);
+  const nodes = allTerms();
+  for(let step=0; step<limit; step++){
+    const adj = t => mask.has(t) ? [] : knownDeps(t);
+    const comps = allSccs(nodes,adj).filter(c=>c.length>1 || c.some(n=>adj(n).includes(n)));
+    if(!comps.length) return {cut,remaining:0};
+    const score = new Map();
+    comps.forEach(c=>c.forEach(n=>{
+      score.set(n,(score.get(n)||0) + c.length + adj(n).filter(d=>c.includes(d)).length);
+    }));
+    const pick = [...score.entries()].filter(([n])=>!mask.has(n)).sort((a,b)=>b[1]-a[1] || knownDeps(b[0]).length-knownDeps(a[0]).length || a[0].localeCompare(b[0]))[0];
+    if(!pick) return {cut,remaining:comps.length};
+    mask.add(pick[0]);
+    cut.push(pick[0]);
+  }
+  const adj = t => mask.has(t) ? [] : knownDeps(t);
+  const remaining = allSccs(nodes,adj).filter(c=>c.length>1 || c.some(n=>adj(n).includes(n))).length;
+  return {cut,remaining};
+}
+
+function applyPreset(name){
+  const next = new Set();
+  if(name === "empiricist"){
+    allTerms().forEach(t=>{ if(/perceptual|spatial|material|embodied/.test(terms[t].role)) next.add(t); });
+  } else if(name === "practice"){
+    ["action","practice","rule","agent","norm","use","language-game"].forEach(t=>next.add(t));
+  } else if(name === "atomism"){
+    next.add("object");
+  } else if(name === "social"){
+    allTerms().forEach(t=>{ if(/social|institutional|normative/.test(terms[t].role)) next.add(t); });
+    ["practice","rule","status","role","agent"].forEach(t=>next.add(t));
+  }
+  setStipulated(next,`preset:${name}`);
+}
+
+function setStipulated(next,action){
+  lastFacts = computeGlobal(stipulated);
+  stipulated = new Set([...next].filter(t=>terms[t]));
+  lastAction = action;
+  render();
+}
+
+function toggleTerm(t){
+  const next = new Set(stipulated);
+  if(next.has(t)) next.delete(t); else next.add(t);
+  setStipulated(next,`${next.has(t) ? "stipulate" : "unstipulate"}:${t}`);
+}
+
+function addProbe(){
+  const name = $("customTerm").value.trim().toLowerCase().replace(/\s+/g,"-");
+  const def = $("customDef").value.trim();
+  if(!name || !def) return;
+  terms[name] = {def, role:"temporary probe", source:"temporary"};
+  rebuildCompiler();
+  baselineFacts = null;
+  lastFacts = null;
+  selected = name; render();
+}
+
+function applySelectedDefinition(){
+  const def = $("selectedDef").value.trim();
+  if(!def || !terms[selected]) return;
+  const before = computeGlobal(stipulated);
+  terms[selected].def = def;
+  terms[selected].source = terms[selected].source === "seed" ? "seed" : "authored";
+  rebuildCompiler();
+  baselineFacts = computeGlobal(new Set());
+  lastFacts = before;
+  lastAction = `compile-edit:${selected}`;
+  render();
+}
+
+function revertSelectedDefinition(){
+  if(terms[selected]) $("selectedDef").value = terms[selected].def;
+}
+
+function sample(arr,n){
+  if(!arr.length) return "none";
+  const sorted = [...arr].sort((a,b)=>a.localeCompare(b));
+  return sorted.length <= n ? sorted.join(", ") : `${sorted.slice(0,n).join(", ")} +${sorted.length-n}`;
+}
+
+function signed(n){ return n > 0 ? `+${n}` : String(n); }
+
+function hash(s){
+  let h=0; for(let i=0;i<s.length;i++) h=((h<<5)-h+s.charCodeAt(i))|0;
+  return Math.abs(h);
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function escapeRegExp(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+
+$("termSelect").onchange = e => { selected = e.target.value; render(); };
+$("depth").onchange = render;
+$("layout").onchange = render;
+$("filter").oninput = renderSelectors;
+$("addProbe").onclick = addProbe;
+$("applyDef").onclick = applySelectedDefinition;
+$("revertDef").onclick = revertSelectedDefinition;
+$("toggleSelected").onclick = () => toggleTerm(selected);
+$("clearStip").onclick = () => setStipulated(new Set(),"clear");
+$("greedyBreak").onclick = () => {
+  const greedy = approximateGlobalMFVS(stipulated,80);
+  setStipulated(new Set([...stipulated,...greedy.cut]),`greedy-break:${greedy.cut.length}`);
+};
+document.querySelectorAll("[data-preset]").forEach(b=>b.onclick=()=>applyPreset(b.dataset.preset));
+$("showAll").onclick = () => setView("all","showAll");
+$("showPath").onclick = () => setView("path","showPath");
+$("showKernel").onclick = () => setView("kernel","showKernel");
+$("showMgs").onclick = () => setView("mgs","showMgs");
+function setView(v,id){
+  view=v; document.querySelectorAll(".buttonrow button").forEach(b=>b.classList.remove("active")); $(id).classList.add("active"); render();
+}
+function canvasPoint(e){
+  const c = $("atlasCanvas"), r = c.getBoundingClientRect();
+  return {x:e.clientX-r.left, y:e.clientY-r.top};
+}
+function screenToWorld(pt){
+  const {w,h} = $("atlasCanvas")._css || {w:$("atlasCanvas").clientWidth,h:$("atlasCanvas").clientHeight};
+  return {x:(pt.x - w/2 - atlasState.panX)/atlasState.zoom, y:(pt.y - h/2 - atlasState.panY)/atlasState.zoom};
+}
+function nearestAtlasNode(pt){
+  const wpt = screenToWorld(pt);
+  let best = null, bestD = Infinity;
+  atlasState.nodes.forEach(n=>{
+    const d = Math.hypot(n.x-wpt.x,n.y-wpt.y);
+    if(d < bestD){ bestD = d; best = n; }
+  });
+  return best && bestD < Math.max(10,16/atlasState.zoom) ? best : null;
+}
+$("atlasCanvas").addEventListener("pointerdown",e=>{
+  $("atlasCanvas").setPointerCapture(e.pointerId);
+  atlasState.drag = {start:canvasPoint(e), panX:atlasState.panX, panY:atlasState.panY, moved:false};
+  $("atlasCanvas").classList.add("dragging");
+});
+$("atlasCanvas").addEventListener("pointermove",e=>{
+  const pt = canvasPoint(e);
+  if(atlasState.drag){
+    const dx = pt.x - atlasState.drag.start.x, dy = pt.y - atlasState.drag.start.y;
+    atlasState.panX = atlasState.drag.panX + dx; atlasState.panY = atlasState.drag.panY + dy;
+    atlasState.drag.moved = atlasState.drag.moved || Math.hypot(dx,dy) > 4;
+    drawCurrentAtlas();
+  } else {
+    const hit = nearestAtlasNode(pt);
+    if((hit?.id || null) !== atlasState.hover){ atlasState.hover = hit?.id || null; drawCurrentAtlas(); }
+  }
+});
+$("atlasCanvas").addEventListener("pointerup",e=>{
+  const hit = nearestAtlasNode(canvasPoint(e));
+  if(hit && !atlasState.drag?.moved){ selected = hit.id; render(); }
+  atlasState.drag = null; $("atlasCanvas").classList.remove("dragging");
+});
+$("atlasCanvas").addEventListener("wheel",e=>{
+  e.preventDefault();
+  const old = atlasState.zoom;
+  atlasState.zoom = Math.max(.24,Math.min(4,atlasState.zoom * (e.deltaY < 0 ? 1.12 : .89)));
+  const pt = canvasPoint(e), {w,h} = $("atlasCanvas")._css;
+  atlasState.panX = pt.x - w/2 - (pt.x - w/2 - atlasState.panX) * (atlasState.zoom/old);
+  atlasState.panY = pt.y - h/2 - (pt.y - h/2 - atlasState.panY) * (atlasState.zoom/old);
+  drawCurrentAtlas();
+},{passive:false});
+window.addEventListener("resize",()=>render());
+render();
+</script>
+</body>
+</html>

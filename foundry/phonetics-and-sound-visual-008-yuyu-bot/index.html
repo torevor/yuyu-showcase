@@ -1,0 +1,1469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounding Atlas</title>
+<style>
+:root{
+  --paper:#f8f7f1;
+  --ink:#1e2020;
+  --muted:#666760;
+  --faint:#ddd8cb;
+  --line:#bdb5a3;
+  --panel:#fffdfa;
+  --panel2:#efebe0;
+  --blue:#245d7e;
+  --red:#a53827;
+  --green:#4c6f39;
+  --gold:#9a721f;
+  --violet:#5c5470;
+  --black:#111;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;line-height:1.25}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.app{display:grid;grid-template-columns:310px minmax(520px,1fr) 380px;grid-template-rows:auto minmax(0,1fr);gap:7px;padding:7px;height:100vh;min-height:680px}
+header,.panel{border:1px solid var(--line);background:var(--panel);overflow:hidden}
+header{grid-column:1/-1;display:grid;grid-template-columns:310px 1fr 380px;gap:7px;padding:7px;align-items:stretch}
+h1{font-family:ui-serif,Georgia,serif;font-size:25px;line-height:1;margin:0;font-weight:700;letter-spacing:0}
+.sub{font-size:11px;color:var(--muted);margin-top:2px}
+.claim{border-left:1px solid var(--line);border-right:1px solid var(--line);padding:0 10px;color:#333;max-width:900px}
+.regimebar{display:grid;grid-template-columns:110px 1fr;gap:5px;margin-top:6px;align-items:center}
+.regimebar label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.regimebar select{height:24px}
+.metrics{display:grid;grid-template-columns:repeat(8,1fr);gap:0;border:1px solid var(--line);background:#faf8f1}
+.metric{padding:4px 6px;border-right:1px solid var(--line)}
+.metric:last-child{border-right:0}
+.metric b{display:block;font-family:ui-serif,Georgia,serif;font-size:20px;line-height:1.05}
+.metric span{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.panel h2{margin:0;padding:5px 7px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--panel2);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.inner{padding:7px}
+.left{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;min-height:0}
+.search{display:grid;grid-template-columns:1fr 64px;gap:5px;margin-bottom:6px}
+input,select,button{height:26px;border:1px solid var(--line);background:#fffdfa;padding:0 6px}
+input:focus,select:focus,button:focus{outline:1px solid var(--blue);outline-offset:0}
+.filters{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px}
+.toggles{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:6px}
+.toggle{height:26px;border:1px solid var(--line);background:#fffdfa;display:flex;align-items:center;gap:5px;padding:0 6px}
+.toggle input{margin:0}
+.word-list{min-height:0;overflow:auto;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:3px 0}
+.word-row{width:100%;height:28px;border:1px solid transparent;background:transparent;display:grid;grid-template-columns:70px 70px 30px 30px 1fr;gap:4px;align-items:center;text-align:left;padding:0 4px}
+.word-row:hover{border-color:var(--line)}
+.word-row.active{border-color:var(--black);background:#ebe4d2}
+.term{font-weight:750}
+.ipa{font-family:ui-serif,Georgia,serif;color:var(--blue);white-space:nowrap}
+.chip{display:inline-block;border:1px solid var(--line);padding:1px 4px;font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:#fff}
+.chip.ax{border-color:#9cad86;color:var(--green);background:#f7fbf1}
+.chip.cy{border-color:#d2a198;color:var(--red);background:#fff4f1}
+.chip.inf{border-color:#aa9fb9;color:var(--violet);background:#f7f3fb}
+.chip.nec{border-color:#111;color:#111;background:#fff7df}
+.chip.cont{border-color:#9a721f;color:#7b5814;background:#fffaf0}
+.chip.unused{border-color:#bdb5a3;color:#666760;background:#f8f6ef}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;color:var(--muted);font-size:11px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;border:1px solid var(--line);vertical-align:-1px}
+.graph-panel{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0}
+.tools{display:grid;grid-template-columns:repeat(17,max-content) 1fr;gap:5px;padding:6px;border-bottom:1px solid var(--line);background:#fbfaf4;align-items:center}
+.tools button{min-width:30px}
+.tools button.active{background:#ebe4d2;border-color:#111}
+.tools .readout{text-align:right;color:var(--muted);font-size:11px}
+.basis-read{height:26px;min-width:108px;border:1px solid var(--line);background:#fffdfa;display:flex;align-items:center;justify-content:center;padding:0 6px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px}
+.stage{position:relative;min-height:0;background:#fdfbf5}
+canvas#atlas{display:block;width:100%;height:100%;background:
+  linear-gradient(90deg,rgba(189,181,163,.26) 1px,transparent 1px),
+  linear-gradient(rgba(189,181,163,.22) 1px,transparent 1px);
+  background-size:28px 28px}
+.tracebar{border-top:1px solid var(--line);padding:5px 7px;display:grid;grid-template-columns:1fr auto;gap:8px;background:#fbfaf4;color:var(--muted);font-size:11px}
+.right{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0}
+.record{display:grid;grid-template-rows:auto auto auto auto auto auto minmax(0,1fr);gap:7px;height:100%;min-height:0}
+.big-term{display:grid;grid-template-columns:1fr auto auto;gap:7px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:6px}
+.big-term b{font-family:ui-serif,Georgia,serif;font-size:30px;line-height:1}
+.definition{font-family:ui-serif,Georgia,serif;font-size:15px;line-height:1.32}
+.strip{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.mini{border:1px solid var(--line);background:#fff;padding:5px;min-height:54px;overflow:hidden}
+.mini h3{margin:0 0 4px;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.mini b{font-family:ui-serif,Georgia,serif;font-size:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.list{display:flex;flex-wrap:wrap;gap:3px}
+.pill{height:22px;border:1px solid var(--line);background:#f8f6ef;padding:0 5px}
+.pill:hover{border-color:#111}
+#spectro{width:100%;height:124px;border:1px solid var(--line);background:#fff;display:block}
+.scrollbox{min-height:0;overflow:auto;border:1px solid var(--line);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:11px}
+td,th{border-bottom:1px solid var(--faint);padding:4px 5px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:#f3efe5;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);z-index:1}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;white-space:pre-wrap}
+.note{color:var(--muted);font-size:11px}
+.labbar{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.labbar button.active{background:#ebe4d2;border-color:#111}
+.labmark{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--gold)}
+.theorytag{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9px;color:var(--violet);text-transform:uppercase}
+.matrix-tip{position:absolute;left:8px;top:8px;border:1px solid var(--line);background:rgba(255,253,250,.92);padding:4px 6px;font-size:11px;color:var(--muted);pointer-events:none}
+.proofline{border:1px solid var(--line);background:#fffdfa;padding:5px 6px;font-size:11px;color:#333;min-height:40px}
+.proofline b{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;color:#111}
+@media (max-width:1180px){
+  .app{grid-template-columns:300px 1fr;grid-template-rows:auto 640px auto;height:auto}
+  header{grid-template-columns:300px 1fr}
+  .metrics{grid-column:1/-1}
+  .right{grid-column:1/-1;min-height:720px}
+}
+@media (max-width:760px){
+  .app,header{display:block;height:auto;min-height:0}
+  header>*{margin-bottom:7px}
+  .panel{margin-bottom:7px}
+  .graph-panel{height:560px}
+  .left{height:520px}
+  .tools{grid-template-columns:repeat(5,max-content) 1fr}
+  .labbar{grid-template-columns:repeat(2,1fr)}
+  .claim{border:0;padding:0}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>Grounding Atlas</h1>
+      <div class="sub">closure workbench / grounding depth / acoustic trace</div>
+    </div>
+    <div class="claim">A self-contained lexical instrument and counterfactual lab: definitions become dependency edges, circularity is computed, axioms and cuts can be changed live, and every intervention reissues a compact grounding certificate while the word keeps its phonetic body.
+      <div class="regimebar"><label for="theorySelect">regime</label><select id="theorySelect"></select></div>
+    </div>
+    <div class="metrics" id="metrics"></div>
+  </header>
+
+  <section class="panel left">
+    <h2>Lexical Index <span id="countLabel"></span></h2>
+    <div class="inner">
+      <div class="search">
+        <input id="query" placeholder="search word / IPA / gloss" autocomplete="off">
+        <button id="clearSearch">clear</button>
+      </div>
+      <div class="filters">
+        <select id="scope">
+          <option value="all">all nodes</option>
+          <option value="local">local trace</option>
+          <option value="cycle">cycles</option>
+          <option value="axiom">axioms</option>
+          <option value="custom">lab axioms</option>
+          <option value="kernel">basis terms</option>
+          <option value="cut">cut terms</option>
+          <option value="infinite">unrounded</option>
+        </select>
+        <select id="depthFilter">
+          <option value="any">any depth</option>
+          <option value="0">depth 0</option>
+          <option value="1">depth 1</option>
+          <option value="2">depth 2</option>
+          <option value="3">depth 3+</option>
+          <option value="inf">infinite</option>
+        </select>
+        <select id="sortMode">
+          <option value="alpha">A-Z</option>
+          <option value="depth">depth</option>
+          <option value="degree">degree</option>
+        </select>
+      </div>
+      <div class="toggles">
+        <label class="toggle"><input id="showEdges" type="checkbox" checked> edges</label>
+        <label class="toggle"><input id="showLabels" type="checkbox"> labels</label>
+      </div>
+    </div>
+    <div class="word-list" id="wordList"></div>
+    <div class="inner">
+      <div class="legend">
+        <span><i style="background:#f7fbf1;border-color:#4c6f39"></i>axiom</span>
+        <span><i style="background:#fff4f1;border-color:#a53827"></i>cycle</span>
+        <span><i style="background:#f7f3fb;border-color:#5c5470"></i>unrounded</span>
+        <span><i style="background:#f3efe5;border-color:#245d7e"></i>trace</span>
+      </div>
+    </div>
+  </section>
+
+  <main class="panel graph-panel">
+    <h2>Definition Atlas <span id="modeLabel"></span></h2>
+    <div class="tools">
+      <button id="playBtn" title="play selected IPA">play</button>
+      <button id="traceGround">ground</button>
+      <button id="traceCycle">cycle</button>
+      <button id="stepBtn">step</button>
+      <button id="settleBtn">settle</button>
+      <button id="resetView">center</button>
+      <button id="pinBtn">pin</button>
+      <button id="atlasMode">atlas</button>
+      <button id="matrixMode">matrix</button>
+      <button id="auditMode">audit</button>
+      <button id="regimeMode">regime</button>
+      <button id="solveBtn">solve</button>
+      <button id="basisPrev" title="previous grounding basis">‹</button>
+      <div class="basis-read" id="basisRead">basis --/--</div>
+      <button id="basisNext" title="next grounding basis">›</button>
+      <button id="diffBtn">diff</button>
+      <button id="applyBasis">apply</button>
+      <div class="readout" id="readout"></div>
+    </div>
+    <div class="stage"><canvas id="atlas"></canvas><div class="matrix-tip" id="matrixTip" hidden></div></div>
+    <div class="tracebar"><span id="traceText"></span><span id="zoomLabel"></span></div>
+  </main>
+
+  <aside class="panel right">
+    <h2>Selected Word <span id="selectedFlags"></span></h2>
+    <div class="inner record">
+      <div class="big-term"><b id="term">meaning</b><span class="ipa" id="ipa"></span><span class="chip" id="roleChip"></span></div>
+      <div class="definition" id="definition"></div>
+      <div class="strip">
+        <div class="mini"><h3>Base Depth</h3><b id="depthValue"></b></div>
+        <div class="mini"><h3>Out / In</h3><b id="degreeValue"></b></div>
+        <div class="mini"><h3>Component</h3><b id="componentValue"></b></div>
+        <div class="mini"><h3>Basis Class</h3><b id="kernelValue"></b></div>
+        <div class="mini"><h3>Lab Delta</h3><b id="labValue"></b></div>
+      </div>
+      <div class="labbar">
+        <button id="axiomToggle">make axiom</button>
+        <button id="cutToggle">cut term</button>
+        <select id="wordTheory"></select>
+        <button id="clearLab">clear lab</button>
+        <button id="copyCert">copy cert</button>
+      </div>
+      <canvas id="spectro" width="760" height="180"></canvas>
+      <div class="grid2">
+        <div class="mini"><h3>Defines Through</h3><div class="list" id="deps"></div></div>
+        <div class="mini"><h3>Used By</h3><div class="list" id="revdeps"></div></div>
+      </div>
+      <div class="proofline" id="basisProof"></div>
+      <div class="scrollbox">
+        <table id="kernelTable"></table>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const AXIOMS = ["body","see","hear","move","touch","time","place","space","now","this","not"];
+const RAW = [
+["meaning","/ˈmiːnɪŋ/","the sense carried by a sign or word in use",["sense","sign","word","use"]],
+["sense","/sɛns/","the way a word or sign can be understood",["word","sign","understand"]],
+["sign","/saɪn/","a mark sound gesture or act taken to carry meaning",["mark","sound","gesture","act","meaning"]],
+["word","/wɜːrd/","a repeatable speech or writing form used as a sign",["repeat","speech","writing","form","sign","use"]],
+["use","/juːs/","an act of putting a sign body or tool to work in a situation",["act","sign","body","tool","work","situation"]],
+["definition","/ˌdɛfəˈnɪʃən/","words that state the meaning of another word",["word","state","meaning"]],
+["language","/ˈlæŋɡwɪdʒ/","a shared system of signs and rules for making meaning",["share","system","sign","rule","meaning"]],
+["speech","/spiːtʃ/","language made as voice for another to hear",["language","voice","other","hear"]],
+["writing","/ˈraɪtɪŋ/","language made durable as visible marks",["language","durable","visible","mark"]],
+["voice","/vɔɪs/","sound made by a body for speech call or expression",["sound","body","speech","call","expression"]],
+["sound","/saʊnd/","a hearable vibration in air or body",["hear","vibration","air","body"]],
+["mark","/mɑːrk/","a visible difference on a surface",["visible","difference","surface"]],
+["gesture","/ˈdʒɛstʃər/","a visible movement of a body used as a sign",["visible","move","body","sign"]],
+["understand","/ˌʌndərˈstænd/","to take a sign as having sense in a situation",["take","sign","sense","situation"]],
+["interpret","/ɪnˈtɜːrprət/","to make sense of a sign word act or mark",["make","sense","sign","word","act","mark"]],
+["context","/ˈkɑːntɛkst/","the surrounding situation in which a sign is taken",["surround","situation","sign","take"]],
+["situation","/ˌsɪtʃuˈeɪʃən/","an arrangement of body place time and relation",["arrange","body","place","time","relation"]],
+["relation","/rɪˈleɪʃən/","a way in which one thing bears on another",["way","one","thing","other"]],
+["system","/ˈsɪstəm/","many related parts whose relations matter",["many","part","relation","matter"]],
+["rule","/ruːl/","a stable pattern that guides use or judgment",["stable","pattern","guide","use","judge"]],
+["pattern","/ˈpætərn/","a repeatable arrangement of difference",["repeat","arrange","difference"]],
+["form","/fɔːrm/","the shaped appearance or sound of a thing",["shape","appear","sound","thing"]],
+["difference","/ˈdɪfərəns/","not being the same in form place time or state",["not","same","form","place","time","state"]],
+["same","/seɪm/","not different in the relevant way",["not","difference","way"]],
+["identity","/aɪˈdɛntəti/","the sameness by which a thing is itself",["same","thing","itself"]],
+["object","/ˈɑːbdʒɛkt/","a thing treated as bounded and distinct",["thing","bound","difference"]],
+["thing","/θɪŋ/","something that can be noticed named or used",["notice","name","use"]],
+["name","/neɪm/","a word or sign used to pick out a thing",["word","sign","use","thing"]],
+["state","/steɪt/","how a thing is at a time",["thing","time","way"]],
+["event","/ɪˈvɛnt/","a change or happening in time",["change","happen","time"]],
+["change","/tʃeɪndʒ/","a difference between one state and another through time",["difference","state","time","one","other"]],
+["movement","/ˈmuːvmənt/","change of place through time",["change","place","time","move"]],
+["body","/ˈbɑːdi/","the living physical thing that can see hear touch and move",["see","hear","touch","move"]],
+["see","/siː/","to receive visible difference by sight",["visible","difference","sight"]],
+["hear","/hɪr/","to receive sound by ear",["sound","ear"]],
+["touch","/tʌtʃ/","to feel contact with the body",["feel","contact","body"]],
+["move","/muːv/","to change place through time",["change","place","time"]],
+["time","/taɪm/","the ordering of before now and after",["before","now","after","order"]],
+["place","/pleɪs/","where a body or thing is",["where","body","thing"]],
+["space","/speɪs/","the spread in which places differ",["place","difference"]],
+["now","/naʊ/","this present time",["this","time"]],
+["this","/ðɪs/","the indicated thing or situation here",["indicate","thing","situation"]],
+["not","/nɑːt/","the mark of denial or difference",["mark","deny","difference"]],
+["visible","/ˈvɪzəbəl/","able to be seen",["see"]],
+["sight","/saɪt/","the bodily capacity for seeing",["body","see"]],
+["ear","/ɪr/","the bodily organ for hearing",["body","hear"]],
+["feel","/fiːl/","to sense through body or emotion",["sense","body","emotion"]],
+["contact","/ˈkɑːntækt/","touching relation between bodies or surfaces",["touch","relation","body","surface"]],
+["surface","/ˈsɜːrfəs/","the outer face of a body or thing",["outer","face","body","thing"]],
+["air","/ɛr/","the surrounding matter through which sound can move",["surround","matter","sound","move"]],
+["vibration","/vaɪˈbreɪʃən/","repeated movement that can make sound",["repeat","movement","make","sound"]],
+["matter","/ˈmætər/","physical stuff with body or weight",["physical","body","weight"]],
+["physical","/ˈfɪzɪkəl/","belonging to body matter space and time",["body","matter","space","time"]],
+["act","/ækt/","something done by a body",["do","body"]],
+["do","/duː/","to make an act or change",["make","act","change"]],
+["make","/meɪk/","to cause a thing state or event to be",["cause","thing","state","event"]],
+["cause","/kɔːz/","an event or state that makes another happen",["event","state","make","happen"]],
+["happen","/ˈhæpən/","to take place in time",["take","place","time"]],
+["take","/teɪk/","to receive hold or treat in a way",["receive","hold","treat","way"]],
+["receive","/rɪˈsiːv/","to get or be affected by something",["get","affect","thing"]],
+["hold","/hoʊld/","to keep a thing in place or relation",["keep","thing","place","relation"]],
+["treat","/triːt/","to take or handle something as a kind",["take","handle","kind"]],
+["kind","/kaɪnd/","a group of things taken as the same in some way",["group","thing","same","way"]],
+["group","/ɡruːp/","many things taken together",["many","thing","together"]],
+["many","/ˈmɛni/","more than one",["more","one"]],
+["one","/wʌn/","a single thing",["single","thing"]],
+["other","/ˈʌðər/","not this one",["not","this","one"]],
+["part","/pɑːrt/","a thing within a larger system or body",["thing","system","body"]],
+["whole","/hoʊl/","a thing considered with all its parts",["thing","all","part"]],
+["all","/ɔːl/","the whole amount or group",["whole","amount","group"]],
+["more","/mɔːr/","greater in amount or degree",["greater","amount","degree"]],
+["amount","/əˈmaʊnt/","how much of something there is",["much","thing"]],
+["degree","/dɪˈɡriː/","a measured amount of a quality",["measure","amount","quality"]],
+["quality","/ˈkwɑːləti/","a way a thing can be",["way","thing"]],
+["way","/weɪ/","a manner path or form of being or doing",["manner","path","form","do"]],
+["manner","/ˈmænər/","a way of doing or happening",["way","do","happen"]],
+["path","/pæθ/","a course from one place or state to another",["course","one","place","state","other"]],
+["course","/kɔːrs/","ordered movement or development through time",["order","movement","time"]],
+["order","/ˈɔːrdər/","an arrangement in which place or time matters",["arrange","place","time","matter"]],
+["arrange","/əˈreɪndʒ/","to put parts into an order or relation",["put","part","order","relation"]],
+["put","/pʊt/","to move a thing into a place or state",["move","thing","place","state"]],
+["stable","/ˈsteɪbəl/","remaining the same through time",["same","time"]],
+["durable","/ˈdʊrəbəl/","able to remain through time and use",["stable","time","use"]],
+["repeat","/rɪˈpiːt/","to do or happen again in a similar form",["do","happen","again","same","form"]],
+["again","/əˈɡɛn/","at another time after now or before",["time","after","now","before"]],
+["before","/bɪˈfɔːr/","earlier in time",["time"]],
+["after","/ˈæftər/","later in time",["time"]],
+["where","/wɛr/","at what place",["place"]],
+["here","/hɪr/","at this place",["this","place"]],
+["indicate","/ˈɪndəkeɪt/","to point out by sign gesture or mark",["point","sign","gesture","mark"]],
+["point","/pɔɪnt/","to direct attention to a thing or place",["direct","attention","thing","place"]],
+["attention","/əˈtɛnʃən/","directed noticing",["direct","notice"]],
+["notice","/ˈnoʊtɪs/","to become aware of a difference or thing",["aware","difference","thing"]],
+["aware","/əˈwɛr/","able to notice or feel",["notice","feel"]],
+["direct","/dəˈrɛkt/","to guide toward a place thing or state",["guide","place","thing","state"]],
+["guide","/ɡaɪd/","to direct movement use or judgment",["direct","movement","use","judge"]],
+["judge","/dʒʌdʒ/","to treat something as having a quality or relation",["treat","thing","quality","relation"]],
+["work","/wɜːrk/","effective action toward a use or result",["effect","act","use","result"]],
+["effect","/ɪˈfɛkt/","a change made by a cause or act",["change","make","cause","act"]],
+["result","/rɪˈzʌlt/","a state or event that comes after an act or cause",["state","event","after","act","cause"]],
+["tool","/tuːl/","a thing used by a body to make work happen",["thing","use","body","make","work"]],
+["call","/kɔːl/","a voice act directed to another",["voice","act","direct","other"]],
+["expression","/ɪkˈsprɛʃən/","a sign or act that shows feeling or meaning",["sign","act","show","feel","meaning"]],
+["show","/ʃoʊ/","to make visible or evident",["make","visible","evident"]],
+["evident","/ˈɛvədənt/","able to be seen understood or noticed",["see","understand","notice"]],
+["emotion","/ɪˈmoʊʃən/","felt state of a body",["feel","state","body"]],
+["share","/ʃɛr/","to hold or use with another",["hold","use","other"]],
+["speaker","/ˈspiːkər/","a body using speech or signs for another",["body","use","speech","sign","other"]],
+["reader","/ˈriːdər/","a body taking visible marks as words",["body","take","visible","mark","word"]],
+["listener","/ˈlɪsənər/","a body receiving voice or sound as speech",["body","receive","voice","sound","speech"]],
+["deny","/dɪˈnaɪ/","to state not or refuse a claim",["state","not","refuse","claim"]],
+["claim","/kleɪm/","a stated sign offered for judgment",["state","sign","judge"]],
+["refuse","/rɪˈfjuːz/","to not take or allow",["not","take","allow"]],
+["allow","/əˈlaʊ/","to let an act happen",["let","act","happen"]],
+["let","/lɛt/","to allow something to happen",["allow","happen"]],
+["bound","/baʊnd/","to mark or limit the edge of a thing",["mark","limit","edge","thing"]],
+["limit","/ˈlɪmɪt/","a boundary where more is not allowed",["bound","more","not","allow"]],
+["edge","/ɛdʒ/","where a surface or thing ends",["where","surface","thing","end"]],
+["end","/ɛnd/","the point where a course stops",["point","course","stop"]],
+["stop","/stɑːp/","to cease moving doing or happening",["not","move","do","happen"]],
+["outer","/ˈaʊtər/","away from the inside of a thing",["away","inside","thing"]],
+["inside","/ˌɪnˈsaɪd/","within the bounds of a thing",["bound","thing"]],
+["away","/əˈweɪ/","not here or not near",["not","here","near"]],
+["near","/nɪr/","close in place or relation",["close","place","relation"]],
+["close","/kloʊs/","near in place time or relation",["near","place","time","relation"]],
+["face","/feɪs/","a visible surface of a body or thing",["visible","surface","body","thing"]],
+["weight","/weɪt/","bodily felt heaviness of matter",["body","feel","matter"]],
+["get","/ɡɛt/","to come to have or receive",["receive","have"]],
+["have","/hæv/","to hold as part state or possession",["hold","part","state"]],
+["affect","/əˈfɛkt/","to make a change in a thing or state",["make","change","thing","state"]],
+["handle","/ˈhændəl/","to touch move or treat with the body",["touch","move","treat","body"]],
+["single","/ˈsɪŋɡəl/","one and not more",["one","not","more"]],
+["together","/təˈɡɛðər/","in the same place time group or relation",["same","place","time","group","relation"]],
+["greater","/ˈɡreɪtər/","more in amount degree or force",["more","amount","degree","force"]],
+["force","/fɔːrs/","power that can cause movement or change",["power","cause","movement","change"]],
+["power","/ˈpaʊər/","capacity to make change happen",["capacity","make","change","happen"]],
+["capacity","/kəˈpæsəti/","ability of a body thing or system to act",["ability","body","thing","system","act"]],
+["ability","/əˈbɪləti/","power to do or receive an act",["power","do","receive","act"]],
+["measure","/ˈmɛʒər/","to mark amount degree time or space",["mark","amount","degree","time","space"]],
+["much","/mʌtʃ/","large in amount or degree",["amount","degree"]],
+["surround","/səˈraʊnd/","to be around a thing or place",["around","thing","place"]],
+["around","/əˈraʊnd/","on many sides of a thing or place",["many","side","thing","place"]],
+["side","/saɪd/","a part or surface away from another side",["part","surface","away","other"]],
+["itself","/ɪtˈsɛlf/","the same thing considered as its own identity",["same","thing","identity"]],
+["development","/dɪˈvɛləpmənt/","ordered change through time",["order","change","time"]],
+["present","/ˈprɛzənt/","at this time now",["this","time","now"]],
+["later","/ˈleɪtər/","after in time",["after","time"]],
+["earlier","/ˈɜːrliər/","before in time",["before","time"]]
+];
+
+const LEXICON = RAW.map(([id,ipa,def,deps])=>({id,ipa,def,deps}));
+const byId = Object.fromEntries(LEXICON.map(d=>[d.id,d]));
+const ids = LEXICON.map(d=>d.id);
+const THEORIES = [
+  ["use","use-theoretic"],
+  ["referential","referential"],
+  ["mentalist","mentalist"],
+  ["structural","structural"]
+];
+const THEORY_VARIANTS = {
+  meaning:{
+    use:["the role a sign has in a shared pattern of use",["sign","role","share","pattern","use"]],
+    referential:["the relation by which a sign picks out a thing or state",["relation","sign","thing","state","name"]],
+    mentalist:["the sense or content a sign makes available to understanding",["sense","sign","make","understand"]],
+    structural:["the value a sign has by difference within a system",["sign","difference","system","relation"]]
+  },
+  sense:{
+    use:["the practical uptake a word can have in a situation",["word","take","use","situation"]],
+    referential:["the way a word directs attention toward what it names",["word","direct","attention","name","thing"]],
+    mentalist:["the understood content held with a word or sign",["understand","hold","word","sign"]],
+    structural:["a position of contrast among related signs",["place","difference","relation","sign"]]
+  },
+  sign:{
+    use:["a mark sound gesture or act used in a practice to carry meaning",["mark","sound","gesture","act","use","meaning"]],
+    referential:["a form that indicates an object event or state",["form","indicate","object","event","state"]],
+    mentalist:["a perceivable form that evokes sense for a body",["form","sense","body","notice"]],
+    structural:["an element whose value comes from difference in a system",["part","difference","system","value"]]
+  },
+  word:{
+    use:["a repeatable speech or writing form used as a sign",["repeat","speech","writing","form","sign","use"]],
+    referential:["a linguistic sign that can name or indicate a thing",["language","sign","name","indicate","thing"]],
+    mentalist:["a sound or mark associated with an understood sense",["sound","mark","understand","sense"]],
+    structural:["a unit in language defined by its relations to other words",["part","language","relation","other","word"]]
+  },
+  use:{
+    use:["an act of putting a sign body or tool to work in a situation",["act","sign","body","tool","work","situation"]],
+    referential:["an act that applies a sign to a thing or state",["act","sign","thing","state","apply"]],
+    mentalist:["an act of expressing or receiving intended sense",["act","expression","receive","sense"]],
+    structural:["a patterned position a sign takes inside a system of acts",["pattern","place","sign","system","act"]]
+  },
+  definition:{
+    use:["words that state how another word is used",["word","state","other","use"]],
+    referential:["words that fix what a sign is taken to name",["word","sign","take","name"]],
+    mentalist:["words that make a sense explicit for understanding",["word","make","sense","understand"]],
+    structural:["a rule that locates a term among related terms",["rule","place","relation","word"]]
+  },
+  language:{
+    use:["a shared system of signs and rules for making meaning",["share","system","sign","rule","meaning"]],
+    referential:["a system of signs for naming and indicating the world",["system","sign","name","indicate","thing"]],
+    mentalist:["a system for expressing and receiving sense",["system","expression","receive","sense"]],
+    structural:["a differential system in which signs take value from relations",["difference","system","sign","relation","value"]]
+  },
+  understand:{
+    use:["to take a sign as having a workable use in a situation",["take","sign","use","situation"]],
+    referential:["to know what a sign names or indicates",["know","sign","name","indicate"]],
+    mentalist:["to receive and hold a sense as content",["receive","hold","sense"]],
+    structural:["to locate a sign within a pattern of differences",["place","sign","pattern","difference"]]
+  },
+  interpret:{
+    use:["to work out how a sign is being used",["work","sign","use"]],
+    referential:["to take a sign as about an object state or event",["take","sign","object","state","event"]],
+    mentalist:["to make a sign yield sense for understanding",["make","sign","sense","understand"]],
+    structural:["to read a sign through its relations and contrasts",["sign","relation","difference"]]
+  },
+  context:{
+    use:["the surrounding situation that makes a use intelligible",["surround","situation","make","use"]],
+    referential:["the situation that fixes what a sign points to",["situation","sign","point","thing"]],
+    mentalist:["the surrounding signs and states that guide understanding",["surround","sign","state","guide","understand"]],
+    structural:["the local system of relations that gives a sign value",["place","system","relation","sign","value"]]
+  },
+  system:{
+    use:["many related parts whose use-patterns matter",["many","part","relation","use","pattern","matter"]],
+    referential:["an ordered arrangement connecting signs with things",["order","arrange","sign","thing"]],
+    mentalist:["a held arrangement of related senses",["hold","arrange","relation","sense"]],
+    structural:["a whole in which differences among parts produce value",["whole","difference","part","value"]]
+  },
+  rule:{
+    use:["a stable pattern that guides use or judgment",["stable","pattern","guide","use","judge"]],
+    referential:["a stable constraint on how a sign may apply",["stable","limit","sign","apply"]],
+    mentalist:["a held guide for making or receiving sense",["hold","guide","make","receive","sense"]],
+    structural:["a relation that preserves differences inside a system",["relation","difference","system","stable"]]
+  },
+  form:{
+    use:["the repeatable shape or sound through which a sign is used",["repeat","shape","sound","sign","use"]],
+    referential:["the visible or hearable vehicle that points to a thing",["visible","hear","point","thing"]],
+    mentalist:["the perceivable body that carries sense",["body","sense","visible","sound"]],
+    structural:["the differential shape a term has among other terms",["difference","shape","other","word"]]
+  },
+  name:{
+    use:["a word or sign used to pick out a thing",["word","sign","use","thing"]],
+    referential:["a sign whose function is to refer to a thing",["sign","thing","relation"]],
+    mentalist:["a word linked to a held sense of a thing",["word","hold","sense","thing"]],
+    structural:["a term whose value depends on contrasts with other names",["word","value","difference","other","name"]]
+  },
+  state:{
+    use:["how a thing is treated at a time",["thing","treat","time","way"]],
+    referential:["a condition of a thing that a sign can indicate",["thing","sign","indicate","quality"]],
+    mentalist:["a held way a thing is understood to be",["hold","way","thing","understand"]],
+    structural:["a position in a field of possible differences",["place","difference","quality","system"]]
+  }
+};
+let activeTheory = "use";
+const theoryOverrides = {};
+const axiomSet = new Set(AXIOMS.filter(x=>byId[x]));
+let selected = "meaning";
+let traceMode = "ground";
+let tracePath = [];
+let pinned = false;
+let simRunning = true;
+let viewMode = "atlas";
+let basisIndex = 0;
+let compareIndex = 0;
+let diffMode = false;
+const customAxioms = new Set(AXIOMS.filter(x=>byId[x]));
+const cuts = new Set();
+const lab = {};
+const graph = document.getElementById("atlas");
+const gctx = graph.getContext("2d");
+const spectro = document.getElementById("spectro");
+const sctx = spectro.getContext("2d");
+const nodes = {};
+const view = {x:0,y:0,k:1,drag:false,lastX:0,lastY:0,node:null};
+
+function theoryName(key){return THEORIES.find(t=>t[0]===key)?.[1] || key;}
+function contested(id){return !!THEORY_VARIANTS[id];}
+function resolvedTheory(id){return theoryOverrides[id] || activeTheory;}
+function entryOf(id, theory=resolvedTheory(id)){
+  const base = byId[id];
+  const variant = THEORY_VARIANTS[id]?.[theory];
+  return variant ? {id, ipa:base.ipa, def:variant[0], deps:variant[1], theory} : {...base, theory:"fixed"};
+}
+function depsOf(id){return (entryOf(id).deps||[]).filter(x=>byId[x]);}
+function revOf(id){return LEXICON.filter(d=>depsOf(d.id).includes(id)).map(d=>d.id);}
+function aliveSet(){return new Set(ids.filter(id=>!cuts.has(id)));}
+function terminalUnion(extra){
+  const out = new Set(customAxioms);
+  if(extra) extra.forEach(id=>out.add(id));
+  return out;
+}
+function depsWithTerminals(id, alive, terminals){
+  if(!alive.has(id) || terminals.has(id)) return [];
+  return depsOf(id).filter(x=>alive.has(x));
+}
+function labDepsOf(id, extraTerminals){
+  const terms = terminalUnion(extraTerminals);
+  return depsWithTerminals(id, aliveSet(), terms);
+}
+function labRevOf(id, extraTerminals){return cuts.has(id)?[]:ids.filter(x=>labDepsOf(x, extraTerminals).includes(id));}
+function scc(){
+  let index=0, stack=[], comps=[], meta={};
+  function strong(v){
+    meta[v]={i:index,low:index,on:true}; index++; stack.push(v);
+    depsOf(v).forEach(w=>{
+      if(!meta[w]){ strong(w); meta[v].low=Math.min(meta[v].low,meta[w].low); }
+      else if(meta[w].on) meta[v].low=Math.min(meta[v].low,meta[w].i);
+    });
+    if(meta[v].low===meta[v].i){
+      const c=[]; let w;
+      do{w=stack.pop(); meta[w].on=false; c.push(w);}while(w!==v);
+      comps.push(c);
+    }
+  }
+  ids.forEach(id=>{if(!meta[id]) strong(id);});
+  return comps.filter(c=>c.length>1 || depsOf(c[0]).includes(c[0])).sort((a,b)=>b.length-a.length);
+}
+function sccOn(alive, terminals=new Set()){
+  let index=0, stack=[], comps=[], meta={};
+  function strong(v){
+    meta[v]={i:index,low:index,on:true}; index++; stack.push(v);
+    depsWithTerminals(v, alive, terminals).forEach(w=>{
+      if(!meta[w]){ strong(w); meta[v].low=Math.min(meta[v].low,meta[w].low); }
+      else if(meta[w].on) meta[v].low=Math.min(meta[v].low,meta[w].i);
+    });
+    if(meta[v].low===meta[v].i){
+      const c=[]; let w;
+      do{w=stack.pop(); meta[w].on=false; c.push(w);}while(w!==v);
+      comps.push(c);
+    }
+  }
+  ids.filter(id=>alive.has(id)).forEach(id=>{if(!meta[id]) strong(id);});
+  return comps.filter(c=>c.length>1 || depsWithTerminals(c[0], alive, terminals).includes(c[0])).sort((a,b)=>b.length-a.length);
+}
+let components = [];
+let compById = {};
+let cyclic = new Set();
+
+function computeDepths(){
+  const depth = Object.fromEntries(ids.map(id=>[id,Infinity]));
+  const q = [];
+  axiomSet.forEach(id=>{depth[id]=0; q.push(id);});
+  while(q.length){
+    const id=q.shift();
+    revOf(id).forEach(r=>{
+      if(depth[r] > depth[id]+1){depth[r]=depth[id]+1; q.push(r);}
+    });
+  }
+  return depth;
+}
+let depth = {};
+let infinite = new Set();
+
+function greedyKernel(){
+  const left = new Set(ids);
+  const cut = [];
+  let safety = 0;
+  while(safety++ < 200){
+    const activeComps = sccOn(left);
+    if(!activeComps.length) break;
+    const counts = {};
+    activeComps.flat().forEach(id=>counts[id]=(counts[id]||0)+depsOf(id).filter(x=>left.has(x)).length+revOf(id).filter(x=>left.has(x)).length);
+    const best = Object.entries(counts).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0]))[0][0];
+    cut.push(best); left.delete(best);
+  }
+  return cut;
+}
+let kernel = [];
+let kernelSet = new Set();
+let degree = {};
+
+function recomputeBase(){
+  components = scc();
+  compById = {};
+  components.forEach((c,i)=>c.forEach(id=>compById[id]=i+1));
+  cyclic = new Set(components.flat());
+  depth = computeDepths();
+  infinite = new Set(ids.filter(id=>!Number.isFinite(depth[id])));
+  kernel = greedyKernel();
+  kernelSet = new Set(kernel);
+  degree = Object.fromEntries(ids.map(id=>[id,depsOf(id).length+revOf(id).length]));
+}
+recomputeBase();
+
+function computeDepthsFor(seedSet, alive){
+  const out = Object.fromEntries(ids.map(id=>[id,Infinity]));
+  const q = [];
+  seedSet.forEach(id=>{if(alive.has(id)){out[id]=0; q.push(id);}});
+  while(q.length){
+    const id=q.shift();
+    ids.forEach(r=>{
+      if(!alive.has(r) || out[r] <= out[id]+1) return;
+      if(depsWithTerminals(r, alive, seedSet).includes(id)){out[r]=out[id]+1; q.push(r);}
+    });
+  }
+  return out;
+}
+function greedyKernelFor(alive){
+  const left = new Set([...alive]);
+  const cut = [];
+  let safety = 0;
+  while(safety++ < 240){
+    const activeComps = sccOn(left);
+    if(!activeComps.length) break;
+    const counts = {};
+    activeComps.flat().forEach(id=>counts[id]=(counts[id]||0)+depsOf(id).filter(x=>left.has(x)).length+revOf(id).filter(x=>left.has(x)).length);
+    const best = Object.entries(counts).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0]))[0][0];
+    cut.push(best); left.delete(best);
+  }
+  return cut;
+}
+function findCycleIn(vertices, alive, terminals){
+  const vset = new Set(vertices.filter(id=>alive.has(id) && !terminals.has(id)));
+  const state = {}, stack = [];
+  let found = null;
+  function dfs(v){
+    state[v]=1; stack.push(v);
+    depsWithTerminals(v, alive, terminals).forEach(w=>{
+      if(found || !vset.has(w)) return;
+      if(!state[w]) dfs(w);
+      else if(state[w]===1){
+        const i = stack.indexOf(w);
+        found = stack.slice(i).concat(w);
+      }
+    });
+    stack.pop(); state[v]=2;
+  }
+  [...vset].forEach(v=>{if(!found && !state[v]) dfs(v);});
+  return found;
+}
+function trimBasis(vertices, basis, alive, baseTerminals){
+  const out = [...basis].sort((a,b)=>a.localeCompare(b));
+  for(let i=out.length-1;i>=0;i--){
+    const test = new Set(out); test.delete(out[i]);
+    const terms = new Set([...baseTerminals, ...test]);
+    if(!findCycleIn(vertices, alive, terms)) out.splice(i,1);
+  }
+  return out;
+}
+function greedyBasisVariant(vertices, alive, baseTerminals, salt=0){
+  const chosen = new Set();
+  let safety = 0, cycle;
+  while((cycle=findCycleIn(vertices, alive, new Set([...baseTerminals, ...chosen]))) && safety++ < 260){
+    const cyc = [...new Set(cycle.slice(0,-1))].filter(id=>!baseTerminals.has(id));
+    const ranked = cyc.sort((a,b)=>{
+      const ta = new Set([...baseTerminals, ...chosen, a]);
+      const tb = new Set([...baseTerminals, ...chosen, b]);
+      const da = depsWithTerminals(a, alive, ta).length + ids.filter(x=>depsWithTerminals(x, alive, ta).includes(a)).length;
+      const db = depsWithTerminals(b, alive, tb).length + ids.filter(x=>depsWithTerminals(x, alive, tb).includes(b)).length;
+      const jitter = ((a.length*17 + salt*31 + a.charCodeAt(0)) % 11) - ((b.length*17 + salt*31 + b.charCodeAt(0)) % 11);
+      return db-da || jitter || a.localeCompare(b);
+    });
+    if(!ranked.length) break;
+    chosen.add(ranked[Math.min(ranked.length-1, salt % Math.min(3, ranked.length))]);
+  }
+  return trimBasis(vertices, chosen, alive, baseTerminals);
+}
+function solveComponentBasis(comp, alive, baseTerminals){
+  const exactLimit = 16, solutionLimit = 96, nodeLimit = 45000;
+  if(comp.length > exactLimit){
+    const variants = new Map();
+    for(let salt=0;salt<72;salt++){
+      const b = greedyBasisVariant(comp, alive, baseTerminals, salt);
+      const key = b.join("|");
+      if(key) variants.set(key,b);
+    }
+    const arr = [...variants.values()].sort((a,b)=>a.length-b.length || a.join("|").localeCompare(b.join("|")));
+    const best = arr[0]?.length || 0;
+    return {solutions:arr.filter(x=>x.length===best).slice(0,solutionLimit), exact:false, size:best, searched:arr.length, nodes:0};
+  }
+  const seed = greedyBasisVariant(comp, alive, baseTerminals, 0);
+  let best = seed.length, nodesSeen = 0, truncated = false;
+  const firstPass = new Map();
+  function search(chosen, collect){
+    nodesSeen++;
+    if(nodesSeen > nodeLimit){truncated = true; return;}
+    if(chosen.size > best) return;
+    const key = [...chosen].sort().join("|");
+    if(firstPass.has(key) && firstPass.get(key) <= chosen.size) return;
+    firstPass.set(key, chosen.size);
+    const terms = new Set([...baseTerminals, ...chosen]);
+    const cycle = findCycleIn(comp, alive, terms);
+    if(!cycle){
+      if(chosen.size < best){best = chosen.size; if(collect) collect.clear();}
+      if(collect && chosen.size === best) collect.set(key, [...chosen].sort((a,b)=>a.localeCompare(b)));
+      return;
+    }
+    [...new Set(cycle.slice(0,-1))].filter(id=>!baseTerminals.has(id)).forEach(id=>{
+      chosen.add(id); search(chosen, collect); chosen.delete(id);
+    });
+  }
+  search(new Set(), null);
+  const solutions = new Map();
+  nodesSeen = 0; firstPass.clear();
+  search(new Set(), solutions);
+  if(!solutions.size) solutions.set(seed.join("|"), seed);
+  return {solutions:[...solutions.values()].slice(0,solutionLimit), exact:!truncated, size:best, searched:solutions.size, nodes:nodesSeen};
+}
+function computeBasisSpace(alive){
+  const baseTerminals = terminalUnion();
+  const comps = sccOn(alive, baseTerminals);
+  const solved = comps.map(c=>solveComponentBasis(c, alive, baseTerminals));
+  let bases = [[]];
+  solved.forEach(part=>{
+    const next = [];
+    bases.forEach(a=>part.solutions.forEach(b=>next.push([...a,...b].sort((x,y)=>x.localeCompare(y)))));
+    bases = next.slice(0,384);
+  });
+  const seen = new Map();
+  bases.forEach(b=>seen.set(b.join("|"), b));
+  bases = [...seen.values()].sort((a,b)=>a.length-b.length || a.join("|").localeCompare(b.join("|")));
+  const minSize = bases[0]?.length || 0;
+  bases = bases.filter(b=>b.length===minSize);
+  const freq = Object.fromEntries(ids.map(id=>[id,0]));
+  bases.forEach(b=>b.forEach(id=>freq[id]++));
+  const basisSet = new Set(bases[Math.min(basisIndex,bases.length-1)] || []);
+  const classById = {};
+  ids.forEach(id=>{
+    if(!alive.has(id)) classById[id]="cut";
+    else if(baseTerminals.has(id)) classById[id]="terminal";
+    else if(!freq[id]) classById[id]="unused";
+    else if(freq[id]===bases.length) classById[id]="necessary";
+    else classById[id]="contingent";
+  });
+  return {
+    bases, basisSet, classById, freq, minSize,
+    exact: solved.every(x=>x.exact),
+    parts: solved,
+    componentCount: comps.length,
+    truncated: solved.some(x=>!x.exact)
+  };
+}
+function recomputeLab(){
+  lab.alive = aliveSet();
+  lab.components = sccOn(lab.alive, terminalUnion());
+  lab.compById = {};
+  lab.components.forEach((c,i)=>c.forEach(id=>lab.compById[id]=i+1));
+  lab.cyclic = new Set(lab.components.flat());
+  lab.depth = computeDepthsFor(customAxioms, lab.alive);
+  lab.infinite = new Set(ids.filter(id=>lab.alive.has(id) && !Number.isFinite(lab.depth[id])));
+  lab.basis = computeBasisSpace(lab.alive);
+  basisIndex = Math.min(basisIndex, Math.max(0, lab.basis.bases.length-1));
+  compareIndex = Math.min(compareIndex, Math.max(0, lab.basis.bases.length-1));
+  lab.kernel = lab.basis.bases[basisIndex] || [];
+  lab.kernelSet = new Set(lab.kernel);
+  lab.degree = Object.fromEntries(ids.map(id=>[id,labDepsOf(id).length+labRevOf(id).length]));
+  lab.edges = ids.reduce((a,id)=>a+labDepsOf(id).length,0);
+  lab.grounded = ids.filter(id=>lab.alive.has(id) && Number.isFinite(lab.depth[id])).length;
+  lab.regimeSnaps = Object.fromEntries(THEORIES.map(([key])=>[key,regimeSnapshot(key)]));
+  lab.regimeSnaps.mixed = regimeSnapshot(activeTheory, theoryOverrides);
+}
+recomputeLab();
+
+function initNodes(){
+  ids.forEach((id,i)=>{
+    const d = Number.isFinite(depth[id]) ? depth[id] : 7;
+    const ring = 70 + d*42 + (cyclic.has(id)?36:0);
+    const a = (i/ids.length)*Math.PI*2;
+    nodes[id]={id,x:Math.cos(a)*ring,y:Math.sin(a)*ring,vx:0,vy:0,fx:null,fy:null};
+  });
+  AXIOMS.forEach((id,i)=>{
+    if(nodes[id]){
+      const a=(i/AXIOMS.length)*Math.PI*2;
+      nodes[id].x=Math.cos(a)*80; nodes[id].y=Math.sin(a)*80;
+    }
+  });
+}
+initNodes();
+
+function resizeCanvas(){
+  const r = graph.getBoundingClientRect();
+  const ratio = Math.max(1, window.devicePixelRatio || 1);
+  graph.width = Math.max(300, Math.floor(r.width*ratio));
+  graph.height = Math.max(300, Math.floor(r.height*ratio));
+  gctx.setTransform(ratio,0,0,ratio,0,0);
+}
+function toScreen(x,y){const r=graph.getBoundingClientRect(); return {x:r.width/2+(x+view.x)*view.k,y:r.height/2+(y+view.y)*view.k};}
+function toWorld(x,y){const r=graph.getBoundingClientRect(); return {x:(x-r.width/2)/view.k-view.x,y:(y-r.height/2)/view.k-view.y};}
+
+function simStep(iter=1){
+  const arr = ids.map(id=>nodes[id]);
+  for(let t=0;t<iter;t++){
+    for(let i=0;i<arr.length;i++){
+      const a=arr[i];
+      for(let j=i+1;j<arr.length;j++){
+        const b=arr[j], dx=a.x-b.x, dy=a.y-b.y, dd=dx*dx+dy*dy+36;
+        const f=(lab.cyclic.has(a.id)&&lab.cyclic.has(b.id)?900:620)/dd;
+        a.vx+=dx*f; a.vy+=dy*f; b.vx-=dx*f; b.vy-=dy*f;
+      }
+    }
+    ids.forEach(id=>{
+      const a=nodes[id];
+      labDepsOf(id).forEach(dep=>{
+        const b=nodes[dep], dx=b.x-a.x, dy=b.y-a.y, dist=Math.max(1,Math.hypot(dx,dy));
+        const target = lab.cyclic.has(id)&&lab.cyclic.has(dep)?60:94;
+        const f=(dist-target)*0.006;
+        a.vx+=dx/dist*f; a.vy+=dy/dist*f; b.vx-=dx/dist*f; b.vy-=dy/dist*f;
+      });
+      const wanted = cuts.has(id) ? 520 : Number.isFinite(lab.depth[id]) ? lab.depth[id]*62 : 430;
+      const dist=Math.max(1,Math.hypot(a.x,a.y));
+      const rf=(wanted-dist)*0.0016;
+      a.vx+=a.x/dist*rf; a.vy+=a.y/dist*rf;
+      if(customAxioms.has(id) && !cuts.has(id)){a.vx+=(-a.x)*0.015; a.vy+=(-a.y)*0.015;}
+    });
+    arr.forEach(n=>{
+      if(n.fx!==null){n.x=n.fx; n.y=n.fy; n.vx=0; n.vy=0; return;}
+      n.vx*=0.82; n.vy*=0.82; n.x+=Math.max(-8,Math.min(8,n.vx)); n.y+=Math.max(-8,Math.min(8,n.vy));
+    });
+  }
+}
+
+function shortestPath(start, targetTest){
+  const prev={}, q=[start], seen=new Set([start]);
+  while(q.length){
+    const id=q.shift();
+    if(id!==start && targetTest(id)){
+      const path=[id]; let p=id;
+      while(prev[p]){p=prev[p]; path.push(p);}
+      return path.reverse();
+    }
+    labDepsOf(id).forEach(n=>{if(!seen.has(n)){seen.add(n); prev[n]=id; q.push(n);}});
+  }
+  return [];
+}
+function pathToCycle(start){
+  const cycleId = lab.compById[start];
+  if(cycleId){
+    const seen=new Set();
+    function dfs(id,path){
+      if(path.length>1 && id===start) return path;
+      if(path.length>18) return null;
+      seen.add(id+"|"+path.length);
+      for(const n of labDepsOf(id)){
+        if(lab.compById[n]===cycleId){
+          const r=dfs(n,path.concat(n));
+          if(r) return r;
+        }
+      }
+      return null;
+    }
+    return dfs(start,[start]) || [start];
+  }
+  return shortestPath(start,id=>lab.cyclic.has(id));
+}
+function updateTrace(mode=traceMode){
+  traceMode=mode;
+  tracePath = cuts.has(selected) ? [] : mode==="cycle" ? pathToCycle(selected) : shortestPath(selected,id=>customAxioms.has(id));
+  if(!tracePath.length && mode==="ground") tracePath = pathToCycle(selected);
+  document.getElementById("traceText").textContent = tracePath.length ? tracePath.join(" -> ") : "no route found";
+  document.getElementById("modeLabel").textContent = `${viewMode} / ${mode==="cycle" ? "cycle trace" : "ground trace"}`;
+}
+
+function nodeRadius(id){
+  if(id===selected) return 12;
+  if(cuts.has(id)) return 4;
+  if(customAxioms.has(id)) return 8;
+  if(lab.kernelSet.has(id)) return 8;
+  return 5 + Math.min(5, (lab.degree[id]||0)/8);
+}
+function basisClass(id){return lab.basis?.classById?.[id] || "unused";}
+function compareBasisSet(){
+  return new Set(lab.basis?.bases?.[compareIndex] || []);
+}
+function drawAtlas(){
+  const r=graph.getBoundingClientRect();
+  gctx.clearRect(0,0,r.width,r.height);
+  document.getElementById("matrixTip").hidden = true;
+  if(viewMode==="matrix"){drawMatrix(r); return;}
+  if(viewMode==="audit"){drawAudit(r); return;}
+  if(viewMode==="regime"){drawRegime(r); return;}
+  const traceEdges = new Set();
+  for(let i=0;i<tracePath.length-1;i++) traceEdges.add(tracePath[i]+"|"+tracePath[i+1]);
+  if(document.getElementById("showEdges").checked){
+    ids.forEach(id=>{
+      if(cuts.has(id)) return;
+      const a=toScreen(nodes[id].x,nodes[id].y);
+      labDepsOf(id).forEach(dep=>{
+        const b=toScreen(nodes[dep].x,nodes[dep].y);
+        const hot = traceEdges.has(id+"|"+dep);
+        const cyc = lab.cyclic.has(id)&&lab.cyclic.has(dep);
+        gctx.strokeStyle = hot ? "#111" : cyc ? "rgba(165,56,39,.42)" : "rgba(80,92,96,.25)";
+        gctx.lineWidth = hot ? 2.6 : cyc ? 1.1 : .8;
+        gctx.beginPath();
+        const mx=(a.x+b.x)/2, my=(a.y+b.y)/2, bend=(a.y-b.y)*.05;
+        gctx.moveTo(a.x,a.y); gctx.quadraticCurveTo(mx+bend,my-bend,b.x,b.y); gctx.stroke();
+      });
+    });
+  }
+  ids.forEach(id=>{
+    const p=toScreen(nodes[id].x,nodes[id].y), rad=nodeRadius(id);
+    const inTrace=tracePath.includes(id);
+    const cls=basisClass(id), cmp=compareBasisSet();
+    gctx.beginPath(); gctx.arc(p.x,p.y,rad*view.k,0,Math.PI*2);
+    let fill="#fffdfa", stroke="#657176";
+    if(customAxioms.has(id)){fill="#f2f8ea"; stroke="#4c6f39";}
+    if(lab.cyclic.has(id)){fill="#fff2ee"; stroke="#a53827";}
+    if(lab.infinite.has(id)){fill="#f7f3fb"; stroke="#5c5470";}
+    if(cls==="contingent"){fill="#fffaf0"; stroke="#9a721f";}
+    if(cls==="necessary"){fill="#fff1c6"; stroke="#111";}
+    if(lab.kernelSet.has(id)){fill="#ffeeb1"; stroke="#9a721f";}
+    if(diffMode && lab.kernelSet.has(id) !== cmp.has(id)){
+      fill = lab.kernelSet.has(id) ? "#d9ecf6" : "#ffe0d7";
+      stroke = lab.kernelSet.has(id) ? "#245d7e" : "#a53827";
+    }
+    if(cuts.has(id)){fill="#ece8dc"; stroke="#9f9a8e";}
+    if(inTrace){fill="#eee9dc"; stroke="#111";}
+    if(id===selected){fill="#e8dfc8"; stroke="#111";}
+    gctx.fillStyle=fill; gctx.strokeStyle=stroke; gctx.lineWidth=id===selected?2.4:1.2; gctx.fill(); gctx.stroke();
+    if(id===selected || inTrace || document.getElementById("showLabels").checked || view.k>1.35){
+      gctx.font=(id===selected?"700 12px":"11px")+" system-ui";
+      gctx.fillStyle="#202020"; gctx.textAlign="center"; gctx.textBaseline="top";
+      gctx.fillText(id,p.x,p.y+rad*view.k+3);
+    }
+  });
+  document.getElementById("zoomLabel").textContent = Math.round(view.k*100)+"%";
+}
+function orderedLive(){
+  return ids.filter(id=>lab.alive.has(id)).sort((a,b)=>(Number.isFinite(lab.depth[a])?lab.depth[a]:99)-(Number.isFinite(lab.depth[b])?lab.depth[b]:99) || a.localeCompare(b));
+}
+function drawMatrix(r){
+  const arr = orderedLive();
+  const padL=96, padT=34, padB=18, n=arr.length;
+  const cell=Math.max(3,Math.min(10,Math.floor(Math.min((r.width-padL-14)/n,(r.height-padT-padB)/n))));
+  lab.matrixGeom = {arr,padL,padT,cell,n};
+  gctx.fillStyle="#fffdfa"; gctx.fillRect(0,0,r.width,r.height);
+  gctx.fillStyle="#68645d"; gctx.font="11px system-ui"; gctx.textAlign="left";
+  gctx.fillText("dependency adjacency matrix: rows define through columns; dark cells are trace/cycle pressure",8,16);
+  arr.forEach((id,i)=>{
+    const x=padL+i*cell, y=padT+i*cell;
+    if(i%5===0){gctx.strokeStyle="#e6e0d2";gctx.beginPath();gctx.moveTo(padL,y);gctx.lineTo(padL+n*cell,y);gctx.moveTo(x,padT);gctx.lineTo(x,padT+n*cell);gctx.stroke();}
+    if(basisClass(id)==="necessary"){gctx.fillStyle="rgba(17,17,17,.08)";gctx.fillRect(padL,y,n*cell,cell);gctx.fillRect(x,padT,cell,n*cell);}
+    else if(basisClass(id)==="contingent"){gctx.fillStyle="rgba(154,114,31,.10)";gctx.fillRect(padL,y,n*cell,cell);gctx.fillRect(x,padT,cell,n*cell);}
+    if(id===selected){gctx.fillStyle="rgba(154,114,31,.16)";gctx.fillRect(padL,y,n*cell,cell);gctx.fillRect(x,padT,cell,n*cell);}
+    if(i%7===0 || id===selected){gctx.fillStyle="#292929";gctx.font="10px system-ui";gctx.textAlign="right";gctx.fillText(id,padL-4,y+cell);}
+  });
+  const index=Object.fromEntries(arr.map((id,i)=>[id,i]));
+  arr.forEach(id=>{
+    const i=index[id];
+    labDepsOf(id).forEach(dep=>{
+      const j=index[dep]; if(j===undefined) return;
+      const hot = tracePath.includes(id) && tracePath.includes(dep);
+      const cyc = lab.cyclic.has(id) && lab.cyclic.has(dep);
+      gctx.fillStyle = hot ? "#111" : cyc ? "rgba(165,56,39,.72)" : "rgba(36,93,126,.46)";
+      gctx.fillRect(padL+j*cell,padT+i*cell,Math.max(2,cell-1),Math.max(2,cell-1));
+    });
+  });
+  lab.components.slice(0,10).forEach(c=>{
+    const idx=c.map(id=>index[id]).filter(i=>i!==undefined).sort((a,b)=>a-b);
+    if(!idx.length) return;
+    const a=idx[0], b=idx[idx.length-1];
+    gctx.strokeStyle="rgba(165,56,39,.75)"; gctx.lineWidth=1;
+    gctx.strokeRect(padL+a*cell-.5,padT+a*cell-.5,(b-a+1)*cell,(b-a+1)*cell);
+  });
+  document.getElementById("zoomLabel").textContent = `${arr.length}x${arr.length}`;
+}
+function drawAudit(r){
+  gctx.fillStyle="#fffdfa"; gctx.fillRect(0,0,r.width,r.height);
+  const groundedPct = lab.alive.size ? Math.round(lab.grounded/lab.alive.size*100) : 0;
+  const necessary = ids.filter(id=>basisClass(id)==="necessary").length;
+  const contingent = ids.filter(id=>basisClass(id)==="contingent").length;
+  const basisStatus = `${lab.basis.bases.length} basis candidates of size ${lab.basis.minSize} (${lab.basis.exact ? "exhaustive" : "bounded; large SCC not exhausted"})`;
+  const overrides = Object.entries(theoryOverrides).map(([k,v])=>`${k}:${v}`).sort().join(", ") || "none";
+  const lines = [
+    ["LAB CERTIFICATE", `${lab.grounded}/${lab.alive.size} grounded (${groundedPct}%) after ${cuts.size} cuts and ${customAxioms.size} axioms`],
+    ["regime", `global ${activeTheory} (${theoryName(activeTheory)}); local overrides ${overrides}`],
+    ["selected", `${selected}: base depth ${Number.isFinite(depth[selected])?depth[selected]:"inf"} -> lab depth ${cuts.has(selected)?"cut":Number.isFinite(lab.depth[selected])?lab.depth[selected]:"inf"}`],
+    ["basis space", `${basisStatus}; necessary ${necessary}; contingent ${contingent}; active ${basisIndex+1}/${lab.basis.bases.length || 1}`],
+    ["ground route", tracePath.length ? tracePath.join(" -> ") : "none"],
+    ["remaining cycles", lab.components.length ? lab.components.slice(0,6).map(c=>`${c.length}:${c.slice(0,8).join(",")}`).join("  /  ") : "none"],
+    ["active basis", lab.kernel.length ? lab.kernel.slice(0,22).join(", ") : "none"],
+    ["lab axioms", [...customAxioms].sort().join(", ")],
+    ["manual cuts", [...cuts].sort().join(", ") || "none"]
+  ];
+  gctx.font="700 12px system-ui"; gctx.fillStyle="#202020"; gctx.textAlign="left";
+  let y=28;
+  lines.forEach(([k,v],i)=>{
+    gctx.fillStyle=i===0?"#111":"#68645d"; gctx.fillText(k,18,y);
+    gctx.font=i===0?"700 20px Georgia, serif":"12px ui-monospace, Menlo, monospace";
+    gctx.fillStyle="#202020"; wrapText(v,150,y,r.width-170,16); y += i===0 ? 50 : 44;
+    gctx.font="700 12px system-ui";
+  });
+  document.getElementById("zoomLabel").textContent = "certificate";
+}
+function replaceOverrides(next){
+  Object.keys(theoryOverrides).forEach(k=>delete theoryOverrides[k]);
+  Object.assign(theoryOverrides,next || {});
+}
+function withRegime(theory, overrides, fn){
+  const saveTheory = activeTheory;
+  const saveOverrides = {...theoryOverrides};
+  activeTheory = theory;
+  replaceOverrides(overrides);
+  const out = fn();
+  activeTheory = saveTheory;
+  replaceOverrides(saveOverrides);
+  return out;
+}
+function regimeSnapshot(theory, overrides={}){
+  return withRegime(theory, overrides, ()=>{
+    const alive = aliveSet();
+    const comps = sccOn(alive, terminalUnion());
+    const cyc = new Set(comps.flat());
+    const dep = computeDepthsFor(customAxioms, alive);
+    const edges = ids.reduce((a,id)=>a+labDepsOf(id).length,0);
+    const grounded = ids.filter(id=>alive.has(id) && Number.isFinite(dep[id])).length;
+    return {depth:dep, cyclic:cyc, components:comps.length, edges, grounded};
+  });
+}
+function drawRegime(r){
+  gctx.fillStyle="#fffdfa"; gctx.fillRect(0,0,r.width,r.height);
+  const contestedIds = Object.keys(THEORY_VARIANTS).filter(id=>byId[id]);
+  const cols = THEORIES.map(t=>t[0]).concat("mixed");
+  const left=110, top=44, cellW=Math.max(72,Math.floor((r.width-left-18)/cols.length)), rowH=Math.max(22,Math.min(30,Math.floor((r.height-top-54)/contestedIds.length)));
+  const snaps = lab.regimeSnaps || Object.fromEntries(THEORIES.map(([key])=>[key,regimeSnapshot(key)]));
+  if(!snaps.mixed) snaps.mixed = regimeSnapshot(activeTheory, theoryOverrides);
+  lab.regimeGeom = {contestedIds, cols, left, top, cellW, rowH};
+  gctx.fillStyle="#202020"; gctx.font="700 18px Georgia, serif"; gctx.textAlign="left";
+  gctx.fillText("Regime diff: same algorithms, competing definitions",12,24);
+  gctx.font="11px system-ui"; gctx.fillStyle="#68645d";
+  gctx.fillText("Cells encode selected-term depth under each theory: green grounded, red circular, violet unrounded. Mixed = global regime plus local overrides.",12,40);
+  cols.forEach((c,i)=>{
+    gctx.fillStyle=c==="mixed"?"#111":"#5c5470"; gctx.font="700 10px system-ui"; gctx.textAlign="center";
+    gctx.fillText(c,left+i*cellW+cellW/2,top-10);
+  });
+  contestedIds.forEach((id,row)=>{
+    const y=top+row*rowH;
+    gctx.fillStyle=id===selected?"rgba(154,114,31,.18)":"transparent";
+    if(id===selected) gctx.fillRect(0,y-2,r.width,rowH);
+    gctx.fillStyle="#202020"; gctx.font="700 11px system-ui"; gctx.textAlign="right";
+    gctx.fillText(id,left-8,y+rowH*.68);
+    let first = null, varied = false;
+    cols.forEach((c,i)=>{
+      const snap = snaps[c], d=snap.depth[id], cyc=snap.cyclic.has(id);
+      const x=left+i*cellW;
+      if(first===null) first = Number.isFinite(d) ? d : "inf";
+      else if(first !== (Number.isFinite(d) ? d : "inf")) varied = true;
+      let fill = Number.isFinite(d) ? "rgba(76,111,57,.22)" : "rgba(92,84,112,.18)";
+      if(cyc) fill = "rgba(165,56,39,.24)";
+      if(c==="mixed") fill = cyc ? "rgba(165,56,39,.38)" : Number.isFinite(d) ? "rgba(36,93,126,.26)" : "rgba(92,84,112,.32)";
+      gctx.fillStyle=fill; gctx.fillRect(x,y,cellW-3,rowH-3);
+      gctx.strokeStyle = theoryOverrides[id]===c ? "#111" : "rgba(189,181,163,.8)";
+      gctx.strokeRect(x+.5,y+.5,cellW-4,rowH-4);
+      gctx.fillStyle="#202020"; gctx.font="11px ui-monospace, Menlo, monospace"; gctx.textAlign="center";
+      gctx.fillText(cyc ? "cyc" : Number.isFinite(d) ? String(d) : "inf", x+cellW/2, y+rowH*.65);
+    });
+    if(varied){
+      gctx.fillStyle="#9a721f"; gctx.font="10px system-ui"; gctx.textAlign="left";
+      gctx.fillText("sensitive",left+cols.length*cellW+4,y+rowH*.65);
+    }
+  });
+  const stats = cols.map(c=>`${c}: ${snaps[c].grounded}/${ids.length} grounded, ${snaps[c].components} SCC, ${snaps[c].edges} edges`).join("   ");
+  gctx.fillStyle="#68645d"; gctx.font="11px ui-monospace, Menlo, monospace"; gctx.textAlign="left";
+  wrapText(stats,12,r.height-34,r.width-24,14);
+  document.getElementById("zoomLabel").textContent = `${contestedIds.length} contested terms`;
+}
+function wrapText(text,x,y,maxWidth,lineHeight){
+  const words=String(text).split(" "); let line="";
+  words.forEach(w=>{
+    const test=line?line+" "+w:w;
+    if(gctx.measureText(test).width>maxWidth && line){gctx.fillText(line,x,y); line=w; y+=lineHeight;}
+    else line=test;
+  });
+  if(line) gctx.fillText(line,x,y);
+}
+function animate(){
+  if(simRunning) simStep(1);
+  drawAtlas();
+  requestAnimationFrame(animate);
+}
+
+function flagsFor(id){
+  const f=[];
+  if(cuts.has(id)) f.push("cut");
+  if(customAxioms.has(id)) f.push("axiom");
+  if(lab.cyclic.has(id)) f.push("cycle");
+  if(lab.infinite.has(id)) f.push("inf");
+  if(basisClass(id)==="necessary") f.push("necessary");
+  else if(basisClass(id)==="contingent") f.push("contingent");
+  else if(lab.kernelSet.has(id)) f.push("basis");
+  return f;
+}
+function pills(el, items){
+  el.innerHTML="";
+  items.forEach(id=>{
+    const b=document.createElement("button"); b.className="pill"; b.textContent=id;
+    b.onclick=()=>selectWord(id);
+    el.appendChild(b);
+  });
+  if(!items.length) el.textContent="none";
+}
+function drawSpectro(d){
+  sctx.clearRect(0,0,spectro.width,spectro.height);
+  sctx.fillStyle="#fffdfa"; sctx.fillRect(0,0,spectro.width,spectro.height);
+  for(let y=20;y<spectro.height;y+=32){sctx.strokeStyle="#e3ded1";sctx.beginPath();sctx.moveTo(0,y);sctx.lineTo(spectro.width,y);sctx.stroke();}
+  const segs = ipaSegments(d.ipa);
+  const w = spectro.width / Math.max(1,segs.length);
+  segs.forEach((s,i)=>{
+    const spec = phoneSpec(s);
+    const x=i*w;
+    sctx.fillStyle = spec.noise ? "rgba(165,56,39,.12)" : "rgba(36,93,126,.10)";
+    sctx.fillRect(x,0,w-1,spectro.height);
+    spec.formants.forEach((hz,j)=>{
+      const y = spectro.height - Math.min(1,hz/3600)*spectro.height;
+      const grd=sctx.createLinearGradient(x,y-10,x,y+10);
+      const color=j===0?"36,93,126":j===1?"76,111,57":"154,114,31";
+      grd.addColorStop(0,`rgba(${color},0)`); grd.addColorStop(.5,`rgba(${color},.85)`); grd.addColorStop(1,`rgba(${color},0)`);
+      sctx.fillStyle=grd; sctx.fillRect(x,y-10,w-1,20);
+    });
+    sctx.fillStyle="#202020"; sctx.font="12px Georgia, serif"; sctx.textAlign="center";
+    sctx.fillText(s,x+w/2,spectro.height-8);
+  });
+  sctx.fillStyle="#68645d"; sctx.font="11px system-ui"; sctx.textAlign="left";
+  sctx.fillText("IPA segment spectrogram: F1/F2/F3 bands with consonant noise/burst approximations",10,15);
+}
+function ipaSegments(ipa){
+  const clean=ipa.replace(/[\/ˈˌ.]/g,"");
+  const multi=["tʃ","dʒ","aɪ","aʊ","ɔɪ","oʊ","eɪ","ər","iː","uː","ɔː","ɑː","ɜː"];
+  const out=[];
+  for(let i=0;i<clean.length;i++){
+    if(clean[i]===" ") continue;
+    const two=clean.slice(i,i+2);
+    if(multi.includes(two)){out.push(two); i++;} else out.push(clean[i]);
+  }
+  return out;
+}
+function phoneSpec(s){
+  const vowels={
+    "i":[300,2300,3000],"iː":[280,2350,3100],"ɪ":[390,1990,2550],"e":[530,1850,2500],"eɪ":[500,2100,2700],
+    "ɛ":[610,1900,2500],"æ":[860,1720,2450],"ɑ":[730,1100,2450],"ɑː":[700,1150,2450],"ɔ":[570,840,2400],
+    "ɔː":[520,900,2400],"oʊ":[500,1000,2500],"ʊ":[440,1020,2400],"u":[300,870,2240],"uː":[280,820,2200],
+    "ʌ":[640,1200,2400],"ə":[500,1500,2500],"ɜː":[520,1350,2350],"aɪ":[700,1900,2700],"aʊ":[700,1200,2500],"ɔɪ":[560,1700,2550]
+  };
+  if(vowels[s]) return {formants:vowels[s],noise:false,dur:.16};
+  const fric = {"s":[4200,6200],"z":[3900,5800],"ʃ":[2500,4200],"ʒ":[2400,4000],"f":[1800,5200],"v":[1600,4800],"θ":[2800,6000],"ð":[2600,5600],"h":[900,1800]};
+  if(fric[s]) return {formants:fric[s],noise:true,dur:.09};
+  const son = {"m":[300,1200,2400],"n":[300,1500,2500],"ŋ":[300,1100,2300],"l":[400,1200,2600],"r":[350,1300,1800],"w":[300,800,2200],"j":[300,2200,3000]};
+  if(son[s]) return {formants:son[s],noise:false,dur:.10};
+  return {formants:[500,1600,2800],noise:/[ptkbdg]/.test(s),dur:.075};
+}
+function playIPA(d){
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if(!AudioContext) return;
+  const ac = new AudioContext();
+  let t = ac.currentTime + .04;
+  ipaSegments(d.ipa).forEach(seg=>{
+    const spec=phoneSpec(seg), dur=spec.dur || .1;
+    const gain=ac.createGain(); gain.gain.setValueAtTime(0.0001,t); gain.gain.exponentialRampToValueAtTime(.055,t+.015); gain.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    gain.connect(ac.destination);
+    spec.formants.slice(0,3).forEach((hz,i)=>{
+      const osc=ac.createOscillator(); const filt=ac.createBiquadFilter();
+      osc.type=spec.noise ? "sawtooth" : "sine"; osc.frequency.setValueAtTime(spec.noise ? hz*.45 : hz,t);
+      filt.type="bandpass"; filt.frequency.setValueAtTime(hz,t); filt.Q.value=spec.noise?5:9;
+      const g=ac.createGain(); g.gain.value=[.9,.55,.28][i]||.2;
+      osc.connect(filt); filt.connect(g); g.connect(gain); osc.start(t); osc.stop(t+dur+.02);
+    });
+    t += dur*.92;
+  });
+}
+
+function renderSide(){
+  const d=entryOf(selected);
+  document.getElementById("term").textContent=d.id;
+  document.getElementById("ipa").textContent=d.ipa;
+  document.getElementById("definition").textContent=d.def;
+  const f=flagsFor(selected);
+  const chip=document.getElementById("roleChip");
+  chip.textContent=f.join(" / ") || "lexical";
+  chip.className="chip "+(f.includes("necessary")?"nec":f.includes("contingent")?"cont":f.includes("axiom")?"ax":f.includes("cycle")?"cy":f.includes("inf")||f.includes("cut")?"inf":"");
+  document.getElementById("selectedFlags").textContent=f.join(", ");
+  document.getElementById("depthValue").textContent=Number.isFinite(depth[selected])?depth[selected]:"∞";
+  document.getElementById("degreeValue").textContent=labDepsOf(selected).length+" / "+labRevOf(selected).length;
+  document.getElementById("componentValue").textContent=lab.compById[selected] || "-";
+  const cls = basisClass(selected);
+  document.getElementById("kernelValue").textContent=cls==="terminal"?"axiom":cls==="necessary"?"forced":cls==="contingent"?"swap":cls==="cut"?"cut":"none";
+  document.getElementById("labValue").textContent=cuts.has(selected)?"cut":(Number.isFinite(lab.depth[selected])?lab.depth[selected]:"∞");
+  document.getElementById("axiomToggle").textContent=customAxioms.has(selected)?"drop axiom":"make axiom";
+  document.getElementById("cutToggle").textContent=cuts.has(selected)?"restore term":"cut term";
+  document.getElementById("axiomToggle").className=customAxioms.has(selected)?"active":"";
+  document.getElementById("cutToggle").className=cuts.has(selected)?"active":"";
+  document.getElementById("wordTheory").disabled=!contested(selected);
+  document.getElementById("wordTheory").value=contested(selected) ? (theoryOverrides[selected] || "global") : "fixed";
+  pills(document.getElementById("deps"),labDepsOf(selected));
+  pills(document.getElementById("revdeps"),labRevOf(selected));
+  drawSpectro(d);
+  document.getElementById("basisProof").innerHTML = basisProof(selected);
+  document.getElementById("kernelTable").innerHTML =
+    "<tr><th>lab certificate</th><th>computed fact</th></tr>" +
+    `<tr><td>grounded</td><td>${lab.grounded}/${lab.alive.size} live terms; ${lab.infinite.size} unrounded</td></tr>` +
+    `<tr><td>basis space</td><td>${lab.basis.bases.length} candidate minimum bases of size ${lab.basis.minSize}; ${lab.basis.exact ? "exhaustive for all components" : "bounded for the large component, exact for small components"}</td></tr>` +
+    `<tr><td>necessity</td><td>${ids.filter(id=>basisClass(id)==="necessary").length} forced; ${ids.filter(id=>basisClass(id)==="contingent").length} swappable; active basis ${basisIndex+1}/${lab.basis.bases.length || 1}</td></tr>` +
+    `<tr><td>custom axioms</td><td>${[...customAxioms].sort().join(", ")}</td></tr>` +
+    `<tr><td>manual cuts</td><td>${[...cuts].sort().join(", ") || "none"}</td></tr>` +
+    "<tr><th>active grounding basis</th><th>why it matters</th></tr>" +
+    lab.kernel.map(id=>`<tr><td><button class="pill" onclick="selectWord('${id}')">${id}</button></td><td>${entryOf(id).def}</td></tr>`).join("") +
+    "<tr><th>remaining cycle components</th><th>terms</th></tr>" +
+    lab.components.map((c,i)=>`<tr><td>${i+1} (${c.length})</td><td>${c.join(", ")}</td></tr>`).join("");
+}
+function basisProof(id){
+  const total = lab.basis.bases.length || 1;
+  const freq = lab.basis.freq[id] || 0;
+  if(customAxioms.has(id)) return `<b>${id}</b> is already terminal in the lab, so its definition edges are suppressed before cycle analysis.`;
+  if(cuts.has(id)) return `<b>${id}</b> is manually cut and excluded from the live graph.`;
+  if(basisClass(id)==="necessary"){
+    const cycle = findCycleIn(lab.components.find(c=>c.includes(id)) || ids, lab.alive, new Set([...terminalUnion(), id]));
+    return `<b>${id}</b> appears in ${freq}/${total} active minimum bases. Removing it from consideration still leaves this cycle witness: ${cycle ? cycle.join(" -> ") : "none found"}.`;
+  }
+  if(basisClass(id)==="contingent"){
+    const alt = lab.basis.bases.find(b=>!b.includes(id)) || [];
+    const withIt = lab.basis.bases.find(b=>b.includes(id)) || [];
+    const trade = [...new Set(alt.filter(x=>!withIt.includes(x)).concat(withIt.filter(x=>!alt.includes(x))))].slice(0,14);
+    return `<b>${id}</b> appears in ${freq}/${total} active minimum bases. One equally small trade set differs at: ${trade.join(", ") || "no visible trade"}.`;
+  }
+  return `<b>${id}</b> appears in 0/${total} active minimum bases; it may be cyclic, but the current basis search never needs to terminalize it.`;
+}
+function localSet(root){
+  const s=new Set([root]), q=[[root,0]];
+  while(q.length){
+    const [id,l]=q.shift();
+    if(l>=2) continue;
+    labDepsOf(id).concat(labRevOf(id)).forEach(n=>{if(!s.has(n)){s.add(n);q.push([n,l+1]);}});
+  }
+  tracePath.forEach(x=>s.add(x));
+  return s;
+}
+function renderList(){
+  const q=document.getElementById("query").value.trim().toLowerCase();
+  const scope=document.getElementById("scope").value, df=document.getElementById("depthFilter").value;
+  const loc=localSet(selected);
+  let arr=LEXICON.filter(d=>{
+    const r=entryOf(d.id);
+    if(q && !(d.id.includes(q)||r.ipa.toLowerCase().includes(q)||r.def.toLowerCase().includes(q)||r.theory.includes(q))) return false;
+    if(scope==="local" && !loc.has(d.id)) return false;
+    if(scope==="cycle" && !lab.cyclic.has(d.id)) return false;
+    if(scope==="axiom" && !axiomSet.has(d.id)) return false;
+    if(scope==="custom" && !customAxioms.has(d.id)) return false;
+    if(scope==="kernel" && basisClass(d.id)!=="necessary" && basisClass(d.id)!=="contingent") return false;
+    if(scope==="cut" && !cuts.has(d.id)) return false;
+    if(scope==="infinite" && !lab.infinite.has(d.id)) return false;
+    if(df==="inf" && Number.isFinite(lab.depth[d.id])) return false;
+    if(["0","1","2"].includes(df) && lab.depth[d.id]!==+df) return false;
+    if(df==="3" && (!Number.isFinite(lab.depth[d.id]) || lab.depth[d.id]<3)) return false;
+    return true;
+  });
+  const sort=document.getElementById("sortMode").value;
+  arr.sort((a,b)=> sort==="depth" ? ((lab.depth[a.id]??99)-(lab.depth[b.id]??99) || a.id.localeCompare(b.id)) : sort==="degree" ? ((lab.degree[b.id]||0)-(lab.degree[a.id]||0) || a.id.localeCompare(b.id)) : a.id.localeCompare(b.id));
+  document.getElementById("countLabel").textContent=arr.length+"/"+LEXICON.length;
+  const list=document.getElementById("wordList"); list.innerHTML="";
+  arr.forEach(d=>{
+    const f=flagsFor(d.id);
+    const r=entryOf(d.id);
+    const b=document.createElement("button");
+    b.className="word-row"+(d.id===selected?" active":"");
+    b.innerHTML=`<span class="term">${d.id}</span><span class="ipa">${r.ipa}</span><span>${Number.isFinite(depth[d.id])?depth[d.id]:"∞"}</span><span class="labmark">${cuts.has(d.id)?"×":Number.isFinite(lab.depth[d.id])?lab.depth[d.id]:"∞"}</span><span class="chip ${f.includes("necessary")?"nec":f.includes("contingent")?"cont":f.includes("axiom")?"ax":f.includes("cycle")?"cy":f.includes("inf")||f.includes("cut")?"inf":""}">${contested(d.id)?r.theory.slice(0,3):f[0]||"lex"}</span>`;
+    b.onclick=()=>selectWord(d.id);
+    list.appendChild(b);
+  });
+}
+function renderMetrics(){
+  const edges=ids.reduce((a,id)=>a+depsOf(id).length,0);
+  const maxDepth=Math.max(...ids.map(id=>Number.isFinite(lab.depth[id])?lab.depth[id]:0));
+  const groundedPct = lab.alive.size ? Math.round(lab.grounded/lab.alive.size*100) : 0;
+  const necessary = ids.filter(id=>basisClass(id)==="necessary").length;
+  const contingent = ids.filter(id=>basisClass(id)==="contingent").length;
+  document.getElementById("metrics").innerHTML=[
+    ["live",lab.alive.size],["edges",lab.edges],["cycles",lab.components.length],["basis",lab.basis.minSize],["worlds",lab.basis.bases.length],["forced",necessary],["swap",contingent],["grounded",groundedPct+"%"]
+  ].map(([k,v])=>`<div class="metric"><b>${v}</b><span>${k}</span></div>`).join("");
+  document.getElementById("basisRead").textContent=`basis ${lab.basis.bases.length ? basisIndex+1 : 0}/${lab.basis.bases.length || 0}${lab.basis.exact ? "" : "*"}`;
+  document.getElementById("diffBtn").className=diffMode?"active":"";
+  document.getElementById("readout").textContent=`${activeTheory}${Object.keys(theoryOverrides).length?"+local":""}; base ${LEXICON.length}/${edges}; lab ${lab.grounded}/${lab.alive.size} grounded; ${lab.cyclic.size} cyclic terms; ${cuts.size} cuts; ${lab.basis.exact?"exact":"bounded"} basis`;
+}
+function axiomCount(){return axiomSet.size;}
+function selectWord(id){
+  selected=id;
+  if(!pinned){view.x=-nodes[id].x; view.y=-nodes[id].y;}
+  updateTrace(traceMode);
+  render();
+}
+function render(){renderMetrics(); renderList(); renderSide(); drawAtlas();}
+function rerunLab(){
+  recomputeBase();
+  recomputeLab();
+  updateTrace(traceMode);
+  render();
+}
+function setBasisIndex(next){
+  const n = lab.basis.bases.length || 1;
+  basisIndex = ((next % n) + n) % n;
+  lab.kernel = lab.basis.bases[basisIndex] || [];
+  lab.kernelSet = new Set(lab.kernel);
+  updateTrace(traceMode);
+  render();
+}
+function applyActiveBasis(){
+  lab.kernel.forEach(id=>{customAxioms.add(id); cuts.delete(id);});
+  basisIndex = 0; compareIndex = 0;
+  rerunLab();
+}
+function labCertificate(){
+  const baseEdges=ids.reduce((a,id)=>a+depsOf(id).length,0);
+  const necessary = ids.filter(id=>basisClass(id)==="necessary").length;
+  const contingent = ids.filter(id=>basisClass(id)==="contingent").length;
+  const overrides = Object.entries(theoryOverrides).map(([k,v])=>`${k}:${v}`).sort().join(", ") || "none";
+  return [
+    "Grounding Atlas lab certificate",
+    `selected: ${selected}`,
+    `definition regime: global=${activeTheory} (${theoryName(activeTheory)}); overrides=${overrides}`,
+    `base corpus: ${LEXICON.length} terms, ${baseEdges} edges, ${components.length} cycle components`,
+    `lab corpus: ${lab.alive.size} live terms, ${lab.edges} edges, ${lab.components.length} cycle components`,
+    `grounded: ${lab.grounded}/${lab.alive.size}`,
+    `basis space: ${lab.basis.bases.length} candidate minimum bases of size ${lab.basis.minSize} (${lab.basis.exact ? "exhaustive" : "bounded; large component not exhausted"})`,
+    `basis index: ${basisIndex+1}/${lab.basis.bases.length || 1}`,
+    `necessity: ${necessary} forced, ${contingent} swappable`,
+    `axioms: ${[...customAxioms].sort().join(", ")}`,
+    `cuts: ${[...cuts].sort().join(", ") || "none"}`,
+    `trace: ${tracePath.join(" -> ") || "none"}`,
+    `active basis: ${lab.kernel.join(", ") || "none"}`
+  ].join("\n");
+}
+function setViewMode(mode){
+  viewMode=mode;
+  ["atlasMode","matrixMode","auditMode","regimeMode"].forEach(id=>document.getElementById(id).className="");
+  document.getElementById(mode+"Mode").className="active";
+  updateTrace(traceMode);
+  drawAtlas();
+}
+
+graph.addEventListener("mousedown",e=>{
+  if(viewMode==="regime" && lab.regimeGeom){
+    const {contestedIds, cols, left, top, cellW, rowH}=lab.regimeGeom;
+    const row=Math.floor((e.offsetY-top)/rowH), col=Math.floor((e.offsetX-left)/cellW);
+    if(row>=0 && row<contestedIds.length){
+      selectWord(contestedIds[row]);
+      if(col>=0 && col<cols.length && cols[col]!=="mixed"){
+        theoryOverrides[contestedIds[row]]=cols[col];
+        rerunLab();
+      }
+    }
+    return;
+  }
+  if(viewMode==="matrix" && lab.matrixGeom){
+    const {arr,padL,padT,cell,n}=lab.matrixGeom;
+    const row=Math.floor((e.offsetY-padT)/cell), col=Math.floor((e.offsetX-padL)/cell);
+    if(row>=0 && row<n && arr[row]) selectWord(arr[row]);
+    else if(col>=0 && col<n && arr[col]) selectWord(arr[col]);
+    return;
+  }
+  if(viewMode==="audit") return;
+  const w=toWorld(e.offsetX,e.offsetY);
+  const hit=ids.map(id=>({id,dist:Math.hypot(nodes[id].x-w.x,nodes[id].y-w.y)})).sort((a,b)=>a.dist-b.dist)[0];
+  if(hit && hit.dist < nodeRadius(hit.id)+8/view.k){view.node=nodes[hit.id]; selectWord(hit.id); view.node.fx=view.node.x; view.node.fy=view.node.y;}
+  else {view.drag=true;}
+  view.lastX=e.clientX; view.lastY=e.clientY;
+});
+window.addEventListener("mousemove",e=>{
+  if(view.node){const w=toWorld(e.offsetX ?? (e.clientX-graph.getBoundingClientRect().left), e.offsetY ?? (e.clientY-graph.getBoundingClientRect().top)); view.node.fx=w.x; view.node.fy=w.y;}
+  else if(view.drag){view.x+=(e.clientX-view.lastX)/view.k; view.y+=(e.clientY-view.lastY)/view.k; view.lastX=e.clientX; view.lastY=e.clientY;}
+});
+window.addEventListener("mouseup",()=>{if(view.node){view.node.fx=null;view.node.fy=null;} view.node=null; view.drag=false;});
+graph.addEventListener("wheel",e=>{
+  e.preventDefault();
+  const old=view.k;
+  view.k=Math.max(.35,Math.min(3.5,view.k*(e.deltaY<0?1.12:.89)));
+  const rect=graph.getBoundingClientRect(), sx=e.clientX-rect.left-rect.width/2, sy=e.clientY-rect.top-rect.height/2;
+  view.x += sx*(1/view.k-1/old); view.y += sy*(1/view.k-1/old);
+},{passive:false});
+
+document.getElementById("theorySelect").innerHTML = THEORIES.map(([key,label])=>`<option value="${key}">${label}</option>`).join("");
+document.getElementById("theorySelect").value = activeTheory;
+document.getElementById("wordTheory").innerHTML = `<option value="global">global regime</option>` + THEORIES.map(([key,label])=>`<option value="${key}">${label}</option>`).join("") + `<option value="fixed">fixed term</option>`;
+["query","scope","depthFilter","sortMode","showEdges","showLabels"].forEach(id=>document.getElementById(id).addEventListener("input",render));
+document.getElementById("clearSearch").onclick=()=>{document.getElementById("query").value="";render();};
+document.getElementById("traceGround").onclick=()=>{updateTrace("ground");render();};
+document.getElementById("traceCycle").onclick=()=>{updateTrace("cycle");render();};
+document.getElementById("stepBtn").onclick=()=>{simRunning=false;simStep(25);drawAtlas();};
+document.getElementById("settleBtn").onclick=()=>{simRunning=!simRunning;document.getElementById("settleBtn").textContent=simRunning?"settle":"run";};
+document.getElementById("resetView").onclick=()=>{view.x=-nodes[selected].x;view.y=-nodes[selected].y;view.k=1;};
+document.getElementById("pinBtn").onclick=()=>{pinned=!pinned;document.getElementById("pinBtn").textContent=pinned?"free":"pin";};
+document.getElementById("playBtn").onclick=()=>playIPA(byId[selected]);
+document.getElementById("atlasMode").onclick=()=>setViewMode("atlas");
+document.getElementById("matrixMode").onclick=()=>setViewMode("matrix");
+document.getElementById("auditMode").onclick=()=>setViewMode("audit");
+document.getElementById("regimeMode").onclick=()=>setViewMode("regime");
+document.getElementById("theorySelect").onchange=e=>{
+  activeTheory=e.target.value;
+  basisIndex=0; compareIndex=0;
+  rerunLab();
+};
+document.getElementById("wordTheory").onchange=e=>{
+  if(!contested(selected)) return;
+  if(e.target.value==="global") delete theoryOverrides[selected];
+  else theoryOverrides[selected]=e.target.value;
+  basisIndex=0; compareIndex=0;
+  rerunLab();
+};
+document.getElementById("basisPrev").onclick=()=>setBasisIndex(basisIndex-1);
+document.getElementById("basisNext").onclick=()=>setBasisIndex(basisIndex+1);
+document.getElementById("diffBtn").onclick=()=>{diffMode=!diffMode; compareIndex=(basisIndex+1)%Math.max(1,lab.basis.bases.length); render();};
+document.getElementById("applyBasis").onclick=applyActiveBasis;
+document.getElementById("axiomToggle").onclick=()=>{
+  if(customAxioms.has(selected)) customAxioms.delete(selected); else {customAxioms.add(selected); cuts.delete(selected);}
+  rerunLab();
+};
+document.getElementById("cutToggle").onclick=()=>{
+  if(cuts.has(selected)) cuts.delete(selected); else {cuts.add(selected); customAxioms.delete(selected);}
+  rerunLab();
+};
+document.getElementById("clearLab").onclick=()=>{
+  customAxioms.clear(); AXIOMS.filter(x=>byId[x]).forEach(x=>customAxioms.add(x)); cuts.clear(); replaceOverrides({}); basisIndex=0; compareIndex=0; diffMode=false; rerunLab();
+};
+document.getElementById("solveBtn").onclick=()=>{
+  applyActiveBasis();
+};
+document.getElementById("copyCert").onclick=async()=>{
+  const text=labCertificate();
+  try{await navigator.clipboard.writeText(text); document.getElementById("copyCert").textContent="copied";}
+  catch(e){console.log(text); document.getElementById("copyCert").textContent="logged";}
+  setTimeout(()=>document.getElementById("copyCert").textContent="copy cert",900);
+};
+window.addEventListener("resize",()=>{resizeCanvas();drawAtlas();});
+resizeCanvas();
+setViewMode("atlas");
+updateTrace("ground");
+render();
+animate();
+</script>
+</body>
+</html>

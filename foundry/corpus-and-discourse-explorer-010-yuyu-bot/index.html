@@ -1,0 +1,2795 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grounding Atlas</title>
+  <style>
+    :root {
+      --ink: #171717;
+      --muted: #5b5b52;
+      --line: #c8c4b8;
+      --line-strong: #8d8777;
+      --paper: #f7f6f0;
+      --panel: #ffffff;
+      --blue: #245b8f;
+      --blue-soft: #e8f0f7;
+      --red: #9a382d;
+      --red-soft: #f5e5df;
+      --amber: #9a6a18;
+      --amber-soft: #f4ead2;
+      --green: #2f6c55;
+      --green-soft: #e3f0e8;
+      --violet: #614d88;
+      --violet-soft: #ece7f4;
+      --shadow: 0 1px 0 rgba(0,0,0,.05);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.025) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(0,0,0,.018) 1px, transparent 1px),
+        var(--paper);
+      background-size: 24px 24px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    button, input, select { font: inherit; }
+
+    .app {
+      min-height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(260px, 1.2fr) minmax(360px, 2fr) minmax(260px, 1fr);
+      gap: 10px;
+      padding: 10px;
+      border-bottom: 2px solid var(--ink);
+      background: rgba(247,246,240,.96);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: 0;
+      font-weight: 800;
+    }
+
+    .dek {
+      margin-top: 6px;
+      max-width: 52ch;
+      color: var(--muted);
+    }
+
+    .searchbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 6px;
+      align-content: start;
+    }
+
+    input[type="search"] {
+      width: 100%;
+      padding: 7px 9px;
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      color: var(--ink);
+      outline: none;
+      box-shadow: var(--shadow);
+    }
+
+    .seg {
+      display: inline-grid;
+      grid-auto-flow: column;
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .seg button, .smallbtn {
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      min-height: 32px;
+      padding: 5px 9px;
+      cursor: pointer;
+    }
+
+    .seg button:last-child { border-right: 0; }
+
+    .seg button.active {
+      background: var(--ink);
+      color: white;
+    }
+
+    .smallbtn {
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+    }
+
+    .ledger {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 6px 7px;
+      min-height: 48px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric b {
+      display: block;
+      font-size: 18px;
+      line-height: 1.05;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 260px minmax(520px, 1fr) 370px;
+      gap: 10px;
+      padding: 10px;
+      min-height: 0;
+    }
+
+    section, aside {
+      min-width: 0;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,.82);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 31px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--line-strong);
+      background: #ece9de;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: .05em;
+    }
+
+    .panel-title small {
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .lexicon {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      max-height: calc(100vh - 104px);
+    }
+
+    .word-list {
+      overflow: auto;
+      padding: 6px;
+      display: grid;
+      gap: 4px;
+      align-content: start;
+    }
+
+    .word-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      align-items: center;
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      text-align: left;
+      padding: 6px 7px;
+      min-height: 34px;
+      cursor: pointer;
+    }
+
+    .word-row.active {
+      border-color: var(--ink);
+      background: var(--blue-soft);
+      box-shadow: inset 3px 0 0 var(--blue);
+    }
+
+    .word-row .term {
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badges {
+      display: flex;
+      gap: 3px;
+      justify-content: end;
+      min-width: 55px;
+    }
+
+    .badge {
+      display: inline-grid;
+      place-items: center;
+      min-width: 19px;
+      height: 18px;
+      border: 1px solid var(--line-strong);
+      background: #f8f8f6;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .badge.cycle { background: var(--red-soft); color: var(--red); border-color: #c98678; }
+    .badge.root { background: var(--green-soft); color: var(--green); border-color: #86ad99; }
+
+    .legend {
+      border-top: 1px solid var(--line-strong);
+      padding: 7px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .key {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border: 1px solid var(--line-strong);
+      background: var(--blue-soft);
+    }
+
+    .swatch.red { background: var(--red-soft); }
+    .swatch.green { background: var(--green-soft); }
+    .swatch.amber { background: var(--amber-soft); }
+
+    .graph-shell {
+      display: grid;
+      grid-template-rows: auto minmax(380px, 1fr) auto;
+      max-height: calc(100vh - 104px);
+      min-height: 560px;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      min-height: 0;
+      background: linear-gradient(180deg, #fff 0%, #faf9f4 100%);
+      overflow: hidden;
+    }
+
+    .map-tools {
+      position: absolute;
+      z-index: 3;
+      top: 7px;
+      right: 7px;
+      display: none;
+      grid-auto-flow: column;
+      gap: 4px;
+      background: rgba(247,246,240,.88);
+      border: 1px solid var(--line-strong);
+      padding: 3px;
+      box-shadow: var(--shadow);
+    }
+
+    .map-tools button {
+      width: 28px;
+      height: 26px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .canvas-wrap.cartographic .map-tools {
+      display: inline-grid;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 390px;
+    }
+
+    .edge {
+      stroke: #817b6d;
+      stroke-width: 1.2;
+      fill: none;
+      marker-end: url(#arrow);
+      opacity: .8;
+    }
+
+    .edge.cycle {
+      stroke: var(--red);
+      stroke-width: 2.2;
+      opacity: .95;
+    }
+
+    .edge.focus {
+      stroke: var(--blue);
+      stroke-width: 2.4;
+      opacity: 1;
+    }
+
+    .edge.matched {
+      stroke: var(--green);
+      stroke-width: 2.1;
+      opacity: .95;
+    }
+
+    .edge.extracted {
+      stroke: var(--amber);
+      stroke-width: 1.8;
+      stroke-dasharray: 6 4;
+      opacity: .9;
+    }
+
+    .edge.invisible {
+      stroke: var(--red);
+      stroke-width: 1.8;
+      stroke-dasharray: 2 4;
+      opacity: .9;
+    }
+
+    .node rect {
+      fill: #fff;
+      stroke: #777064;
+      stroke-width: 1;
+    }
+
+    .node text {
+      fill: var(--ink);
+      font-size: 12px;
+      font-weight: 750;
+      pointer-events: none;
+    }
+
+    .node .sub {
+      fill: var(--muted);
+      font-size: 10px;
+      font-weight: 650;
+    }
+
+    .node.focus rect { fill: var(--blue-soft); stroke: var(--blue); stroke-width: 2; }
+    .node.kernel rect { fill: var(--red-soft); stroke: var(--red); stroke-width: 2; }
+    .node.primitive rect { fill: var(--green-soft); stroke: var(--green); stroke-width: 1.5; }
+    .node.boundary rect { fill: var(--amber-soft); stroke: var(--amber); stroke-width: 1.5; }
+    .node.claim rect { fill: #f8f8f6; stroke: var(--ink); stroke-width: 2; }
+    .node.grounds rect { fill: var(--blue-soft); stroke: var(--blue); stroke-width: 1.5; }
+    .node.warrant rect { fill: var(--amber-soft); stroke: var(--amber); stroke-width: 1.5; }
+    .node.backing rect { fill: var(--green-soft); stroke: var(--green); stroke-width: 1.5; }
+    .node.rebuttal rect { fill: var(--red-soft); stroke: var(--red); stroke-width: 1.5; }
+
+    .node {
+      cursor: pointer;
+    }
+
+    .atlas-point {
+      cursor: pointer;
+    }
+
+    .atlas-point circle,
+    .atlas-point rect {
+      stroke: #5f594e;
+      stroke-width: 1.2;
+    }
+
+    .atlas-point.kernel circle {
+      fill: var(--red-soft);
+      stroke: var(--red);
+      stroke-width: 2;
+    }
+
+    .atlas-point.hub rect {
+      fill: var(--blue-soft);
+      stroke: var(--blue);
+      stroke-width: 1.6;
+    }
+
+    .atlas-point.primitive circle {
+      fill: var(--green-soft);
+      stroke: var(--green);
+    }
+
+    .atlas-point.focus circle,
+    .atlas-point.focus rect {
+      stroke: var(--ink);
+      stroke-width: 2.6;
+    }
+
+    .atlas-label {
+      fill: var(--ink);
+      font-size: 11px;
+      font-weight: 800;
+      pointer-events: none;
+    }
+
+    .atlas-sub {
+      fill: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .component {
+      cursor: pointer;
+    }
+
+    .component rect,
+    .component circle {
+      fill: #fffefa;
+      stroke: #5f594e;
+      stroke-width: 1.2;
+    }
+
+    .component.cyclic rect,
+    .component.cyclic circle {
+      fill: var(--red-soft);
+      stroke: var(--red);
+      stroke-width: 1.8;
+    }
+
+    .component.axiom rect,
+    .component.axiom circle {
+      fill: var(--green-soft);
+      stroke: var(--green);
+      stroke-width: 1.8;
+    }
+
+    .component.expanded rect,
+    .component.expanded circle {
+      stroke: var(--ink);
+      stroke-width: 2.4;
+    }
+
+    .map-label {
+      fill: var(--ink);
+      font-size: 10px;
+      font-weight: 850;
+      pointer-events: none;
+    }
+
+    .map-sub {
+      fill: var(--muted);
+      font-size: 8.5px;
+      font-weight: 750;
+      pointer-events: none;
+    }
+
+    .mini rect {
+      fill: rgba(255,255,255,.62);
+      stroke: var(--line-strong);
+    }
+
+    .mini .dot {
+      fill: var(--blue);
+      opacity: .55;
+    }
+
+    .mini .window {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 1.4;
+    }
+
+    .strip {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr 1fr;
+      border-top: 1px solid var(--line-strong);
+      background: #f1efe7;
+    }
+
+    .strip > div {
+      padding: 7px 8px;
+      border-right: 1px solid var(--line);
+      min-height: 62px;
+    }
+
+    .strip > div:last-child { border-right: 0; }
+
+    .label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .value {
+      margin-top: 3px;
+      font-weight: 750;
+      font-size: 13px;
+    }
+
+    .inspector {
+      display: grid;
+      grid-template-rows: auto auto auto 1fr;
+      max-height: calc(100vh - 104px);
+      overflow: hidden;
+    }
+
+    .definition {
+      padding: 8px;
+      border-bottom: 1px solid var(--line-strong);
+      background: var(--panel);
+    }
+
+    .definition h2 {
+      margin: 0 0 5px;
+      font-size: 22px;
+      line-height: 1.05;
+    }
+
+    .definition p {
+      margin: 0;
+      color: #272721;
+    }
+
+    .tagline {
+      margin-top: 7px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .pill {
+      border: 1px solid var(--line-strong);
+      background: #f6f5ef;
+      padding: 2px 5px;
+      font-size: 11px;
+      font-weight: 750;
+      color: var(--muted);
+    }
+
+    .pill.red { background: var(--red-soft); color: var(--red); }
+    .pill.green { background: var(--green-soft); color: var(--green); }
+    .pill.blue { background: var(--blue-soft); color: var(--blue); }
+    .pill.amber { background: var(--amber-soft); color: var(--amber); }
+
+    .table-wrap {
+      overflow: auto;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 5px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f0eee5;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    td {
+      font-size: 12px;
+    }
+
+    td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .scroll-notes {
+      overflow: auto;
+      padding: 8px;
+      display: grid;
+      gap: 7px;
+      align-content: start;
+      background: #fbfaf5;
+    }
+
+    .path-tools {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 5px;
+      padding: 7px;
+      border-bottom: 1px solid var(--line-strong);
+      background: #f8f7f0;
+    }
+
+    .path-tools select {
+      min-width: 0;
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      padding: 5px 6px;
+    }
+
+    .rank-list {
+      display: grid;
+      gap: 4px;
+    }
+
+    .rank-row {
+      display: grid;
+      grid-template-columns: 92px 1fr auto;
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .rank-row span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    .bar {
+      height: 7px;
+      border: 1px solid var(--line);
+      background: #eee9dc;
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      background: var(--blue);
+    }
+
+    .hist {
+      display: grid;
+      grid-auto-flow: column;
+      align-items: end;
+      gap: 3px;
+      height: 62px;
+      padding-top: 6px;
+    }
+
+    .hist i {
+      display: block;
+      min-width: 10px;
+      background: var(--green);
+      border: 1px solid #235642;
+    }
+
+    .note {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 7px;
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .note.mechanical { border-left: 4px solid var(--green); }
+    .note.interpretive { border-left: 4px solid var(--violet); }
+    .note.warning { border-left: 4px solid var(--red); }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+    }
+
+    .lab-editor {
+      display: grid;
+      gap: 6px;
+      margin-top: 7px;
+    }
+
+    textarea, .lab-editor input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      color: var(--ink);
+      padding: 6px 7px;
+      font: inherit;
+      line-height: 1.3;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    .lab-actions {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 5px;
+    }
+
+    .trace-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 5px;
+    }
+
+    .token {
+      border: 1px solid var(--line);
+      background: #f6f5ef;
+      padding: 1px 4px;
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .token.keep { background: var(--green-soft); color: var(--green); border-color: #86ad99; }
+    .token.stop { color: var(--muted); opacity: .72; }
+    .token.match { background: var(--blue-soft); color: var(--blue); border-color: #86a8c7; }
+    .token.stem { background: var(--amber-soft); color: var(--amber); border-color: #caa85d; }
+
+    .prov {
+      display: inline-block;
+      min-width: 62px;
+      border: 1px solid var(--line);
+      padding: 1px 4px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .prov.matched { background: var(--green-soft); color: var(--green); }
+    .prov.extracted { background: var(--amber-soft); color: var(--amber); }
+    .prov.invisible { background: var(--red-soft); color: var(--red); }
+
+    .passage-text {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--line);
+      color: #2c2a24;
+    }
+
+    .receipt {
+      display: grid;
+      grid-template-columns: 76px 1fr 48px;
+      gap: 5px;
+      align-items: center;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .receipt b {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .jump-term {
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      padding: 2px 5px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    @media (max-width: 1120px) {
+      header {
+        grid-template-columns: 1fr;
+      }
+      main {
+        grid-template-columns: 220px minmax(420px, 1fr);
+      }
+      .inspector {
+        grid-column: 1 / -1;
+        max-height: none;
+      }
+      .graph-shell, .lexicon { max-height: none; }
+    }
+
+    @media (max-width: 760px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      .ledger {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .searchbar {
+        grid-template-columns: 1fr;
+      }
+      .graph-shell {
+        min-height: 520px;
+      }
+      .strip {
+        grid-template-columns: 1fr;
+      }
+      .strip > div {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .strip > div:last-child { border-bottom: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Grounding Atlas</h1>
+        <div class="dek">A lexical dependency instrument: definitions become directed graphs, circular kernels are marked mechanically, and interpretive comments stay outside the graph facts.</div>
+      </div>
+      <div class="searchbar">
+        <input id="search" type="search" autocomplete="off" placeholder="Filter or jump to a term">
+        <div class="seg" aria-label="View mode">
+          <button data-mode="descent" class="active">Descent</button>
+          <button data-mode="atlas">Atlas</button>
+          <button data-mode="axiom">Axioms</button>
+          <button data-mode="lab">Lab</button>
+          <button data-mode="discourse">Discourse</button>
+        </div>
+        <div class="seg" aria-label="View depth">
+          <button data-depth="1">1</button>
+          <button data-depth="2">2</button>
+          <button data-depth="3" class="active">3</button>
+          <button data-depth="4">4</button>
+        </div>
+        <button class="smallbtn" id="reset">Reset</button>
+      </div>
+      <div class="ledger" id="ledger"></div>
+    </header>
+
+    <main>
+      <aside class="lexicon">
+        <div class="panel-title">Lexicon <small id="termCount"></small></div>
+        <div class="word-list" id="wordList"></div>
+        <div class="legend">
+          <span class="key"><i class="swatch"></i>focus path</span>
+          <span class="key"><i class="swatch red"></i>cycle kernel</span>
+          <span class="key"><i class="swatch green"></i>declared primitive</span>
+          <span class="key"><i class="swatch amber"></i>boundary term</span>
+        </div>
+      </aside>
+
+      <section class="graph-shell">
+        <div class="panel-title"><span id="graphTitle">Definition Dependency Graph</span> <small id="graphStatus"></small></div>
+        <div class="canvas-wrap">
+          <div class="map-tools" aria-label="Map navigation">
+            <button id="zoomIn" title="Zoom in">+</button>
+            <button id="zoomOut" title="Zoom out">-</button>
+            <button id="panHome" title="Reset map">0</button>
+          </div>
+          <svg id="graph" role="img" aria-label="Definition dependency graph"></svg>
+        </div>
+        <div class="strip">
+          <div>
+            <div class="label">Deterministic finding</div>
+            <div class="value" id="detFinding"></div>
+          </div>
+          <div>
+            <div class="label">Semantic debt</div>
+            <div class="value" id="debtLine"></div>
+          </div>
+          <div>
+            <div class="label">Shortest return</div>
+            <div class="value mono" id="returnLine"></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="inspector">
+        <div class="panel-title">Inspector <small>span facts vs commentary</small></div>
+        <div class="definition" id="definition"></div>
+        <div class="path-tools">
+          <select id="pathFrom" aria-label="Path from term"></select>
+          <select id="pathTo" aria-label="Path to term"></select>
+          <button class="smallbtn" id="pathRun">Path</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Kernel / boundary</th><th>Members</th><th>Debt</th></tr>
+            </thead>
+            <tbody id="kernelRows"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Dependency</th><th>Relation</th><th class="num">Depth</th></tr>
+            </thead>
+            <tbody id="depRows"></tbody>
+          </table>
+        </div>
+        <div class="scroll-notes" id="notes"></div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const LEXICON = {
+      meaning: {
+        definition: "What a sign, word, or utterance is taken to convey in use.",
+        deps: ["sign", "word", "utterance", "convey", "use", "interpretation"],
+        primitive: false,
+        note: "Useful precisely because it refuses to be a private object. Meaning is shown here as a dependency on sign-use and interpretation."
+      },
+      sign: {
+        definition: "A perceivable form that stands for, points to, or functions as something for an interpreter.",
+        deps: ["form", "reference", "function", "interpretation"],
+        primitive: false,
+        note: "The sample keeps Peircean pressure visible without pretending to solve semiotics in one node."
+      },
+      word: {
+        definition: "A conventional linguistic sign used as a unit in speech or writing.",
+        deps: ["sign", "convention", "language", "use", "utterance"],
+        primitive: false,
+        note: "The definition borrows from sign and convention, so a word cannot ground itself merely by being printed."
+      },
+      definition: {
+        definition: "A statement that explains a term by relating it to other terms.",
+        deps: ["statement", "explain", "term", "relation"],
+        primitive: false,
+        note: "The atlas treats this as a debt-making operation: every definition pays with other terms."
+      },
+      reference: {
+        definition: "The relation by which a sign or expression is directed toward an object, case, or topic.",
+        deps: ["relation", "sign", "expression", "object", "context"],
+        primitive: false,
+        note: "Reference becomes visible as a relation, not as a magic arrow from word to world."
+      },
+      use: {
+        definition: "A situated employment of a sign or expression in an activity.",
+        deps: ["context", "sign", "expression", "practice", "action"],
+        primitive: false,
+        note: "The Wittgensteinian move is operational here: a definition that says 'use' must borrow from context and practice."
+      },
+      context: {
+        definition: "The surrounding conditions that constrain how an expression is interpreted.",
+        deps: ["condition", "constraint", "expression", "interpretation"],
+        primitive: false,
+        note: "Context is a constraint bundle, so it becomes a hub for interpretive risk."
+      },
+      interpretation: {
+        definition: "An assignment of significance to a sign, utterance, claim, or event under a context.",
+        deps: ["significance", "sign", "utterance", "claim", "event", "context"],
+        primitive: false,
+        note: "Interpretation is not shown as a graph fact. The graph only records what the definition depends on."
+      },
+      truth: {
+        definition: "A status assigned to a claim when it is warranted as matching the case under relevant standards.",
+        deps: ["status", "claim", "warrant", "case", "standard"],
+        primitive: false,
+        note: "This node is intentionally not treated as a detector output. yuyu analyzes risk, not truth."
+      },
+      claim: {
+        definition: "A statement presented as something that can be supported, challenged, or used downstream.",
+        deps: ["statement", "evidence", "challenge", "use"],
+        primitive: false,
+        note: "Claims are discourse objects. Their graph dependencies are separate from whether anyone should believe them."
+      },
+      evidence: {
+        definition: "Material offered to support or weaken a claim.",
+        deps: ["material", "support", "claim", "warrant"],
+        primitive: false,
+        note: "Evidence loops back into claim because it has no role without something being evidenced."
+      },
+      ground: {
+        definition: "A term or condition treated as provisionally stable enough to support further explanation.",
+        deps: ["term", "condition", "support", "explain"],
+        primitive: false,
+        note: "Grounding is provisional here. The atlas finds circularity; it does not declare final foundations."
+      },
+      utterance: {
+        definition: "An expression produced in a particular act of speech, writing, or inscription.",
+        deps: ["expression", "action", "context", "language"],
+        primitive: false,
+        note: "Utterance pulls abstract language back into an event."
+      },
+      expression: {
+        definition: "A sign-form used to articulate or display something.",
+        deps: ["sign", "form", "use"],
+        primitive: false,
+        note: "Expression is a compact bridge between form and use."
+      },
+      language: {
+        definition: "A structured practice of signs, conventions, and uses shared by a community.",
+        deps: ["practice", "sign", "convention", "use", "community"],
+        primitive: false,
+        note: "Language is a practice, not a bag of words."
+      },
+      convention: {
+        definition: "A socially maintained regularity that lets participants coordinate interpretation.",
+        deps: ["community", "regularity", "interpretation", "practice"],
+        primitive: false,
+        note: "Convention has social force and interpretive force at once."
+      },
+      practice: {
+        definition: "A repeatable pattern of action sustained by participants in a context.",
+        deps: ["action", "regularity", "community", "context"],
+        primitive: false,
+        note: "Practice is where definitions meet repeated life."
+      },
+      statement: {
+        definition: "An utterance or inscription that presents a content as assertible.",
+        deps: ["utterance", "inscription", "content", "claim"],
+        primitive: false,
+        note: "Statement and claim form a local circular kernel: asserting and claim-making define each other in this micro-lexicon."
+      },
+      term: {
+        definition: "A word or expression considered as an item for definition, reference, or analysis.",
+        deps: ["word", "expression", "definition", "reference"],
+        primitive: false,
+        note: "Term is the atlas's own self-reference point."
+      },
+      relation: {
+        definition: "A connection under which one item is considered with respect to another.",
+        deps: ["connection", "object", "context"],
+        primitive: false,
+        note: "Relations do the quiet work in most philosophical vocabulary."
+      },
+      object: {
+        definition: "Something picked out, treated, or tracked as a unit of attention.",
+        deps: ["attention", "case", "context"],
+        primitive: false,
+        note: "Object is intentionally modest: picked out for analysis, not metaphysically settled."
+      },
+      convey: {
+        definition: "To make content available for interpretation through a sign or expression.",
+        deps: ["content", "interpretation", "sign", "expression"],
+        primitive: false,
+        note: "Convey is a transfer metaphor that hides interpretive work."
+      },
+      explain: {
+        definition: "To make a relation, claim, or term intelligible by supplying supporting connections.",
+        deps: ["relation", "claim", "term", "support", "connection"],
+        primitive: false,
+        note: "Explanation is shown as graph expansion."
+      },
+      support: {
+        definition: "To provide a reason, condition, or material that increases the warrant of a claim.",
+        deps: ["reason", "condition", "material", "warrant", "claim"],
+        primitive: false,
+        note: "Support belongs to argumentation theory more than to a static dictionary."
+      },
+      warrant: {
+        definition: "A rule, reason, or bridge licensing movement from evidence to claim.",
+        deps: ["rule", "reason", "evidence", "claim", "support"],
+        primitive: false,
+        note: "The Toulmin link is explicit: warrant is the bridge, not the data."
+      },
+      significance: {
+        definition: "Importance or import assigned within a context of interpretation.",
+        deps: ["importance", "context", "interpretation"],
+        primitive: false,
+        note: "Significance is value-laden, so the atlas treats it as commentary-heavy."
+      },
+      form: { definition: "A perceivable pattern or arrangement.", deps: ["pattern"], primitive: true, note: "Declared primitive in this seed data." },
+      function: { definition: "A role performed within a practice or system.", deps: ["role", "practice"], primitive: false, note: "Function inherits from practice." },
+      action: { definition: "Something done by an agent or participant.", deps: ["agent"], primitive: true, note: "Declared primitive to keep the seed graph finite." },
+      condition: { definition: "A circumstance relevant to whether something holds.", deps: ["case"], primitive: true, note: "Declared primitive in this sample." },
+      constraint: { definition: "A limit or requirement on possible interpretation or action.", deps: ["condition"], primitive: false, note: "A mechanical dependency, not a value judgment." },
+      material: { definition: "Text, data, observation, or artifact available for analysis.", deps: ["text", "data", "observation", "artifact"], primitive: true, note: "This seed treats material as a boundary to the world." },
+      standard: { definition: "A rule or norm used to evaluate a claim or action.", deps: ["rule", "norm", "claim"], primitive: false, note: "Standards are not free-floating; they connect to rules and norms." },
+      case: { definition: "The matter, instance, or situation being considered.", deps: ["situation"], primitive: true, note: "Declared primitive for this atlas slice." },
+      event: { definition: "Something that happens and can be described or interpreted.", deps: ["action", "context"], primitive: false, note: "Events enter discourse once described." },
+      challenge: { definition: "An act that questions, contests, or weakens a claim.", deps: ["action", "claim", "reason"], primitive: false, note: "Challenge belongs to the same argumentative space as support." },
+      content: { definition: "What is presented as being expressed, claimed, or conveyed.", deps: ["expression", "claim", "convey"], primitive: false, note: "Content is a knot, not a substance." },
+      inscription: { definition: "A durable mark or trace that can carry an expression.", deps: ["form", "material"], primitive: false, note: "Inscription ties language to artifacts." },
+      connection: { definition: "A link between considered items.", deps: ["object", "relation"], primitive: false, note: "Connection and relation intentionally form a small loop." },
+      rule: { definition: "A repeatable constraint governing action, inference, or evaluation.", deps: ["constraint", "regularity", "action"], primitive: false, note: "Rule imports both regularity and normativity." },
+      reason: { definition: "A consideration offered in support of a claim or action.", deps: ["support", "claim", "action"], primitive: false, note: "Reason has no role outside offering and support." },
+      community: { definition: "Participants treated as sharing practices, conventions, or standards.", deps: ["practice", "convention", "standard"], primitive: false, note: "Community is a high-debt node in social meaning." },
+      regularity: { definition: "A repeated pattern stable enough to be noticed or relied upon.", deps: ["pattern"], primitive: true, note: "Declared primitive." },
+      importance: { definition: "A weight or priority assigned in a context.", deps: ["context"], primitive: false, note: "This is interpretively expensive." },
+      pattern: { definition: "An arrangement that can be recognized as recurring.", deps: [], primitive: true, note: "Terminal primitive for this seed." },
+      role: { definition: "A position or contribution within a practice.", deps: ["practice"], primitive: false, note: "Role is practice-dependent." },
+      agent: { definition: "A participant treated as capable of action.", deps: ["action"], primitive: true, note: "A deliberate boundary term." },
+      text: { definition: "An inscription or sequence of signs available for reading.", deps: ["inscription", "sign"], primitive: false, note: "Text returns to sign." },
+      data: { definition: "Recorded material treated as available for analysis.", deps: ["material"], primitive: true, note: "Boundary term." },
+      observation: { definition: "A noticed case or event treated as material.", deps: ["case", "event", "material"], primitive: true, note: "Boundary term." },
+      artifact: { definition: "A made object available as material.", deps: ["object", "material"], primitive: true, note: "Boundary term." },
+      situation: { definition: "A bounded context in which cases, actions, or events can be considered.", deps: ["context"], primitive: true, note: "Boundary term." },
+      norm: { definition: "A standard of expected or appropriate conduct.", deps: ["standard", "practice"], primitive: false, note: "Norms borrow from standards and practices." }
+    };
+
+    const ORIGINAL_LEXICON = JSON.parse(JSON.stringify(LEXICON));
+
+    const DISCOURSE = [
+      {
+        id: "vaccination",
+        title: "School Vaccination Rule",
+        domain: "law / public health",
+        source: "illustrative",
+        text: "The school may require vaccination because outbreaks create preventable risk to students. Medical exemptions should remain because the rule is justified by public health, not punishment.",
+        claim: { text: "The school may require vaccination with narrow exemptions.", keyTerms: ["claim", "rule", "standard"] },
+        grounds: [
+          { text: "Outbreaks create preventable risk in a shared setting.", keyTerms: ["evidence", "case", "condition"] },
+          { text: "A school is a community practice with obligations to participants.", keyTerms: ["community", "practice", "standard"] }
+        ],
+        warrant: { text: "A rule is warranted when it constrains action to protect a shared practice under a public standard.", keyTerms: ["warrant", "rule", "constraint", "support"] },
+        backing: { text: "Public-health norms treat foreseeable harm as relevant material for collective action.", keyTerms: ["norm", "material", "action"], refs: ["climate"] },
+        qualifier: { text: "Only when exemptions are real and reviewable.", keyTerms: ["standard", "challenge"] },
+        rebuttal: { text: "If the standard becomes punishment, the warrant changes.", keyTerms: ["standard", "warrant", "interpretation"] }
+      },
+      {
+        id: "climate",
+        title: "Warming Inference",
+        domain: "science",
+        source: "illustrative",
+        text: "Multiple independent observations point in the same direction, so the warming trend is not a single-instrument artifact. The inference is strong, though not a claim that every local event has the same cause.",
+        claim: { text: "The warming trend is supported by convergent observations.", keyTerms: ["claim", "support", "observation"] },
+        grounds: [
+          { text: "Surface records, ocean heat, and glacier retreat are separate materials.", keyTerms: ["material", "data", "observation"] }
+        ],
+        warrant: { text: "Independent measurements strengthen a claim when they fit the same pattern under a stable method.", keyTerms: ["warrant", "pattern", "standard"] },
+        backing: { text: "Scientific inference treats repeated patterns as evidence when methods are exposed to challenge.", keyTerms: ["evidence", "challenge", "practice"], refs: ["vaccination"] },
+        qualifier: { text: "Stronger for long-run trend than for each single weather event.", keyTerms: ["event", "case"] },
+        rebuttal: { text: "A hidden shared instrument bias would weaken the support.", keyTerms: ["challenge", "support"] }
+      },
+      {
+        id: "ad",
+        title: "Fastest Phone",
+        domain: "advertising",
+        source: "illustrative",
+        text: "This is the fastest phone because it wins our benchmark. Fastest means best for you only if that benchmark matches your actual use.",
+        claim: { text: "This phone is the fastest phone.", keyTerms: ["claim", "standard", "significance"] },
+        grounds: [
+          { text: "It wins the vendor benchmark.", keyTerms: ["evidence", "data", "standard"] }
+        ],
+        warrant: { text: "A benchmark supports a comparative claim only when its rule matches the relevant use.", keyTerms: ["warrant", "rule", "use"] },
+        backing: { text: "Consumers interpret speed as practical value, not merely a test score.", keyTerms: ["interpretation", "significance", "use"] },
+        qualifier: { text: "Fastest under that benchmark.", keyTerms: ["standard", "context"] },
+        rebuttal: { text: "Battery, heat, and accessibility may be the actual case.", keyTerms: ["case", "context", "challenge"] }
+      },
+      {
+        id: "contract",
+        title: "Plain Contract Term",
+        domain: "law",
+        source: "illustrative",
+        text: "The clause should be read by ordinary use, not a private intention. A signed inscription binds because participants coordinate around public terms.",
+        claim: { text: "The clause should be interpreted by ordinary public use.", keyTerms: ["interpretation", "use", "term"] },
+        grounds: [
+          { text: "The parties signed the same inscription.", keyTerms: ["inscription", "sign", "community"] }
+        ],
+        warrant: { text: "Shared signs constrain later claims when a practice needs stable coordination.", keyTerms: ["sign", "constraint", "practice", "claim"] },
+        backing: { text: "Contract practice treats public expression as the material object.", keyTerms: ["expression", "material", "object"], refs: ["testimony"] },
+        qualifier: { text: "Unless a technical convention was disclosed.", keyTerms: ["convention", "context"] },
+        rebuttal: { text: "Private intention cannot silently replace the public term.", keyTerms: ["term", "interpretation"] }
+      },
+      {
+        id: "testimony",
+        title: "Witness Memory",
+        domain: "everyday / law",
+        source: "illustrative",
+        text: "The witness sounded certain, but confidence is not the same as truth. The claim needs corroborating material because memory can preserve significance while losing detail.",
+        claim: { text: "The testimony should not settle the case by itself.", keyTerms: ["claim", "truth", "case"] },
+        grounds: [
+          { text: "Confidence and accuracy can diverge.", keyTerms: ["evidence", "truth", "interpretation"] },
+          { text: "Memory is vulnerable to later context.", keyTerms: ["context", "event", "interpretation"] }
+        ],
+        warrant: { text: "A claim about an event needs material support when the source is context-sensitive.", keyTerms: ["warrant", "event", "material", "support"] },
+        backing: { text: "Courtroom standards distinguish assertion from corroborated evidence.", keyTerms: ["standard", "statement", "evidence"], refs: ["contract"] },
+        qualifier: { text: "Especially when the identification is central.", keyTerms: ["significance", "case"] },
+        rebuttal: { text: "Immediate, detailed, independently confirmed reports reduce the risk.", keyTerms: ["data", "support"] }
+      },
+      {
+        id: "syllogism",
+        title: "Classical Syllogism",
+        domain: "philosophy",
+        source: "cited: traditional Aristotelian form, paraphrased",
+        text: "All humans are mortal; Socrates is human; therefore Socrates is mortal.",
+        claim: { text: "Socrates is mortal.", keyTerms: ["claim", "truth"] },
+        grounds: [
+          { text: "All humans are mortal.", keyTerms: ["statement", "rule"] },
+          { text: "Socrates is human.", keyTerms: ["case", "object"] }
+        ],
+        warrant: { text: "A universal rule licenses the move from membership to predication.", keyTerms: ["warrant", "rule", "relation"] },
+        backing: { text: "Deductive practice treats valid form as preserving truth.", keyTerms: ["practice", "truth", "form"] },
+        qualifier: { text: "If the category terms keep the same use.", keyTerms: ["term", "use"] },
+        rebuttal: { text: "Equivocation on a category term breaks the form's force.", keyTerms: ["interpretation", "term", "challenge"] }
+      },
+      {
+        id: "platform",
+        title: "Platform Speech Rule",
+        domain: "politics / moderation",
+        source: "illustrative",
+        text: "The platform should remove coordinated deception because the issue is manipulation of reference, not disagreement. The danger is overreach if the standard becomes unpopular-opinion removal.",
+        claim: { text: "The platform should remove coordinated deceptive campaigns.", keyTerms: ["claim", "rule", "action"] },
+        grounds: [
+          { text: "The campaign uses signs to misdirect reference at scale.", keyTerms: ["sign", "reference", "community"] }
+        ],
+        warrant: { text: "A shared forum may constrain action that destroys the conditions of interpretation.", keyTerms: ["warrant", "constraint", "interpretation", "condition"] },
+        backing: { text: "Public discourse requires some stable relation between sign and source.", keyTerms: ["relation", "sign", "context"], refs: ["ad"] },
+        qualifier: { text: "Only for coordinated deception, not ordinary disagreement.", keyTerms: ["standard", "challenge"] },
+        rebuttal: { text: "Ambiguous satire should not be treated as deceptive material.", keyTerms: ["context", "material", "interpretation"] }
+      },
+      {
+        id: "bare",
+        title: "Bare Authority",
+        domain: "everyday",
+        source: "illustrative",
+        text: "The policy is fair because leadership says so.",
+        claim: { text: "The policy is fair.", keyTerms: ["claim", "standard"] },
+        grounds: [],
+        warrant: null,
+        backing: null,
+        qualifier: null,
+        rebuttal: null
+      },
+      {
+        id: "archive",
+        title: "Archive Metadata",
+        domain: "history / data",
+        source: "illustrative",
+        text: "The archive entry is reliable because its inscription, provenance, and external references agree. But reliability here means stable description, not moral importance.",
+        claim: { text: "The archive entry is reliable as a description.", keyTerms: ["claim", "reference", "truth"] },
+        grounds: [
+          { text: "Inscription, provenance, and external references converge.", keyTerms: ["inscription", "reference", "material"] }
+        ],
+        warrant: { text: "Convergent traces support a descriptive claim when their relations are independent.", keyTerms: ["support", "relation", "claim"] },
+        backing: { text: "Archival practice separates recorded material from later significance.", keyTerms: ["practice", "material", "significance"] },
+        qualifier: { text: "Reliable about description, not complete interpretation.", keyTerms: ["interpretation", "context"] },
+        rebuttal: { text: "A copied error can create false convergence.", keyTerms: ["challenge", "data"] }
+      },
+      {
+        id: "algorithm",
+        title: "Algorithmic Score",
+        domain: "technology / governance",
+        source: "illustrative",
+        text: "The score should not decide the case alone. A model output is data, but a decision also needs a standard, a challenge path, and reasons a participant can inspect.",
+        claim: { text: "The score should not decide the case alone.", keyTerms: ["claim", "case", "standard"] },
+        grounds: [
+          { text: "The model output is recorded data without its own warrant.", keyTerms: ["data", "warrant", "material"] },
+          { text: "Affected participants need reasons they can challenge.", keyTerms: ["reason", "challenge", "community"] }
+        ],
+        warrant: { text: "A consequential action is warranted only when standards and reasons are inspectable.", keyTerms: ["warrant", "action", "standard", "reason"] },
+        backing: { text: "Governance practice treats opacity as a constraint on legitimate evaluation.", keyTerms: ["practice", "constraint", "standard"] },
+        qualifier: { text: "The score may still guide review.", keyTerms: ["support", "condition"] },
+        rebuttal: { text: "A transparent rule with appeal rights changes the analysis.", keyTerms: ["rule", "challenge"] }
+      },
+      {
+        id: "art",
+        title: "Museum Label",
+        domain: "art criticism",
+        source: "illustrative",
+        text: "The object matters because the community has made it a sign of rupture. That claim depends on practice and interpretation, not only on the material artifact.",
+        claim: { text: "The object has artistic significance.", keyTerms: ["object", "significance", "claim"] },
+        grounds: [
+          { text: "The community repeatedly treats it as marking a rupture.", keyTerms: ["community", "regularity", "interpretation"] }
+        ],
+        warrant: { text: "A practice can assign significance to a form when interpretation stabilizes around it.", keyTerms: ["practice", "significance", "form", "interpretation"] },
+        backing: { text: "Museum labels convert artifacts into public signs.", keyTerms: ["artifact", "sign", "expression"] },
+        qualifier: { text: "Within that art-historical context.", keyTerms: ["context", "standard"] },
+        rebuttal: { text: "Material novelty alone would not carry the claim.", keyTerms: ["material", "challenge"] }
+      },
+      {
+        id: "quote",
+        title: "Quoted Sentence",
+        domain: "media literacy",
+        source: "illustrative",
+        text: "The quote is accurate as an inscription but misleading as an utterance. Removing the surrounding exchange changes what the sentence was used to convey.",
+        claim: { text: "The quote is accurate but misleading.", keyTerms: ["claim", "inscription", "utterance"] },
+        grounds: [
+          { text: "The words match the transcript.", keyTerms: ["word", "text", "inscription"] },
+          { text: "The surrounding exchange changes the apparent use.", keyTerms: ["context", "use", "interpretation"] }
+        ],
+        warrant: { text: "A copied text preserves form, while an utterance depends on context for what it conveys.", keyTerms: ["warrant", "form", "utterance", "context", "convey"] },
+        backing: { text: "Media practice separates literal quotation from fair representation.", keyTerms: ["practice", "reference", "standard"] },
+        qualifier: { text: "Accurate at the level of text only.", keyTerms: ["text", "standard"] },
+        rebuttal: { text: "If the omitted context is irrelevant, the challenge weakens.", keyTerms: ["context", "challenge"] }
+      }
+    ];
+
+    const state = {
+      selected: "meaning",
+      depth: 3,
+      filter: "",
+      mode: "descent",
+      pathFrom: "meaning",
+      pathTo: "truth",
+      newTerm: "",
+      newDefinition: "",
+      editorRestore: null,
+      expandedComponent: null,
+      discourseSelected: "vaccination",
+      discourseNode: null,
+      mapZoom: 1,
+      mapPanX: 0,
+      mapPanY: 0
+    };
+
+    let allTerms = [];
+    let KERNELS = [];
+    let kernelByTerm = new Map();
+    let GLOBAL_EDGES = [];
+    let INDEGREE = new Map();
+    let PAGERANK = new Map();
+    let COMPONENTS = [];
+    let COMPONENT_BY_TERM = new Map();
+    let AXIOM_REPORT = null;
+    let STATS = {};
+    const graphEl = document.getElementById("graph");
+    const wordList = document.getElementById("wordList");
+    const search = document.getElementById("search");
+    const pathFrom = document.getElementById("pathFrom");
+    const pathTo = document.getElementById("pathTo");
+    const canvasWrap = document.querySelector(".canvas-wrap");
+    let labRenderTimer = null;
+
+    function esc(value) {
+      return String(value).replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch]));
+    }
+
+    const STOPWORDS = new Set(("a an and are as at be by can for from has have in into is it its of on or that the their this to under when which with within without what who whose used using use enough further other own than then there these those through toward").split(" "));
+
+    const IRREGULAR = {
+      conveys: "convey",
+      conveyed: "convey",
+      conveying: "convey",
+      definitions: "definition",
+      interpreted: "interpretation",
+      interpreting: "interpretation",
+      interprets: "interpretation",
+      meanings: "meaning",
+      signs: "sign",
+      words: "word",
+      claims: "claim",
+      evidences: "evidence",
+      standards: "standard",
+      contexts: "context",
+      practices: "practice",
+      conventions: "convention",
+      relations: "relation",
+      expressions: "expression",
+      utterances: "utterance",
+      statements: "statement",
+      reasons: "reason",
+      conditions: "condition",
+      actions: "action",
+      objects: "object"
+    };
+
+    function stemToken(token) {
+      if (IRREGULAR[token]) return IRREGULAR[token];
+      const rules = [
+        [/ization$/, "ize"],
+        [/ation$/, "ate"],
+        [/tion$/, "t"],
+        [/ing$/, ""],
+        [/ied$/, "y"],
+        [/ed$/, ""],
+        [/ly$/, ""],
+        [/ies$/, "y"],
+        [/es$/, ""],
+        [/s$/, ""]
+      ];
+      for (const [pattern, replacement] of rules) {
+        if (token.length > 4 && pattern.test(token)) return token.replace(pattern, replacement);
+      }
+      return token;
+    }
+
+    function tokenize(text) {
+      return String(text).toLowerCase().replace(/[^a-z0-9\s-]/g, " ").split(/\s+/).filter(Boolean);
+    }
+
+    function extractDefinition(term) {
+      const entry = LEXICON[term];
+      if (!entry) return { deps: [], trace: [] };
+      const headwords = new Map();
+      allTerms.forEach(t => {
+        headwords.set(t, t);
+        headwords.set(stemToken(t), t);
+      });
+      const found = new Set();
+      const trace = tokenize(entry.definition).map(token => {
+        if (STOPWORDS.has(token)) return { token, kind: "stop", note: "stopword" };
+        const direct = headwords.get(token);
+        const stem = stemToken(token);
+        const stemmed = headwords.get(stem);
+        const match = direct || stemmed;
+        if (match && match !== term) {
+          found.add(match);
+          return { token, kind: direct ? "match" : "stem", note: direct ? match : stem + " -> " + match };
+        }
+        return { token, kind: "keep", note: stem !== token ? stem : "unmatched" };
+      });
+      return { deps: [...found].sort(), trace };
+    }
+
+    function authoredDepsOf(term) {
+      const entry = ORIGINAL_LEXICON[term] || LEXICON[term];
+      if (!entry || entry.primitive) return [];
+      return (entry.deps || []).filter(dep => LEXICON[dep]);
+    }
+
+    function depsOf(term) {
+      if (!LEXICON[term] || LEXICON[term].primitive) return [];
+      if (state.mode === "lab") return compareDeps(term).map(row => row.dep);
+      return (LEXICON[term].deps || []).filter(dep => LEXICON[dep]);
+    }
+
+    function compareDeps(term) {
+      const authored = new Set(authoredDepsOf(term));
+      const extracted = new Set(extractDefinition(term).deps);
+      const rows = [];
+      [...new Set([...authored, ...extracted])].sort().forEach(dep => {
+        const inA = authored.has(dep);
+        const inE = extracted.has(dep);
+        rows.push({
+          dep,
+          provenance: inA && inE ? "matched" : (inE ? "extracted" : "invisible")
+        });
+      });
+      return rows;
+    }
+
+    function buildReachable(start, maxDepth) {
+      const depths = new Map([[start, 0]]);
+      const queue = [start];
+      const edges = [];
+      while (queue.length) {
+        const term = queue.shift();
+        const depth = depths.get(term);
+        if (depth >= maxDepth) continue;
+        depsOf(term).forEach(dep => {
+          edges.push([term, dep]);
+          if (!depths.has(dep)) {
+            depths.set(dep, depth + 1);
+            queue.push(dep);
+          }
+        });
+      }
+      return { nodes: [...depths.keys()], edges, depths };
+    }
+
+    function tarjan(nodes, edges) {
+      const out = new Map(nodes.map(n => [n, []]));
+      edges.forEach(([a, b]) => {
+        if (out.has(a) && out.has(b)) out.get(a).push(b);
+      });
+      let index = 0;
+      const stack = [];
+      const onStack = new Set();
+      const meta = new Map();
+      const comps = [];
+
+      function strongConnect(v) {
+        meta.set(v, { index, low: index });
+        index++;
+        stack.push(v);
+        onStack.add(v);
+        out.get(v).forEach(w => {
+          if (!meta.has(w)) {
+            strongConnect(w);
+            meta.get(v).low = Math.min(meta.get(v).low, meta.get(w).low);
+          } else if (onStack.has(w)) {
+            meta.get(v).low = Math.min(meta.get(v).low, meta.get(w).index);
+          }
+        });
+        if (meta.get(v).low === meta.get(v).index) {
+          const comp = [];
+          let w;
+          do {
+            w = stack.pop();
+            onStack.delete(w);
+            comp.push(w);
+          } while (w !== v);
+          comps.push(comp.sort());
+        }
+      }
+
+      nodes.forEach(n => { if (!meta.has(n)) strongConnect(n); });
+      return comps.filter(comp => comp.length > 1 || edges.some(([a, b]) => a === comp[0] && b === comp[0]));
+    }
+
+    function shortestReturn(start) {
+      const queue = depsOf(start).map(dep => [dep, [start, dep]]);
+      const seen = new Set([start]);
+      for (const dep of depsOf(start)) seen.add(dep);
+      while (queue.length) {
+        const [term, path] = queue.shift();
+        if (term === start && path.length > 1) return path;
+        for (const next of depsOf(term)) {
+          if (next === start) return [...path, next];
+          const key = term + ">" + next;
+          if (!seen.has(key) && path.length < 12) {
+            seen.add(key);
+            queue.push([next, [...path, next]]);
+          }
+        }
+      }
+      return null;
+    }
+
+    function globalKernels() {
+      const edges = [];
+      allTerms.forEach(term => depsOf(term).forEach(dep => edges.push([term, dep])));
+      return tarjan(allTerms, edges).sort((a, b) => b.length - a.length || a[0].localeCompare(b[0]));
+    }
+
+    function indegreeMap() {
+      const map = new Map(allTerms.map(term => [term, 0]));
+      GLOBAL_EDGES.forEach(([, dep]) => map.set(dep, (map.get(dep) || 0) + 1));
+      return map;
+    }
+
+    function pageRankMap(iterations = 34, damping = .86) {
+      const n = Math.max(allTerms.length, 1);
+      const rank = new Map(allTerms.map(term => [term, 1 / n]));
+      for (let i = 0; i < iterations; i++) {
+        const next = new Map(allTerms.map(term => [term, (1 - damping) / n]));
+        let dangling = 0;
+        allTerms.forEach(term => {
+          const deps = depsOf(term);
+          if (!deps.length) {
+            dangling += rank.get(term) || 0;
+            return;
+          }
+          const share = (rank.get(term) || 0) / deps.length;
+          deps.forEach(dep => next.set(dep, (next.get(dep) || 0) + damping * share));
+        });
+        const leak = damping * dangling / n;
+        allTerms.forEach(term => rank.set(term, (next.get(term) || 0) + leak));
+      }
+      return rank;
+    }
+
+    function isAcyclic(nodes, edges) {
+      return tarjan(nodes, edges).length === 0;
+    }
+
+    function combinations(items, size, visit, start = 0, picked = []) {
+      if (picked.length === size) {
+        return visit(picked.slice()) === false ? false : true;
+      }
+      for (let i = start; i <= items.length - (size - picked.length); i++) {
+        picked.push(items[i]);
+        if (combinations(items, size, visit, i + 1, picked) === false) return false;
+        picked.pop();
+      }
+      return true;
+    }
+
+    function exactFeedbackSet(nodes, edges) {
+      const ordered = nodes.slice().sort((a, b) => {
+        const da = edges.filter(([x, y]) => x === a || y === a).length;
+        const db = edges.filter(([x, y]) => x === b || y === b).length;
+        return db - da || a.localeCompare(b);
+      });
+      for (let size = 1; size <= ordered.length; size++) {
+        let answer = null;
+        combinations(ordered, size, combo => {
+          const removed = new Set(combo);
+          const leftNodes = ordered.filter(n => !removed.has(n));
+          const leftEdges = edges.filter(([a, b]) => !removed.has(a) && !removed.has(b));
+          if (isAcyclic(leftNodes, leftEdges)) {
+            answer = combo.slice().sort();
+            return false;
+          }
+          return true;
+        });
+        if (answer) return { terms: answer, method: "exact", searched: size };
+      }
+      return { terms: ordered, method: "exact", searched: ordered.length };
+    }
+
+    function greedyFeedbackSet(nodes, edges) {
+      const removed = [];
+      let leftNodes = nodes.slice();
+      let leftEdges = edges.slice();
+      while (tarjan(leftNodes, leftEdges).length) {
+        const score = new Map(leftNodes.map(n => [n, 0]));
+        leftEdges.forEach(([a, b]) => {
+          score.set(a, (score.get(a) || 0) + 1.2);
+          score.set(b, (score.get(b) || 0) + 1);
+        });
+        const pick = [...score.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
+        removed.push(pick);
+        leftNodes = leftNodes.filter(n => n !== pick);
+        leftEdges = leftEdges.filter(([a, b]) => a !== pick && b !== pick);
+      }
+      return { terms: removed.sort(), method: "greedy-bounded", searched: nodes.length };
+    }
+
+    function solveAxiomSets() {
+      const components = KERNELS.map((members, index) => {
+        const set = new Set(members);
+        const edges = GLOBAL_EDGES.filter(([a, b]) => set.has(a) && set.has(b));
+        const solution = members.length <= 13 && edges.length <= 80
+          ? exactFeedbackSet(members, edges)
+          : greedyFeedbackSet(members, edges);
+        return {
+          index,
+          members,
+          edges,
+          incoming: kernelLoad(index).incoming,
+          internal: edges.length,
+          axioms: solution.terms,
+          method: solution.method,
+          searched: solution.searched
+        };
+      }).sort((a, b) => b.members.length - a.members.length || b.incoming - a.incoming || a.index - b.index);
+      const axiomTerms = [...new Set(components.flatMap(c => c.axioms))].sort();
+      return {
+        components,
+        axiomTerms,
+        exact: components.filter(c => c.method === "exact").length,
+        greedy: components.filter(c => c.method !== "exact").length
+      };
+    }
+
+    function condensation() {
+      const membership = new Map();
+      KERNELS.forEach((members, index) => members.forEach(term => membership.set(term, "k" + index)));
+      const components = [];
+      KERNELS.forEach((members, index) => {
+        components.push({
+          id: "k" + index,
+          kind: "kernel",
+          kernelIndex: index,
+          terms: members.slice(),
+          label: "kernel " + (index + 1),
+          cyclic: true
+        });
+      });
+      allTerms.forEach(term => {
+        if (!membership.has(term)) {
+          const id = "t:" + term;
+          membership.set(term, id);
+          components.push({
+            id,
+            kind: "term",
+            terms: [term],
+            label: term,
+            cyclic: false
+          });
+        }
+      });
+      const edgeMap = new Map();
+      GLOBAL_EDGES.forEach(([a, b]) => {
+        const ca = membership.get(a);
+        const cb = membership.get(b);
+        if (!ca || !cb || ca === cb) return;
+        const key = ca + ">" + cb;
+        edgeMap.set(key, { from: ca, to: cb, weight: (edgeMap.get(key)?.weight || 0) + 1 });
+      });
+      const byId = new Map(components.map(c => [c.id, c]));
+      components.forEach(c => {
+        c.incoming = 0;
+        c.outgoing = 0;
+        c.rank = c.terms.reduce((sum, term) => sum + (PAGERANK.get(term) || 0), 0);
+        c.axiom = AXIOM_REPORT ? c.terms.some(term => AXIOM_REPORT.axiomTerms.includes(term)) : false;
+      });
+      const edges = [...edgeMap.values()];
+      edges.forEach(edge => {
+        if (byId.has(edge.to)) byId.get(edge.to).incoming += edge.weight;
+        if (byId.has(edge.from)) byId.get(edge.from).outgoing += edge.weight;
+      });
+      return { components, edges, byId, membership };
+    }
+
+    function kernelLoad(index) {
+      const comp = new Set(KERNELS[index]);
+      let incoming = 0;
+      let internal = 0;
+      GLOBAL_EDGES.forEach(([a, b]) => {
+        if (comp.has(b) && !comp.has(a)) incoming++;
+        if (comp.has(a) && comp.has(b)) internal++;
+      });
+      return { incoming, internal };
+    }
+
+    function groundingDistance(start) {
+      if (LEXICON[start].primitive) return 0;
+      const queue = [[start, 0]];
+      const seen = new Set([start]);
+      while (queue.length) {
+        const [term, depth] = queue.shift();
+        for (const dep of depsOf(term)) {
+          if (LEXICON[dep].primitive) return depth + 1;
+          if (!seen.has(dep)) {
+            seen.add(dep);
+            queue.push([dep, depth + 1]);
+          }
+        }
+      }
+      return Infinity;
+    }
+
+    function shortestPath(from, to) {
+      if (from === to) return [from];
+      const queue = [[from, [from]]];
+      const seen = new Set([from]);
+      while (queue.length) {
+        const [term, path] = queue.shift();
+        for (const dep of depsOf(term)) {
+          if (dep === to) return [...path, dep];
+          if (!seen.has(dep)) {
+            seen.add(dep);
+            queue.push([dep, [...path, dep]]);
+          }
+        }
+      }
+      return null;
+    }
+
+    function corpusStats() {
+      const primitives = allTerms.filter(term => LEXICON[term].primitive);
+      const cyclicTerms = new Set([...kernelByTerm.keys()]);
+      const distances = allTerms.map(term => groundingDistance(term));
+      const finite = distances.filter(Number.isFinite);
+      const maxDistance = Math.max(...finite, 0);
+      const histogram = Array.from({ length: maxDistance + 1 }, () => 0);
+      finite.forEach(d => histogram[d]++);
+      const hubs = allTerms
+        .filter(term => !kernelByTerm.has(term))
+        .map(term => ({ term, indegree: INDEGREE.get(term) || 0, outdegree: depsOf(term).length, rank: PAGERANK.get(term) || 0 }))
+        .sort((a, b) => b.rank - a.rank || b.indegree - a.indegree || b.outdegree - a.outdegree || a.term.localeCompare(b.term));
+      const kernels = KERNELS.map((members, index) => ({ index, members, ...kernelLoad(index) }))
+        .sort((a, b) => b.incoming - a.incoming || b.members.length - a.members.length || a.index - b.index);
+      return { primitives, cyclicTerms, distances, histogram, hubs, kernels };
+    }
+
+    function extractorStats() {
+      let matched = 0;
+      let extractedOnly = 0;
+      let invisible = 0;
+      allTerms.forEach(term => {
+        compareDeps(term).forEach(row => {
+          if (row.provenance === "matched") matched++;
+          if (row.provenance === "extracted") extractedOnly++;
+          if (row.provenance === "invisible") invisible++;
+        });
+      });
+      const precision = matched / Math.max(matched + extractedOnly, 1);
+      const recall = matched / Math.max(matched + invisible, 1);
+      const f1 = (2 * precision * recall) / Math.max(precision + recall, .0001);
+      return { matched, extractedOnly, invisible, precision, recall, f1 };
+    }
+
+    function refreshAnalysis() {
+      allTerms = Object.keys(LEXICON).sort();
+      KERNELS = globalKernels();
+      kernelByTerm = new Map();
+      KERNELS.forEach((comp, i) => comp.forEach(term => kernelByTerm.set(term, i)));
+      GLOBAL_EDGES = allTerms.flatMap(term => depsOf(term).map(dep => [term, dep]));
+      INDEGREE = indegreeMap();
+      PAGERANK = pageRankMap();
+      AXIOM_REPORT = solveAxiomSets();
+      const condensed = condensation();
+      COMPONENTS = condensed.components;
+      COMPONENT_BY_TERM = condensed.membership;
+      STATS = corpusStats();
+      STATS.extractor = extractorStats();
+      STATS.axioms = AXIOM_REPORT;
+      STATS.condensation = condensed;
+    }
+
+    function debtFor(term) {
+      const visited = new Set();
+      const queue = [term];
+      const kernels = new Set();
+      const primitives = new Set();
+      while (queue.length) {
+        const cur = queue.shift();
+        if (visited.has(cur)) continue;
+        visited.add(cur);
+        if (kernelByTerm.has(cur)) kernels.add(kernelByTerm.get(cur));
+        if (LEXICON[cur] && LEXICON[cur].primitive) primitives.add(cur);
+        depsOf(cur).forEach(dep => { if (!visited.has(dep)) queue.push(dep); });
+      }
+      return { kernels: [...kernels], primitives: [...primitives].sort(), span: visited.size };
+    }
+
+    function passageById(id) {
+      return DISCOURSE.find(p => p.id === id) || DISCOURSE[0];
+    }
+
+    function discourseParts(passage) {
+      const parts = [{ id: passage.id + ":claim", role: "claim", label: "claim", ...passage.claim }];
+      (passage.grounds || []).forEach((g, i) => parts.push({ id: passage.id + ":g" + (i + 1), role: "grounds", label: "ground " + (i + 1), ...g }));
+      ["warrant", "backing", "qualifier", "rebuttal"].forEach(role => {
+        if (passage[role]) parts.push({ id: passage.id + ":" + role, role, label: role, ...passage[role] });
+      });
+      return parts.map(part => ({
+        ...part,
+        keyTerms: (part.keyTerms || []).filter(term => LEXICON[term])
+      }));
+    }
+
+    function discourseEdges(passage) {
+      const id = passage.id;
+      const edges = [];
+      (passage.grounds || []).forEach((_, i) => edges.push([id + ":g" + (i + 1), passage.warrant ? id + ":warrant" : id + ":claim", "support"]));
+      if (passage.warrant) edges.push([id + ":warrant", id + ":claim", "license"]);
+      if (passage.backing) edges.push([id + ":backing", passage.warrant ? id + ":warrant" : id + ":claim", "back"]);
+      if (passage.qualifier) edges.push([id + ":qualifier", id + ":claim", "scope"]);
+      if (passage.rebuttal) edges.push([id + ":rebuttal", id + ":claim", "challenge"]);
+      return edges;
+    }
+
+    function supportClaimEdges() {
+      const claimIds = DISCOURSE.map(p => p.id);
+      const edges = [];
+      DISCOURSE.forEach(p => {
+        const refs = (p.backing && p.backing.refs) || [];
+        refs.forEach(ref => {
+          if (claimIds.includes(ref)) edges.push([p.id, ref]);
+        });
+      });
+      return edges;
+    }
+
+    function footprintForTerms(terms) {
+      const kernels = new Set();
+      const primitives = new Set();
+      const span = new Set();
+      terms.filter(term => LEXICON[term]).forEach(term => {
+        const debt = debtFor(term);
+        debt.kernels.forEach(k => kernels.add("k" + k));
+        debt.primitives.forEach(p => primitives.add("p:" + p));
+        span.add(term);
+      });
+      return { kernels, primitives, span };
+    }
+
+    function discourseUseReceipt(passage, part, term) {
+      const roleTerms = {
+        claim: ["claim", "statement"],
+        grounds: ["evidence", "support", "material"],
+        warrant: ["warrant", "reason", "rule"],
+        backing: ["support", "standard", "practice"],
+        qualifier: ["standard", "condition"],
+        rebuttal: ["challenge", "reason"]
+      }[part.role] || [];
+      const contextTerms = [...new Set([...(part.keyTerms || []).filter(t => t !== term), ...roleTerms])].filter(t => LEXICON[t]);
+      const dictionary = footprintForTerms([term]);
+      const context = footprintForTerms(contextTerms);
+      const dictSet = new Set([...dictionary.kernels, ...dictionary.primitives]);
+      const ctxSet = new Set([...context.kernels, ...context.primitives]);
+      const union = new Set([...dictSet, ...ctxSet]);
+      let overlap = 0;
+      dictSet.forEach(item => { if (ctxSet.has(item)) overlap++; });
+      const score = union.size ? overlap / union.size : 1;
+      return {
+        passage: passage.id,
+        part: part.id,
+        role: part.role,
+        term,
+        score,
+        status: score >= .34 ? "stable" : "divergent",
+        dictionary: [...dictSet].sort(),
+        context: [...ctxSet].sort(),
+        contextTerms
+      };
+    }
+
+    function discourseAnalysis() {
+      const bare = DISCOURSE.filter(p => !(p.grounds || []).length && !p.warrant);
+      const claimEdges = supportClaimEdges();
+      const cycles = tarjan(DISCOURSE.map(p => p.id), claimEdges);
+      const receipts = [];
+      DISCOURSE.forEach(p => {
+        discourseParts(p).forEach(part => {
+          part.keyTerms.forEach(term => receipts.push(discourseUseReceipt(p, part, term)));
+        });
+      });
+      const divergent = receipts.filter(r => r.status === "divergent");
+      const termCounts = new Map();
+      receipts.forEach(r => termCounts.set(r.term, (termCounts.get(r.term) || 0) + 1));
+      return { bare, claimEdges, cycles, receipts, divergent, termCounts };
+    }
+
+    function renderLedger(reachable, kernels) {
+      if (state.mode === "discourse") {
+        const d = discourseAnalysis();
+        document.getElementById("ledger").innerHTML = [
+          ["Passages", DISCOURSE.length],
+          ["Bare claims", d.bare.length],
+          ["Support cycles", d.cycles.length],
+          ["Divergent uses", d.divergent.length]
+        ].map(([label, val]) => `<div class="metric"><b>${val}</b><span>${label}</span></div>`).join("");
+        return;
+      }
+      if (state.mode === "lab") {
+        const ex = STATS.extractor;
+        document.getElementById("ledger").innerHTML = [
+          ["Matched", ex.matched],
+          ["Extracted-only", ex.extractedOnly],
+          ["Invisible", ex.invisible],
+          ["P/R/F1", `${Math.round(ex.precision * 100)} / ${Math.round(ex.recall * 100)} / ${Math.round(ex.f1 * 100)}`]
+        ].map(([label, val]) => `<div class="metric"><b>${val}</b><span>${label}</span></div>`).join("");
+        return;
+      }
+      if (state.mode === "atlas") {
+        const cyclic = STATS.cyclicTerms.size;
+        const unresolved = STATS.distances.filter(d => !Number.isFinite(d)).length;
+        document.getElementById("ledger").innerHTML = [
+          ["Terms", allTerms.length],
+          ["Edges", GLOBAL_EDGES.length],
+          ["Components", COMPONENTS.length],
+          ["Cyclic / ungrounded", cyclic + " / " + unresolved]
+        ].map(([label, val]) => `<div class="metric"><b>${val}</b><span>${label}</span></div>`).join("");
+        return;
+      }
+      if (state.mode === "axiom") {
+        const ax = STATS.axioms;
+        document.getElementById("ledger").innerHTML = [
+          ["Axiom terms", ax.axiomTerms.length],
+          ["Cyclic kernels", ax.components.length],
+          ["Exact / greedy", ax.exact + " / " + ax.greedy],
+          ["Cycle coverage", STATS.cyclicTerms.size]
+        ].map(([label, val]) => `<div class="metric"><b>${val}</b><span>${label}</span></div>`).join("");
+        return;
+      }
+      const primitives = reachable.nodes.filter(n => LEXICON[n].primitive).length;
+      const boundary = reachable.nodes.reduce((sum, n) => sum + (LEXICON[n].deps || []).filter(d => !LEXICON[d]).length, 0);
+      document.getElementById("ledger").innerHTML = [
+        ["Terms", allTerms.length],
+        ["Visible nodes", reachable.nodes.length],
+        ["Cycle kernels", kernels.length],
+        ["Primitive / raw", primitives + " / " + boundary]
+      ].map(([label, val]) => `<div class="metric"><b>${val}</b><span>${label}</span></div>`).join("");
+    }
+
+    function renderWordList() {
+      if (state.mode === "discourse") {
+        const d = discourseAnalysis();
+        const q = state.filter.trim().toLowerCase();
+        const rows = DISCOURSE.filter(p => {
+          if (!q) return true;
+          const keyText = discourseParts(p).flatMap(part => part.keyTerms).join(" ");
+          return (p.title + " " + p.domain + " " + p.text + " " + keyText).toLowerCase().includes(q);
+        });
+        document.getElementById("termCount").textContent = rows.length + " passages";
+        const cyclicIds = new Set(d.cycles.flat());
+        wordList.innerHTML = rows.map(p => {
+          const bare = d.bare.some(b => b.id === p.id) ? `<span class="badge cycle">B</span>` : "";
+          const cyc = cyclicIds.has(p.id) ? `<span class="badge cycle">C</span>` : "";
+          const divs = d.divergent.filter(r => r.passage === p.id).length;
+          return `<button class="word-row ${p.id === state.discourseSelected ? "active" : ""}" data-passage="${p.id}">
+            <span class="term">${esc(p.title)}</span>
+            <span class="badges">${bare}${cyc}<span class="badge">${divs}</span></span>
+          </button>`;
+        }).join("");
+        wordList.querySelectorAll("button").forEach(btn => {
+          btn.addEventListener("click", () => {
+            state.discourseSelected = btn.dataset.passage;
+            state.discourseNode = null;
+            render();
+          });
+        });
+        return;
+      }
+      const q = state.filter.trim().toLowerCase();
+      const rows = allTerms.filter(term => {
+        if (!q) return true;
+        return term.includes(q) || LEXICON[term].definition.toLowerCase().includes(q);
+      });
+      document.getElementById("termCount").textContent = rows.length + " shown";
+      wordList.innerHTML = rows.map(term => {
+        const debt = debtFor(term);
+        const cycle = kernelByTerm.has(term) ? `<span class="badge cycle">C</span>` : "";
+        const root = LEXICON[term].primitive ? `<span class="badge root">P</span>` : "";
+        return `<button class="word-row ${term === state.selected ? "active" : ""}" data-term="${term}">
+          <span class="term">${term}</span>
+          <span class="badges">${cycle}${root}<span class="badge">${debt.span}</span></span>
+        </button>`;
+      }).join("");
+      wordList.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.selected = btn.dataset.term;
+          state.pathFrom = state.selected;
+          render();
+        });
+      });
+    }
+
+    function layoutNodes(nodes, depths, width, height) {
+      const byDepth = new Map();
+      nodes.forEach(n => {
+        const d = depths.get(n) || 0;
+        if (!byDepth.has(d)) byDepth.set(d, []);
+        byDepth.get(d).push(n);
+      });
+      const levels = [...byDepth.keys()].sort((a, b) => a - b);
+      const pos = new Map();
+      const left = 58;
+      const right = width - 120;
+      const top = 42;
+      const bottom = height - 72;
+      levels.forEach((level, levelIndex) => {
+        const terms = byDepth.get(level).sort((a, b) => {
+          const ka = kernelByTerm.has(a) ? -1 : 0;
+          const kb = kernelByTerm.has(b) ? -1 : 0;
+          return ka - kb || a.localeCompare(b);
+        });
+        const x = levels.length === 1 ? width / 2 : left + (right - left) * (levelIndex / (levels.length - 1));
+        terms.forEach((term, i) => {
+          const y = terms.length === 1 ? height / 2 : top + (bottom - top) * ((i + .5) / terms.length);
+          pos.set(term, { x, y });
+        });
+      });
+      return pos;
+    }
+
+    function nodeClass(term) {
+      if (term === state.selected) return "focus";
+      if (kernelByTerm.has(term)) return "kernel";
+      if (LEXICON[term].primitive) return "primitive";
+      return "";
+    }
+
+    function isCycleEdge(a, b) {
+      return kernelByTerm.has(a) && kernelByTerm.get(a) === kernelByTerm.get(b);
+    }
+
+    function renderGraph(reachable, localKernels) {
+      const rect = graphEl.getBoundingClientRect();
+      const width = Math.max(580, Math.floor(rect.width || 700));
+      const height = Math.max(390, Math.floor(rect.height || 470));
+      const pos = layoutNodes(reachable.nodes, reachable.depths, width, height);
+      const focusDeps = new Set(depsOf(state.selected));
+      const defs = `<defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
+          <path d="M0,0 L8,3.5 L0,7 Z" fill="#817b6d"></path>
+        </marker>
+      </defs>`;
+      const edgeMarkup = reachable.edges.map(([a, b]) => {
+        const pa = pos.get(a), pb = pos.get(b);
+        if (!pa || !pb) return "";
+        const provenance = state.mode === "lab" ? (compareDeps(a).find(row => row.dep === b)?.provenance || "extracted") : "";
+        const cls = state.mode === "lab"
+          ? provenance
+          : (isCycleEdge(a, b) ? "cycle" : (a === state.selected || focusDeps.has(b) ? "focus" : ""));
+        const x1 = pa.x + 57, x2 = pb.x - 57;
+        const c = Math.max(40, Math.abs(x2 - x1) * .42);
+        return `<path class="edge ${cls}" d="M${x1},${pa.y} C${x1 + c},${pa.y} ${x2 - c},${pb.y} ${x2},${pb.y}"></path>`;
+      }).join("");
+      const nodeMarkup = reachable.nodes.map(term => {
+        const p = pos.get(term);
+        const depth = reachable.depths.get(term) || 0;
+        const cls = nodeClass(term);
+        const sub = LEXICON[term].primitive ? "primitive" : (kernelByTerm.has(term) ? "kernel " + (kernelByTerm.get(term) + 1) : "d" + depth);
+        return `<g class="node ${cls}" data-term="${term}" transform="translate(${p.x - 60},${p.y - 18})">
+          <rect width="120" height="36" rx="2"></rect>
+          <text x="8" y="15">${term}</text>
+          <text class="sub" x="8" y="29">${sub}</text>
+        </g>`;
+      }).join("");
+      graphEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      graphEl.innerHTML = defs + edgeMarkup + nodeMarkup;
+      graphEl.querySelectorAll(".node").forEach(node => {
+        node.addEventListener("click", () => {
+          state.selected = node.dataset.term;
+          state.pathFrom = state.selected;
+          render();
+        });
+      });
+      document.getElementById("graphTitle").textContent = state.mode === "lab" ? "Definition Lab - Extracted Graph" : "Definition Dependency Graph";
+      document.getElementById("graphStatus").textContent = `${reachable.nodes.length} nodes, ${reachable.edges.length} edges, ${localKernels.length} local kernels`;
+    }
+
+    function renderDiscourseGraph() {
+      const passage = passageById(state.discourseSelected);
+      const parts = discourseParts(passage);
+      const edges = discourseEdges(passage);
+      const rect = graphEl.getBoundingClientRect();
+      const width = Math.max(640, Math.floor(rect.width || 760));
+      const height = Math.max(390, Math.floor(rect.height || 470));
+      const pos = new Map();
+      const grounds = parts.filter(p => p.role === "grounds");
+      grounds.forEach((part, i) => {
+        pos.set(part.id, { x: width * .18, y: 80 + (i + .5) * ((height - 150) / Math.max(grounds.length, 1)) });
+      });
+      const fixed = {
+        backing: { x: width * .48, y: 72 },
+        warrant: { x: width * .48, y: height * .52 },
+        qualifier: { x: width * .73, y: height * .24 },
+        rebuttal: { x: width * .73, y: height * .76 },
+        claim: { x: width * .84, y: height * .52 }
+      };
+      parts.forEach(part => {
+        if (!pos.has(part.id)) pos.set(part.id, fixed[part.role] || { x: width / 2, y: height / 2 });
+      });
+      const defs = `<defs>
+        <marker id="discArrow" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
+          <path d="M0,0 L8,3.5 L0,7 Z" fill="#817b6d"></path>
+        </marker>
+      </defs>`;
+      const edgeMarkup = edges.map(([a, b, kind]) => {
+        const pa = pos.get(a), pb = pos.get(b);
+        if (!pa || !pb) return "";
+        const x1 = pa.x + 72, x2 = pb.x - 72;
+        const c = Math.max(36, Math.abs(x2 - x1) * .38);
+        const cls = kind === "challenge" ? "cycle" : (kind === "license" ? "focus" : "");
+        return `<path class="edge ${cls}" marker-end="url(#discArrow)" d="M${x1},${pa.y} C${x1 + c},${pa.y} ${x2 - c},${pb.y} ${x2},${pb.y}"></path>`;
+      }).join("");
+      const nodeMarkup = parts.map(part => {
+        const p = pos.get(part.id);
+        const terms = part.keyTerms.slice(0, 3).join(", ");
+        const focus = state.discourseNode === part.id ? " focus" : "";
+        return `<g class="node ${part.role}${focus}" data-disc-node="${part.id}" transform="translate(${p.x - 72},${p.y - 24})">
+          <rect width="144" height="48" rx="2"></rect>
+          <text x="8" y="16">${esc(part.label)}</text>
+          <text class="sub" x="8" y="31">${esc(terms || "no key terms")}</text>
+          <text class="sub" x="8" y="43">${esc(part.text.slice(0, 22))}${part.text.length > 22 ? "..." : ""}</text>
+        </g>`;
+      }).join("");
+      graphEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      graphEl.innerHTML = defs + edgeMarkup + nodeMarkup;
+      graphEl.querySelectorAll(".node").forEach(node => {
+        node.addEventListener("click", () => {
+          state.discourseNode = node.dataset.discNode;
+          render();
+        });
+      });
+      const d = discourseAnalysis();
+      document.getElementById("graphTitle").textContent = "Discourse Toulmin Graph";
+      document.getElementById("graphStatus").textContent = `${parts.length} propositions, ${edges.length} support arcs, ${d.claimEdges.length} cross-passage citations`;
+    }
+
+    function renderDiscourseInspector() {
+      const d = discourseAnalysis();
+      const passage = passageById(state.discourseSelected);
+      const parts = discourseParts(passage);
+      const selectedPart = parts.find(p => p.id === state.discourseNode) || parts[0];
+      const receipts = d.receipts.filter(r => r.passage === passage.id && r.part === selectedPart.id)
+        .sort((a, b) => a.score - b.score || a.term.localeCompare(b.term));
+      const passageReceipts = d.receipts.filter(r => r.passage === passage.id);
+      const divergent = passageReceipts.filter(r => r.status === "divergent");
+      const refs = (passage.backing && passage.backing.refs) || [];
+      const cyclic = d.cycles.some(c => c.includes(passage.id));
+      const bare = d.bare.some(p => p.id === passage.id);
+
+      document.getElementById("definition").innerHTML = `
+        <h2>${esc(passage.title)}</h2>
+        <p>${esc(passage.domain)} / ${esc(passage.source)}</p>
+        <div class="passage-text">${esc(passage.text)}</div>
+        <div class="tagline">
+          <span class="pill ${bare ? "red" : "green"}">${bare ? "bare claim" : (passage.grounds || []).length + " ground(s)"}</span>
+          <span class="pill ${cyclic ? "red" : "blue"}">${cyclic ? "circular backing" : "acyclic backing"}</span>
+          <span class="pill amber">${divergent.length} divergent receipt(s)</span>
+          <span class="pill blue">${refs.length ? "backs: " + refs.join(", ") : "no cited backing claim"}</span>
+        </div>`;
+
+      document.getElementById("kernelRows").innerHTML = parts.map(part => {
+        const flag = part.id === selectedPart.id ? "selected" : part.role;
+        return `<tr><td>${esc(part.label)}<br><span class="mono">${esc(flag)}</span></td><td>${esc(part.text)}</td><td class="num">${part.keyTerms.length} terms</td></tr>`;
+      }).join("");
+
+      document.getElementById("depRows").innerHTML = passageReceipts
+        .sort((a, b) => a.score - b.score || a.term.localeCompare(b.term))
+        .map(r => `<tr><td>${esc(r.term)}</td><td>${r.status}<br><span class="mono">${esc(r.role)}</span></td><td class="num">${Math.round(r.score * 100)}%</td></tr>`)
+        .join("");
+
+      document.getElementById("detFinding").textContent =
+        bare ? "This passage has a claim with no grounds and no warrant." : `${parts.length} authored proposition nodes form a local support graph.`;
+      document.getElementById("debtLine").textContent =
+        `${d.bare.length} bare claim(s), ${d.cycles.length} cross-passage support SCC(s), ${d.divergent.length} divergent term-use receipt(s) in corpus.`;
+      document.getElementById("returnLine").textContent =
+        d.cycles.length ? d.cycles.map(c => c.join(" -> ")).join(" / ") : "no circular backing among passage claims";
+
+      const receiptMarkup = receipts.length ? receipts.map(r => {
+        const cls = r.status === "divergent" ? "red" : "green";
+        return `<div class="receipt">
+          <b>${esc(r.term)}</b>
+          <span class="bar"><i style="width:${Math.max(4, r.score * 100).toFixed(1)}%;background:var(--${cls === "red" ? "red" : "green"})"></i></span>
+          <button class="jump-term" data-jump-term="${esc(r.term)}">${Math.round(r.score * 100)}%</button>
+        </div>
+        <div class="mono">context: ${esc(r.contextTerms.join(", ") || "none")} / dictionary ${r.dictionary.length} marks, context ${r.context.length} marks</div>`;
+      }).join("") : `<span class="empty">Selected proposition has no lexicon key terms.</span>`;
+
+      const notes = [
+        `<div class="note mechanical"><strong>Selected proposition</strong><b>${esc(selectedPart.label)}:</b> ${esc(selectedPart.text)}<div class="tagline">${selectedPart.keyTerms.map(t => `<button class="jump-term" data-jump-term="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`,
+        `<div class="note mechanical"><strong>Equivocation receipts</strong>${receiptMarkup}</div>`,
+        `<div class="note mechanical"><strong>Cross-passage support</strong>${d.claimEdges.length ? d.claimEdges.map(([a, b]) => esc(a + " backs " + b)).join("<br>") : "No backing claim citations in this corpus."}</div>`,
+        `<div class="note interpretive"><strong>Round-5 vision</strong>I merged Claude's Discourse proposal with a stricter receipt: the app compares each term's dictionary grounding footprint to the local proposition context footprint. Low overlap is a structural divergence warning, not an NLP claim.</div>`
+      ];
+      document.getElementById("notes").innerHTML = notes.join("");
+      document.querySelectorAll("[data-jump-term]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.selected = btn.dataset.jumpTerm;
+          state.pathFrom = state.selected;
+          state.mode = "descent";
+          syncModeButtons();
+          render();
+        });
+      });
+    }
+
+    function componentLayout(width, height) {
+      const { components } = STATS.condensation;
+      const sorted = components.slice().sort((a, b) => {
+        const ca = a.cyclic ? -1 : 0;
+        const cb = b.cyclic ? -1 : 0;
+        return ca - cb || b.rank - a.rank || b.incoming - a.incoming || a.label.localeCompare(b.label);
+      });
+      const pos = new Map();
+      const centerX = width * .38;
+      const centerY = height * .52;
+      const cyclic = sorted.filter(c => c.cyclic);
+      const acyclic = sorted.filter(c => !c.cyclic);
+      cyclic.forEach((c, i) => {
+        const angle = -Math.PI / 2 + (Math.PI * 2 * i / Math.max(cyclic.length, 1));
+        const radius = cyclic.length <= 1 ? 0 : Math.min(width, height) * .17;
+        pos.set(c.id, { x: centerX + Math.cos(angle) * radius, y: centerY + Math.sin(angle) * radius });
+      });
+      acyclic.forEach((c, i) => {
+        const rank = i / Math.max(acyclic.length - 1, 1);
+        const band = i % 3;
+        const x = width * (.62 + band * .11);
+        const y = 55 + rank * (height - 118);
+        pos.set(c.id, { x, y });
+      });
+      return pos;
+    }
+
+    function renderComponentMap(kind) {
+      const rect = graphEl.getBoundingClientRect();
+      const width = Math.max(760, Math.floor(rect.width || 860));
+      const height = Math.max(470, Math.floor(rect.height || 540));
+      const worldW = 1120;
+      const worldH = 760;
+      const { components, edges, byId } = STATS.condensation;
+      const pos = componentLayout(worldW, worldH);
+      const maxRank = Math.max(...components.map(c => c.rank), .0001);
+      const maxWeight = Math.max(...edges.map(e => e.weight), 1);
+      const zoom = Math.max(.64, Math.min(2.4, state.mapZoom));
+      state.mapZoom = zoom;
+      const tx = state.mapPanX;
+      const ty = state.mapPanY;
+      const selectedComponent = COMPONENT_BY_TERM.get(state.selected);
+      const expanded = state.expandedComponent || selectedComponent;
+      const defs = `<defs>
+        <marker id="mapArrow" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
+          <path d="M0,0 L8,3.5 L0,7 Z" fill="#817b6d"></path>
+        </marker>
+      </defs>`;
+      const edgeMarkup = edges.map(edge => {
+        const a = pos.get(edge.from), b = pos.get(edge.to);
+        if (!a || !b) return "";
+        const weight = 1 + (edge.weight / maxWeight) * 2.2;
+        return `<path class="edge" marker-end="url(#mapArrow)" style="stroke-width:${weight.toFixed(2)};opacity:.38" d="M${a.x},${a.y} C${(a.x + b.x) / 2},${a.y} ${(a.x + b.x) / 2},${b.y} ${b.x},${b.y}"></path>`;
+      }).join("");
+      const componentMarkup = components.map(component => {
+        const p = pos.get(component.id);
+        const isExpanded = component.id === expanded && component.terms.length > 1;
+        const focus = component.id === selectedComponent ? " expanded" : "";
+        const axiom = component.axiom ? " axiom" : "";
+        const cyclic = component.cyclic ? " cyclic" : "";
+        const size = component.cyclic
+          ? 34 + Math.sqrt(component.terms.length) * 9 + (component.rank / maxRank) * 20
+          : 30 + (component.rank / maxRank) * 42;
+        if (isExpanded) {
+          const termNodes = component.terms.map((term, i) => {
+            const angle = -Math.PI / 2 + (Math.PI * 2 * i / component.terms.length);
+            const r = size + 35;
+            const x = Math.cos(angle) * r;
+            const y = Math.sin(angle) * r;
+            const chosen = term === state.selected ? " axiom expanded" : (AXIOM_REPORT.axiomTerms.includes(term) ? " axiom" : "");
+            return `<g class="component${chosen}" data-term="${term}" transform="translate(${p.x + x - 42},${p.y + y - 15})">
+              <rect width="84" height="30" rx="2"></rect>
+              <text class="map-label" x="6" y="13">${esc(term)}</text>
+              <text class="map-sub" x="6" y="25">r ${(PAGERANK.get(term) * 1000).toFixed(1)}</text>
+            </g>`;
+          }).join("");
+          return `<g class="component${cyclic}${axiom}${focus}" data-component="${component.id}" data-term="${component.terms[0]}" transform="translate(${p.x},${p.y})">
+            <circle r="${size.toFixed(1)}"></circle>
+            <text class="map-label" text-anchor="middle" y="-5">${esc(component.label)}</text>
+            <text class="map-sub" text-anchor="middle" y="9">${component.terms.length} terms / ${component.incoming} in</text>
+            <text class="map-sub" text-anchor="middle" y="22">${component.axiom ? "axiom-bearing" : "component"}</text>
+          </g>${termNodes}`;
+        }
+        return `<g class="component${cyclic}${axiom}${focus}" data-component="${component.id}" data-term="${component.terms[0]}" transform="translate(${p.x - size},${p.y - 18})">
+          <rect width="${(size * 2).toFixed(1)}" height="36" rx="2"></rect>
+          <text class="map-label" x="7" y="14">${esc(component.label)}</text>
+          <text class="map-sub" x="7" y="27">${component.terms.length} term${component.terms.length === 1 ? "" : "s"} / r ${(component.rank * 1000).toFixed(1)}</text>
+        </g>`;
+      }).join("");
+      const miniW = 138;
+      const miniH = 92;
+      const miniX = width - miniW - 18;
+      const miniY = height - miniH - 18;
+      const miniDots = components.map(c => {
+        const p = pos.get(c.id);
+        return `<circle class="dot" cx="${miniX + (p.x / worldW) * miniW}" cy="${miniY + (p.y / worldH) * miniH}" r="${c.cyclic ? 2.4 : 1.6}"></circle>`;
+      }).join("");
+      const winW = Math.min(miniW, miniW / zoom);
+      const winH = Math.min(miniH, miniH / zoom);
+      const mini = `<g class="mini"><rect x="${miniX}" y="${miniY}" width="${miniW}" height="${miniH}"></rect>${miniDots}<rect class="window" x="${miniX + 6}" y="${miniY + 6}" width="${winW - 12}" height="${winH - 12}"></rect></g>`;
+
+      graphEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      graphEl.innerHTML = defs + `<g transform="translate(${tx},${ty}) scale(${zoom})">${edgeMarkup}${componentMarkup}</g>${mini}`;
+      graphEl.querySelectorAll(".component").forEach(node => {
+        node.addEventListener("click", ev => {
+          ev.stopPropagation();
+          if (node.dataset.component) state.expandedComponent = node.dataset.component;
+          state.selected = node.dataset.term;
+          state.pathFrom = state.selected;
+          render();
+        });
+        node.addEventListener("dblclick", ev => {
+          ev.stopPropagation();
+          state.mode = "descent";
+          state.selected = node.dataset.term;
+          syncModeButtons();
+          render();
+        });
+      });
+      document.getElementById("graphTitle").textContent = kind === "axiom" ? "Minimum Axiom Cartography" : "Condensed Corpus Atlas";
+      document.getElementById("graphStatus").textContent = `${components.length} components, ${edges.length} inter-component arcs, PageRank authority`;
+    }
+
+    function renderAtlasGraph() {
+      renderComponentMap("atlas");
+    }
+
+    function renderPathControls() {
+      const options = allTerms.map(term => `<option value="${term}">${term}</option>`).join("");
+      pathFrom.innerHTML = options;
+      pathTo.innerHTML = options;
+      pathFrom.value = state.pathFrom;
+      pathTo.value = state.pathTo;
+    }
+
+    function rankRows(items, max, valueKey) {
+      return `<div class="rank-list">${items.map(item => {
+        const value = item[valueKey];
+        const width = Math.max(4, (value / Math.max(max, .0001)) * 100);
+        const shown = valueKey === "rank" ? (value * 1000).toFixed(2) : value;
+        return `<div class="rank-row"><span>${esc(item.term)}</span><span class="bar"><i style="width:${width.toFixed(1)}%"></i></span><b>${shown}</b></div>`;
+      }).join("")}</div>`;
+    }
+
+    function renderAtlasInspector() {
+      const entry = LEXICON[state.selected];
+      const path = shortestPath(state.pathFrom, state.pathTo);
+      const sharedKernel = kernelByTerm.has(state.pathFrom) && kernelByTerm.get(state.pathFrom) === kernelByTerm.get(state.pathTo);
+      const maxHist = Math.max(...STATS.histogram, 1);
+      const topHubs = STATS.hubs.slice(0, 8);
+      const topComponents = STATS.condensation.components.slice()
+        .sort((a, b) => b.rank - a.rank || b.incoming - a.incoming || a.label.localeCompare(b.label))
+        .slice(0, 8);
+      const maxHub = Math.max(...topHubs.map(h => h.rank), .0001);
+
+      document.getElementById("definition").innerHTML = `
+        <h2>atlas / ${esc(state.selected)}</h2>
+        <p>${esc(entry.definition)}</p>
+        <div class="tagline">
+          <span class="pill blue">${GLOBAL_EDGES.length} corpus edges</span>
+          <span class="pill red">${COMPONENTS.length} condensed components</span>
+          <span class="pill green">${STATS.primitives.length} primitive termini</span>
+          <span class="pill amber">${Number.isFinite(groundingDistance(state.selected)) ? "ground depth " + groundingDistance(state.selected) : "no primitive path"}</span>
+        </div>`;
+
+      document.getElementById("kernelRows").innerHTML = topComponents.map(component => {
+        return `<tr><td>${esc(component.label)}</td><td>${esc(component.terms.slice(0, 8).join(", "))}${component.terms.length > 8 ? "..." : ""}</td><td class="num">r ${(component.rank * 1000).toFixed(2)}</td></tr>`;
+      }).join("");
+
+      document.getElementById("depRows").innerHTML = topHubs.map(hub => {
+        return `<tr><td>${esc(hub.term)}</td><td>authority hub</td><td class="num">${(hub.rank * 1000).toFixed(2)} pr / ${hub.indegree} in</td></tr>`;
+      }).join("");
+
+      document.getElementById("detFinding").textContent =
+        `${STATS.cyclicTerms.size} of ${allTerms.length} terms sit inside a strongly connected component.`;
+      document.getElementById("debtLine").textContent =
+        `${state.pathFrom} -> ${state.pathTo}: ${path ? (path.length - 1) + " dependency step(s)" : "no directed path"}; ${sharedKernel ? "shared kernel" : "separate or acyclic"}.`;
+      document.getElementById("returnLine").textContent = path ? path.join(" -> ") : "no dependency path";
+
+      const histogram = `<div class="hist">${STATS.histogram.map((count, depth) => {
+        const height = Math.max(5, (count / maxHist) * 56);
+        return `<i title="depth ${depth}: ${count}" style="height:${height.toFixed(1)}px"></i>`;
+      }).join("")}</div>`;
+
+      const notes = [
+        `<div class="note mechanical"><strong>Atlas mechanical lane</strong>The map aggregates the complete embedded graph into SCC components, then ranks terms with deterministic PageRank power iteration. Click a component to expand its members; double-click any term to descend.</div>`,
+        `<div class="note mechanical"><strong>Grounding-depth histogram</strong>${histogram}<div class="mono">${STATS.histogram.map((count, depth) => "d" + depth + ":" + count).join("  ")}</div></div>`,
+        `<div class="note mechanical"><strong>Authority leaderboard</strong>${rankRows(topHubs, maxHub, "rank")}</div>`,
+        `<div class="note interpretive"><strong>Vision choice</strong>Merged Claude's strongest graph-theory leap with an honest data boundary: no invented Webster corpus, but real condensation, authority, expansion, pan/zoom, and axiom computation over the active offline corpus.</div>`
+      ];
+      document.getElementById("notes").innerHTML = notes.join("");
+    }
+
+    function renderAxiomInspector() {
+      const entry = LEXICON[state.selected];
+      const ax = STATS.axioms;
+      const componentId = COMPONENT_BY_TERM.get(state.selected);
+      const component = STATS.condensation.byId.get(componentId);
+      const selectedSolver = ax.components.find(c => c.members.includes(state.selected));
+      const selectedAxiom = ax.axiomTerms.includes(state.selected);
+      const topAxioms = ax.axiomTerms.map(term => ({
+        term,
+        rank: PAGERANK.get(term) || 0,
+        indegree: INDEGREE.get(term) || 0,
+        outdegree: depsOf(term).length
+      })).sort((a, b) => b.rank - a.rank || b.indegree - a.indegree || a.term.localeCompare(b.term));
+
+      document.getElementById("definition").innerHTML = `
+        <h2>axioms / ${esc(state.selected)}</h2>
+        <p>${esc(entry.definition)}</p>
+        <div class="tagline">
+          <span class="pill ${selectedAxiom ? "green" : "blue"}">${selectedAxiom ? "computed axiom" : "ordinary term"}</span>
+          <span class="pill red">${component && component.cyclic ? "cyclic component" : "acyclic component"}</span>
+          <span class="pill amber">${selectedSolver ? selectedSolver.method : "not in solver"}</span>
+          <span class="pill blue">authority ${(PAGERANK.get(state.selected) * 1000).toFixed(2)}</span>
+        </div>`;
+
+      document.getElementById("kernelRows").innerHTML = ax.components.length ? ax.components.map(comp => {
+        return `<tr><td>kernel ${comp.index + 1}<br><span class="mono">${comp.method}</span></td><td>${esc(comp.axioms.join(", "))}</td><td class="num">${comp.axioms.length} / ${comp.members.length}</td></tr>`;
+      }).join("") : `<tr><td colspan="3" class="empty">No cyclic kernel requires provisional axioms.</td></tr>`;
+
+      document.getElementById("depRows").innerHTML = topAxioms.length ? topAxioms.map(row => {
+        return `<tr><td>${esc(row.term)}</td><td>remove outgoing edges</td><td class="num">${(row.rank * 1000).toFixed(2)} pr</td></tr>`;
+      }).join("") : `<tr><td colspan="3" class="empty">The active graph is already acyclic.</td></tr>`;
+
+      document.getElementById("detFinding").textContent =
+        ax.axiomTerms.length
+          ? `${ax.axiomTerms.length} provisional axiom term(s) break every detected directed cycle.`
+          : "No feedback vertex set is needed because no directed cycle is present.";
+      document.getElementById("debtLine").textContent =
+        `${ax.exact} kernel(s) solved exactly; ${ax.greedy} kernel(s) used the disclosed greedy bound.`;
+      document.getElementById("returnLine").textContent =
+        selectedSolver ? `kernel ${selectedSolver.index + 1}: ${selectedSolver.axioms.join(" + ")}` : "selected term is outside a cyclic kernel";
+
+      const componentLine = component
+        ? `${component.label}: ${component.terms.length} member(s), ${component.incoming} incoming arc(s), ${component.outgoing} outgoing arc(s), PageRank mass ${(component.rank * 1000).toFixed(2)}.`
+        : "No component selected.";
+      const notes = [
+        `<div class="note mechanical"><strong>Minimum axiom set</strong>For each cyclic SCC, the solver finds terms whose outgoing definitions can be provisionally ignored so the residual component becomes acyclic. Components up to 13 terms are solved exactly by exhaustive combination; larger components use repeated highest-pressure removal.</div>`,
+        `<div class="note mechanical"><strong>Selected component</strong>${esc(componentLine)}</div>`,
+        `<div class="note warning"><strong>Interpretation boundary</strong>A computed axiom is not declared true, primitive, or philosophically basic. It is the smallest disclosed intervention needed to make this graph descend without circular support under the current solver.</div>`,
+        `<div class="note interpretive"><strong>Round-4 merge</strong>Claude's corpus leap correctly identified the missing result class. This implementation ships that result class now: axiom receipts, authority, and navigable condensation over the live editable corpus.</div>`
+      ];
+      document.getElementById("notes").innerHTML = notes.join("");
+    }
+
+    function renderLabInspector(reachable, localKernels) {
+      const entry = LEXICON[state.selected];
+      const comparison = compareDeps(state.selected);
+      const extracted = extractDefinition(state.selected);
+      const ex = STATS.extractor;
+      const original = ORIGINAL_LEXICON[state.selected];
+      const changed = !original || entry.definition !== original.definition;
+      const depDepth = reachable.nodes.map(term => [term, reachable.depths.get(term)]).sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]));
+
+      document.getElementById("definition").innerHTML = `
+        <h2>lab / ${esc(state.selected)}</h2>
+        <div class="lab-editor">
+          <textarea id="definitionEdit" aria-label="Editable definition">${esc(entry.definition)}</textarea>
+          <div class="lab-actions">
+            <input id="newTerm" value="${esc(state.newTerm)}" placeholder="coin term">
+            <button class="smallbtn" id="addTerm">Add</button>
+            <button class="smallbtn" id="revertTerm">${original ? "Revert" : "Delete"}</button>
+          </div>
+        </div>
+        <div class="tagline">
+          <span class="pill green">${comparison.filter(r => r.provenance === "matched").length} matched</span>
+          <span class="pill amber">${comparison.filter(r => r.provenance === "extracted").length} extracted-only</span>
+          <span class="pill red">${comparison.filter(r => r.provenance === "invisible").length} authored-invisible</span>
+          <span class="pill ${changed ? "amber" : "blue"}">${changed ? "scratch edit" : "seed text"}</span>
+        </div>`;
+
+      document.getElementById("kernelRows").innerHTML = comparison.length ? comparison.map(row => {
+        return `<tr><td><span class="prov ${row.provenance}">${row.provenance}</span></td><td>${esc(row.dep)}</td><td class="num">${row.provenance === "invisible" ? "authored only" : row.provenance === "extracted" ? "surface only" : "both"}</td></tr>`;
+      }).join("") : `<tr><td colspan="3" class="empty">No dependency recovered or authored for this term.</td></tr>`;
+
+      document.getElementById("depRows").innerHTML = depDepth.map(([term, depth]) => {
+        const relation = term === state.selected ? "focus" : (compareDeps(state.selected).find(row => row.dep === term)?.provenance || "indirect");
+        return `<tr><td>${esc(term)}</td><td>${esc(relation)}</td><td class="num">${depth}</td></tr>`;
+      }).join("");
+
+      document.getElementById("detFinding").textContent =
+        `${ex.invisible} of ${ex.matched + ex.invisible} authored dependencies have no surface lexical trace.`;
+      document.getElementById("debtLine").textContent =
+        `Extractor precision ${Math.round(ex.precision * 100)}%, recall ${Math.round(ex.recall * 100)}%, F1 ${Math.round(ex.f1 * 100)}%.`;
+      document.getElementById("returnLine").textContent =
+        localKernels.length ? `${localKernels.length} local kernel(s) under mixed provenance` : "no visible local kernel";
+
+      const trace = `<div class="trace-grid">${extracted.trace.map(t => `<span class="token ${t.kind}" title="${esc(t.note)}">${esc(t.token)}</span>`).join("")}</div>`;
+      const notes = [
+        `<div class="note mechanical"><strong>Extractor rule</strong>Lowercase tokenization, fixed stopword removal, suffix stripping, irregular lookup, then exact matching against current lexicon headwords. The colored tokens below are the disclosed rule trace.${trace}</div>`,
+        `<div class="note mechanical"><strong>Edge provenance</strong><span class="prov matched">matched</span> appears in authored deps and extracted text; <span class="prov extracted">extracted</span> is surface-only; <span class="prov invisible">invisible</span> is an authored dependency absent from the sentence.</div>`,
+        `<div class="note interpretive"><strong>Vision choice</strong>I took Claude's Definition Lab over a larger corpus leap because it converts the app's weakest assumption into a measurable object while staying honest inside one offline file.</div>`,
+        `<div class="note warning"><strong>Limit</strong>The extractor is deliberately shallow. Invisible edges are not errors by default; they mark paraphrase, frame knowledge, or authored judgment that simple lexical matching cannot justify mechanically.</div>`
+      ];
+      document.getElementById("notes").innerHTML = notes.join("");
+
+      const editor = document.getElementById("definitionEdit");
+      if (state.editorRestore && state.editorRestore.term === state.selected) {
+        editor.focus();
+        editor.setSelectionRange(state.editorRestore.start, state.editorRestore.end);
+        state.editorRestore = null;
+      }
+      editor.addEventListener("input", () => {
+        LEXICON[state.selected].definition = editor.value;
+        state.editorRestore = {
+          term: state.selected,
+          start: editor.selectionStart,
+          end: editor.selectionEnd
+        };
+        clearTimeout(labRenderTimer);
+        labRenderTimer = setTimeout(render, 140);
+      });
+      document.getElementById("newTerm").addEventListener("input", ev => {
+        state.newTerm = ev.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, "");
+      });
+      document.getElementById("addTerm").addEventListener("click", () => {
+        const term = state.newTerm.trim();
+        if (!term || LEXICON[term]) return;
+        LEXICON[term] = {
+          definition: state.newDefinition || "A coined term awaiting a sharper definition.",
+          deps: [],
+          primitive: false,
+          note: "Session-only coined term."
+        };
+        state.selected = term;
+        state.pathFrom = term;
+        state.newTerm = "";
+        render();
+      });
+      document.getElementById("revertTerm").addEventListener("click", () => {
+        if (ORIGINAL_LEXICON[state.selected]) {
+          LEXICON[state.selected] = JSON.parse(JSON.stringify(ORIGINAL_LEXICON[state.selected]));
+        } else {
+          delete LEXICON[state.selected];
+          state.selected = "meaning";
+          state.pathFrom = "meaning";
+        }
+        render();
+      });
+    }
+
+    function renderInspector(reachable, localKernels) {
+      if (state.mode === "lab") {
+        renderLabInspector(reachable, localKernels);
+        return;
+      }
+      if (state.mode === "axiom") {
+        renderAxiomInspector();
+        return;
+      }
+      const entry = LEXICON[state.selected];
+      const debt = debtFor(state.selected);
+      const ret = shortestReturn(state.selected);
+      const depDepth = reachable.nodes.map(term => [term, reachable.depths.get(term)]).sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]));
+
+      document.getElementById("definition").innerHTML = `
+        <h2>${state.selected}</h2>
+        <p>${entry.definition}</p>
+        <div class="tagline">
+          <span class="pill blue">${depsOf(state.selected).length} direct dependencies</span>
+          <span class="pill ${kernelByTerm.has(state.selected) ? "red" : "green"}">${kernelByTerm.has(state.selected) ? "inside cycle kernel" : "not in a cycle kernel"}</span>
+          <span class="pill ${entry.primitive ? "green" : "amber"}">${entry.primitive ? "declared primitive" : "defined by other terms"}</span>
+        </div>`;
+
+      const kernelRows = debt.kernels.map(i => {
+        const comp = KERNELS[i];
+        const internalEdges = comp.reduce((sum, t) => sum + depsOf(t).filter(d => comp.includes(d)).length, 0);
+        return `<tr><td>kernel ${i + 1}</td><td>${comp.join(", ")}</td><td class="num">${internalEdges} internal edges</td></tr>`;
+      });
+      debt.primitives.forEach(p => kernelRows.push(`<tr><td>primitive</td><td>${p}</td><td class="num">boundary</td></tr>`));
+      document.getElementById("kernelRows").innerHTML = kernelRows.length ? kernelRows.join("") : `<tr><td colspan="3" class="empty">No kernel or primitive reached at this depth.</td></tr>`;
+
+      document.getElementById("depRows").innerHTML = depDepth.map(([term, depth]) => {
+        const relation = term === state.selected ? "focus" : (depsOf(state.selected).includes(term) ? "direct" : "indirect");
+        return `<tr><td>${term}</td><td>${relation}</td><td class="num">${depth}</td></tr>`;
+      }).join("");
+
+      document.getElementById("detFinding").textContent = localKernels.length
+        ? `${localKernels.length} strongly connected component(s) found in visible dependency subgraph.`
+        : "No visible strongly connected component at selected depth.";
+      document.getElementById("debtLine").textContent = `${debt.span} total reachable terms; ${debt.kernels.length} kernel(s); ${debt.primitives.length} primitive boundary term(s).`;
+      document.getElementById("returnLine").textContent = ret ? ret.join(" -> ") : "no return path found";
+
+      const notes = [
+        `<div class="note mechanical"><strong>Mechanical lane</strong>Tarjan SCCs, breadth-first dependency depth, and shortest return paths are computed from the JSON graph only. No semantic judgment is required.</div>`,
+        `<div class="note interpretive"><strong>Interpretive lane</strong>${entry.note}</div>`,
+        localKernels.length
+          ? `<div class="note warning"><strong>Kernel warning</strong>The selected view contains circular support. This does not make the term useless; it means the definition depends on a mutually supporting vocabulary rather than a terminal descent.</div>`
+          : `<div class="note mechanical"><strong>No local loop</strong>At the current depth, the visible path does not return to itself. Increase depth before treating that as absence of circularity.</div>`,
+        `<div class="note interpretive"><strong>Yuyu fit</strong>This seed mirrors the determinism wall: graph facts are detectors; comments are risk-oriented interpretation.</div>`
+      ];
+      document.getElementById("notes").innerHTML = notes.join("");
+    }
+
+    function render() {
+      refreshAnalysis();
+      if (!LEXICON[state.selected]) state.selected = allTerms[0] || "";
+      if (!LEXICON[state.pathFrom]) state.pathFrom = state.selected;
+      if (!LEXICON[state.pathTo]) state.pathTo = allTerms.includes("truth") ? "truth" : state.selected;
+      if (!passageById(state.discourseSelected)) state.discourseSelected = DISCOURSE[0].id;
+      const reachable = buildReachable(state.selected, state.depth);
+      const localKernels = tarjan(reachable.nodes, reachable.edges);
+      document.querySelector(".lexicon .panel-title").firstChild.textContent = state.mode === "discourse" ? "Corpus " : "Lexicon ";
+      renderLedger(reachable, localKernels);
+      renderWordList();
+      renderPathControls();
+      canvasWrap.classList.toggle("cartographic", state.mode === "atlas" || state.mode === "axiom");
+      if (state.mode === "discourse") {
+        renderDiscourseGraph();
+        renderDiscourseInspector();
+      } else if (state.mode === "atlas" || state.mode === "axiom") {
+        renderComponentMap(state.mode);
+        if (state.mode === "atlas") renderAtlasInspector();
+        else renderAxiomInspector();
+      } else {
+        renderGraph(reachable, localKernels);
+        renderInspector(reachable, localKernels);
+      }
+    }
+
+    function syncModeButtons() {
+      document.querySelectorAll("[data-mode]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.mode === state.mode);
+      });
+    }
+
+    search.addEventListener("input", () => {
+      state.filter = search.value.toLowerCase();
+      const exact = allTerms.find(t => t === state.filter.trim());
+      if (exact) {
+        state.selected = exact;
+        state.pathFrom = exact;
+      }
+      render();
+    });
+
+    document.querySelectorAll("[data-depth]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.depth = Number(btn.dataset.depth);
+        document.querySelectorAll("[data-depth]").forEach(b => b.classList.toggle("active", b === btn));
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-mode]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.mode = btn.dataset.mode;
+        syncModeButtons();
+        render();
+      });
+    });
+
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      state.mapZoom = Math.min(2.4, state.mapZoom * 1.18);
+      render();
+    });
+
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      state.mapZoom = Math.max(.64, state.mapZoom / 1.18);
+      render();
+    });
+
+    document.getElementById("panHome").addEventListener("click", () => {
+      state.mapZoom = 1;
+      state.mapPanX = 0;
+      state.mapPanY = 0;
+      state.expandedComponent = COMPONENT_BY_TERM.get(state.selected) || null;
+      render();
+    });
+
+    graphEl.addEventListener("wheel", ev => {
+      if (state.mode !== "atlas" && state.mode !== "axiom") return;
+      ev.preventDefault();
+      state.mapZoom = Math.max(.64, Math.min(2.4, state.mapZoom * (ev.deltaY < 0 ? 1.08 : .92)));
+      render();
+    }, { passive: false });
+
+    let dragStart = null;
+    graphEl.addEventListener("pointerdown", ev => {
+      if (state.mode !== "atlas" && state.mode !== "axiom") return;
+      dragStart = { x: ev.clientX, y: ev.clientY, px: state.mapPanX, py: state.mapPanY };
+      graphEl.setPointerCapture(ev.pointerId);
+    });
+    graphEl.addEventListener("pointermove", ev => {
+      if (!dragStart) return;
+      state.mapPanX = dragStart.px + ev.clientX - dragStart.x;
+      state.mapPanY = dragStart.py + ev.clientY - dragStart.y;
+      renderComponentMap(state.mode);
+    });
+    graphEl.addEventListener("pointerup", () => { dragStart = null; });
+    graphEl.addEventListener("pointerleave", () => { dragStart = null; });
+
+    pathFrom.addEventListener("change", () => {
+      state.pathFrom = pathFrom.value;
+      state.selected = pathFrom.value;
+      render();
+    });
+
+    pathTo.addEventListener("change", () => {
+      state.pathTo = pathTo.value;
+      render();
+    });
+
+    document.getElementById("pathRun").addEventListener("click", () => {
+      state.mode = "atlas";
+      state.selected = state.pathFrom;
+      syncModeButtons();
+      render();
+    });
+
+    document.getElementById("reset").addEventListener("click", () => {
+      Object.keys(LEXICON).forEach(term => delete LEXICON[term]);
+      Object.assign(LEXICON, JSON.parse(JSON.stringify(ORIGINAL_LEXICON)));
+      state.selected = "meaning";
+      state.depth = 3;
+      state.filter = "";
+      state.mode = "descent";
+      state.pathFrom = "meaning";
+      state.pathTo = "truth";
+      state.newTerm = "";
+      state.newDefinition = "";
+      state.editorRestore = null;
+      state.expandedComponent = null;
+      state.discourseSelected = "vaccination";
+      state.discourseNode = null;
+      state.mapZoom = 1;
+      state.mapPanX = 0;
+      state.mapPanY = 0;
+      search.value = "";
+      syncModeButtons();
+      document.querySelectorAll("[data-depth]").forEach(b => b.classList.toggle("active", b.dataset.depth === "3"));
+      render();
+    });
+
+    window.addEventListener("resize", () => {
+      const reachable = buildReachable(state.selected, state.depth);
+      if (state.mode === "discourse") renderDiscourseGraph();
+      else if (state.mode === "atlas" || state.mode === "axiom") renderComponentMap(state.mode);
+      else renderGraph(reachable, tarjan(reachable.nodes, reachable.edges));
+    });
+
+    render();
+  </script>
+</body>
+</html>

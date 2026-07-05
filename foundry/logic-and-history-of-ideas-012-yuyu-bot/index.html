@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grounding Atlas</title>
+  <style>
+    :root {
+      --paper:#f7f5ee; --panel:#fffdf8; --ink:#161512; --muted:#69645b; --line:#c8c0b1;
+      --head:#eee8dc; --kernel:#b62b21; --cycle:#d2771d; --anchor:#26715c; --bridge:#315f8e;
+      --only-a:#7b4b96; --only-b:#a06416; --shared:#111; --soft:#e7e0d2;
+      --direct:#171614; --para:#6f6558; --infer:#a79073;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; background:var(--paper); color:var(--ink);
+      font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      font-size:12px; line-height:1.28;
+    }
+    header {
+      display:grid; grid-template-columns:255px 1fr 545px; gap:8px;
+      padding:7px 9px 6px; border-bottom:1px solid var(--line); background:#fbfaf5;
+    }
+    h1 { margin:0; font-size:21px; line-height:1; letter-spacing:0; }
+    .dek { margin-top:3px; color:var(--muted); font-size:11px; }
+    .top-metrics { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:5px; }
+    .metric { border-left:3px solid var(--line); padding-left:6px; min-height:34px; }
+    .metric b { display:block; font-size:16px; line-height:1; font-variant-numeric:tabular-nums; }
+    .metric span { color:var(--muted); font-size:9px; text-transform:uppercase; }
+    .wall { display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; }
+    .wall div { border:1px solid var(--line); background:var(--panel); padding:4px 6px; min-height:43px; }
+    .wall b { display:block; text-transform:uppercase; font-size:9px; margin-bottom:2px; }
+    .wall span { font-size:10.5px; color:var(--muted); }
+    main {
+      display:grid; grid-template-columns:315px minmax(610px,1fr) 505px; gap:8px;
+      height:calc(100vh - 59px); min-height:705px; padding:8px 9px 9px;
+    }
+    .panel { border:1px solid var(--line); background:var(--panel); min-width:0; min-height:0; overflow:hidden; }
+    .panel-head {
+      display:flex; justify-content:space-between; gap:8px; align-items:baseline;
+      padding:6px 8px; border-bottom:1px solid var(--line); background:var(--head);
+      font-weight:760; font-size:10px; text-transform:uppercase;
+    }
+    .panel-head span { color:var(--muted); font-weight:520; text-transform:none; }
+    .left, .right { display:grid; gap:8px; min-height:0; }
+    .left { grid-template-rows:244px 1fr 205px; }
+    .right { grid-template-rows:215px 1fr 225px; }
+    .controls { padding:7px; display:grid; gap:6px; }
+    label { display:grid; grid-template-columns:70px 1fr; gap:6px; align-items:center; color:var(--muted); font-size:10px; font-weight:740; text-transform:uppercase; }
+    input, select, button {
+      font:inherit; color:var(--ink); border:1px solid var(--line); background:#fffefa; min-height:27px;
+    }
+    input, select { width:100%; padding:3px 6px; }
+    button { padding:3px 5px; cursor:pointer; font-weight:720; }
+    button.active { background:#171614; color:#fff; border-color:#171614; }
+    .tabs { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
+    .tabs button { font-size:10px; min-height:31px; }
+    .seg { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
+    .stack { overflow:auto; padding:7px; }
+    .word-list { overflow:auto; }
+    .word-row {
+      display:grid; grid-template-columns:1fr 48px 42px 34px; gap:4px; padding:4px 6px;
+      border-bottom:1px solid #e5ded2; cursor:pointer; align-items:center;
+    }
+    .word-row:hover, .word-row.active { background:#eee7d8; }
+    .word-row b { font-size:12px; }
+    .word-row span { color:var(--muted); text-align:right; font-size:10px; font-variant-numeric:tabular-nums; }
+    .word-row .hot { color:var(--kernel); font-weight:760; }
+    .center { display:grid; grid-template-rows:111px 1fr; gap:8px; min-height:0; }
+    .multiples { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; height:100%; padding:6px; }
+    .thumb { border:1px solid var(--line); background:#faf7ef; position:relative; overflow:hidden; cursor:pointer; }
+    .thumb.active { outline:2px solid #171614; outline-offset:-2px; }
+    .thumb b { position:absolute; left:5px; top:3px; font-size:9px; text-transform:uppercase; z-index:2; }
+    .thumb span { position:absolute; right:5px; top:3px; color:var(--muted); font-size:9px; z-index:2; }
+    .thumb svg { width:100%; height:100%; display:block; }
+    #graphWrap {
+      position:relative; height:calc(100% - 29px);
+      background:
+        linear-gradient(to right,rgba(22,21,18,.055) 1px,transparent 1px),
+        linear-gradient(to bottom,rgba(22,21,18,.055) 1px,transparent 1px);
+      background-size:28px 28px;
+    }
+    svg { display:block; width:100%; height:100%; }
+    .graph-tools {
+      position:absolute; left:7px; top:7px; right:7px; display:grid; grid-template-columns:1fr auto; gap:8px; pointer-events:none;
+    }
+    .readout, .legend {
+      border:1px solid var(--line); background:rgba(255,253,248,.94); padding:5px 7px; font-size:10px; pointer-events:auto;
+    }
+    .readout { display:grid; grid-template-columns:repeat(6,auto); gap:9px; justify-content:start; }
+    .readout b { font-variant-numeric:tabular-nums; }
+    .legend { position:absolute; left:7px; bottom:7px; display:grid; grid-template-columns:repeat(6,auto); gap:7px; }
+    .key { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+    .dot { width:9px; height:9px; border-radius:50%; border:2px solid var(--bridge); background:#fff; }
+    .dot.kernel { border-color:var(--kernel); background:#fde9e5; }
+    .dot.cycle { border-color:var(--cycle); background:#fff3df; }
+    .dot.anchor { border-color:var(--anchor); background:#ecf5ef; }
+    .dot.a { border-color:var(--only-a); }
+    .dot.b { border-color:var(--only-b); }
+    .edge { stroke:#81776a; stroke-width:1; fill:none; opacity:.74; }
+    .edge.direct { stroke:var(--direct); stroke-width:1.55; opacity:.92; }
+    .edge.paraphrase { stroke:var(--para); stroke-dasharray:6 3; }
+    .edge.inference { stroke:var(--infer); stroke-dasharray:1.5 4; opacity:.64; }
+    .edge.cycle { stroke:var(--cycle); stroke-width:1.6; opacity:.95; }
+    .edge.pathline { stroke:#111; stroke-width:2.5; opacity:1; }
+    .edge.selectedEdge { stroke:#111; stroke-width:3; opacity:1; }
+    .edge-hit { stroke:transparent; stroke-width:12; fill:none; cursor:pointer; }
+    .edge.onlyA { stroke:var(--only-a); stroke-width:1.65; stroke-dasharray:5 3; opacity:.95; }
+    .edge.onlyB { stroke:var(--only-b); stroke-width:1.65; stroke-dasharray:2 3; opacity:.95; }
+    .node text {
+      font-size:11px; fill:var(--ink); paint-order:stroke; stroke:#fffdf8; stroke-width:3px; stroke-linejoin:round; pointer-events:none;
+    }
+    .node circle { fill:#fffdf8; stroke:var(--bridge); stroke-width:1.6; cursor:pointer; }
+    .node.anchor circle { stroke:var(--anchor); fill:#edf6f1; }
+    .node.cycle circle { stroke:var(--cycle); fill:#fff2de; }
+    .node.kernel circle { stroke:var(--kernel); fill:#fde9e5; stroke-width:3; }
+    .node.selected circle { stroke:#111; stroke-width:3.4; }
+    .node.deltaA circle { stroke:var(--only-a); stroke-width:3; }
+    .node.deltaB circle { stroke:var(--only-b); stroke-width:3; }
+    .definition { margin:0 0 6px; font-family:ui-serif,Georgia,serif; font-size:15px; line-height:1.2; }
+    .note { color:var(--muted); font-size:10.5px; margin-top:5px; }
+    .chips { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin:6px 0; }
+    .chip { border:1px solid var(--line); background:#fbf8ef; min-height:34px; padding:4px 5px; }
+    .chip b { display:block; font-size:13px; line-height:1.05; font-variant-numeric:tabular-nums; }
+    .chip span { display:block; color:var(--muted); font-size:9px; text-transform:uppercase; }
+    .tag { display:inline-block; border:1px solid var(--line); background:#fbf8ef; padding:1px 4px; margin:0 3px 3px 0; font-size:10px; }
+    .tag.kernel { color:var(--kernel); border-color:var(--kernel); }
+    .tag.anchor { color:var(--anchor); border-color:var(--anchor); }
+    .tag.onlyA { color:var(--only-a); border-color:var(--only-a); }
+    .tag.onlyB { color:var(--only-b); border-color:var(--only-b); }
+    .tag.direct { color:var(--direct); border-color:var(--direct); }
+    .tag.paraphrase { color:#5f574c; border-color:#7e7365; }
+    .tag.inference { color:#806947; border-color:#a79073; }
+    .tag.escaped, .badge.escaped { color:var(--anchor); border-color:var(--anchor); }
+    .tag.relocated, .badge.relocated { color:var(--kernel); border-color:var(--kernel); }
+    .tag.widened, .badge.widened { color:var(--cycle); border-color:var(--cycle); }
+    .succession-node rect { fill:#fffdf8; stroke:var(--line); }
+    .succession-node.active rect { stroke:#111; stroke-width:2; }
+    .succession-node text { fill:var(--ink); font-size:11px; pointer-events:none; }
+    .succession-arrow { fill:none; stroke-width:2.2; opacity:.94; cursor:pointer; }
+    .succession-arrow.escaped { stroke:var(--anchor); }
+    .succession-arrow.relocated { stroke:var(--kernel); }
+    .succession-arrow.widened { stroke:var(--cycle); }
+    .succession-arrow.selected { stroke:#111; stroke-width:3.6; }
+    .critique-hit { fill:none; stroke:transparent; stroke-width:16; cursor:pointer; }
+    table { width:100%; border-collapse:collapse; font-size:10.7px; }
+    th, td { border-bottom:1px solid #e5ded2; padding:3px 4px; text-align:left; vertical-align:top; }
+    th { position:sticky; top:0; z-index:1; background:var(--head); color:var(--muted); font-size:9px; text-transform:uppercase; }
+    .badge { display:inline-block; border:1px solid var(--line); background:#fbf8ef; padding:1px 4px; margin:0 3px 4px 0; font-size:9px; color:var(--muted); text-transform:uppercase; }
+    .split { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+    .path { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:10px; padding:3px 0; border-bottom:1px solid #e5ded2; }
+    .bars { display:grid; gap:3px; margin-top:3px; }
+    .bar { display:grid; grid-template-columns:72px 1fr 30px; gap:5px; align-items:center; font-size:10px; }
+    .bar i { height:8px; border:1px solid rgba(22,21,18,.18); background:linear-gradient(90deg,var(--bridge),var(--anchor)); }
+    .bar b { text-align:right; font-variant-numeric:tabular-nums; }
+    .quote {
+      margin:5px 0 7px; padding:5px 6px; border-left:3px solid var(--line);
+      background:#faf7ef; font-family:ui-serif,Georgia,serif; font-size:12.5px; line-height:1.24;
+    }
+    .edge-row { display:grid; grid-template-columns:62px 1fr; gap:5px; border-bottom:1px solid #e5ded2; padding:4px 0; }
+    .edge-row b { font-variant-numeric:tabular-nums; }
+    @media (max-width:1050px) {
+      header, main { grid-template-columns:1fr; height:auto; }
+      main { min-height:0; }
+      .left, .right, .center { grid-template-rows:auto; }
+      .panel { min-height:260px; }
+      #graphWrap { height:560px; }
+      .top-metrics, .wall, .multiples { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Grounding Atlas</h1>
+      <div class="dek">One word, five theories of what could ground it.</div>
+    </div>
+    <div class="top-metrics" id="metrics"></div>
+    <div class="wall">
+      <div><b>Mechanical</b><span id="factsLine"></span></div>
+      <div><b>Reconstruction</b><span id="reconLine"></span></div>
+      <div><b>Interpretive</b><span id="judgmentLine"></span></div>
+    </div>
+  </header>
+
+  <main>
+    <aside class="left">
+      <section class="panel">
+        <div class="panel-head">Regime Console <span>historical rewiring, same algorithms</span></div>
+        <div class="controls">
+          <div class="tabs" id="regimeTabs"></div>
+          <label>Root <select id="rootSelect"></select></label>
+          <label>Against <select id="compareRegime"></select></label>
+          <label>Target <select id="targetSelect"></select></label>
+          <label>Warrant <select id="warrantMode"><option value="all">all edges</option><option value="direct">direct only</option></select></label>
+          <label>Find <input id="search" type="search" placeholder="filter terms"></label>
+          <label>Depth <input id="depth" type="range" min="1" max="5" value="3"></label>
+          <div class="seg">
+            <button class="active" data-mode="focus">focus</button>
+            <button data-mode="drift">drift</button>
+            <button data-mode="delta">delta</button>
+            <button data-mode="route">route</button>
+            <button data-mode="succession">succession</button>
+          </div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">Vocabulary <span>shared terms, regime-specific edges</span></div>
+        <div class="word-list" id="wordList"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">Kernel Drift <span>current root across regimes</span></div>
+        <div class="stack" id="driftPanel"></div>
+      </section>
+    </aside>
+
+    <section class="center">
+      <section class="panel">
+        <div class="panel-head">Small Multiples <span>same root, five topologies</span></div>
+        <div class="multiples" id="multiples"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">Definition Dependency Graph <span id="graphLabel"></span></div>
+        <div id="graphWrap">
+          <svg id="graph" role="img" aria-label="Definition dependency graph"></svg>
+          <div class="graph-tools"><div class="readout" id="readout"></div></div>
+          <div class="legend">
+            <span class="key"><i class="dot kernel"></i>kernel</span>
+            <span class="key"><i class="dot cycle"></i>cycle</span>
+            <span class="key"><i class="dot anchor"></i>anchor</span>
+            <span class="key"><i class="dot"></i>bridge</span>
+            <span class="key"><i class="dot a"></i>active-only</span>
+            <span class="key"><i class="dot b"></i>against-only</span>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <aside class="right">
+      <section class="panel">
+        <div class="panel-head">Inspector <span id="selectedKind"></span></div>
+        <div class="stack" id="entry"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">Diagnostics <span>exact local, bounded global</span></div>
+        <div class="stack" id="diagnostics"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">Concordance <span>embedded warrant corpus</span></div>
+        <div class="stack" id="routes"></div>
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    const DEFINITIONS = {
+      meaning:"what a sign, word, gesture, or practice makes available for understanding, reference, action, or response.",
+      sign:"a sensible item treated as standing in a meaningful relation to something else.",
+      word:"a repeatable linguistic unit used in speech, writing, classification, naming, and inference.",
+      language:"a public system of signs, rules, contrasts, and uses through which speakers coordinate meaning.",
+      concept:"a general way of grouping, recognizing, or thinking cases under a rule, form, idea, or use.",
+      reference:"the directed relation by which an expression is taken to pick out an object, case, or truth-value.",
+      truth:"the status of a thought, claim, or proposition when what it says is the case.",
+      thought:"a judgeable content that can be true or false, shared, asserted, denied, or inferred from.",
+      proposition:"content considered as assertible, deniable, true, false, supported, or challenged.",
+      assertion:"an act that presents a proposition or claim as answerable to standards of truth or correctness.",
+      interpretation:"the act of taking something as meaningful under a context, practice, code, or rule.",
+      understanding:"a grasp shown by correct continuation, explanation, application, recognition, or response.",
+      use:"the employment of a word, sign, rule, or object within a practical activity.",
+      rule:"a standard or pattern governing correct continuation, classification, inference, or use.",
+      practice:"a repeated social activity with standards, roles, examples, corrections, and expected responses.",
+      context:"the surrounding situation, history, purpose, and textual field that changes what counts as relevant.",
+      expression:"a word, phrase, sentence, mark, or gesture used to present meaning.",
+      sentence:"a structured linguistic unit capable of assertion, question, command, or other speech act.",
+      object:"something that can be perceived, counted, acted on, named, measured, or referred to.",
+      world:"the field of objects, events, constraints, bodies, and situations outside the present definition chain.",
+      perception:"sensory uptake by which a body is affected by objects, marks, sounds, qualities, or events.",
+      action:"something done by a person, body, or institution that changes a situation or answers a rule.",
+      body:"a living material organism capable of perception, movement, action, and response.",
+      mark:"a visible material trace, inscription, stroke, or difference on a surface.",
+      sound:"an audible vibration or event that can be heard, repeated, and patterned.",
+      gesture:"a bodily movement treated as expressive, pointing, conventional, or responsive.",
+      text:"a durable arrangement of marks or signs treated as material for reading and interpretation.",
+      system:"a set of related parts whose arrangement gives each part a role or value.",
+      relation:"a way in which two or more items are connected, ordered, contrasted, or dependent.",
+      difference:"a detectable non-identity or contrast between signs, sounds, objects, cases, or states.",
+      value:"the role a sign has through its differences from other signs in a system.",
+      form:"the organizing structure by which a thing is the kind of thing it is.",
+      matter:"the material substrate or stuff organized by form.",
+      substance:"a primary being or thing that can bear properties and persist through change.",
+      essence:"what a thing is, stated by the features without which it would not be that kind.",
+      genus:"a broader kind under which a species is defined.",
+      differentia:"the distinguishing feature that separates a species from other members of a genus.",
+      species:"a kind defined through genus and differentia.",
+      accident:"a feature that may belong to a thing without stating what the thing essentially is.",
+      cause:"that because of which a thing is, changes, acts, or is explained.",
+      idea:"mental content considered as what a word immediately signifies to the mind.",
+      impression:"a simple sensory presentation from which empiricist ideas are copied or compounded.",
+      sensation:"experience arising from external objects affecting the senses.",
+      reflection:"experience of the mind's own operations, such as willing, comparing, or doubting.",
+      quality:"a perceivable power or feature by which an object produces an idea.",
+      simple:"not decomposed into further ideas within the empiricist analysis.",
+      complex:"made by combining, comparing, or abstracting simpler ideas.",
+      abstraction:"the operation of separating a general idea from particular cases.",
+      memory:"the retained presence of an idea after immediate perception has passed.",
+      sense:"the mode of presentation through which a reference is given to a thinker.",
+      name:"an expression used to pick out, call, identify, or introduce something.",
+      denotation:"the object or extension to which a sign or expression is directed.",
+      extension:"the class of objects or cases falling under a concept or expression.",
+      intension:"the rule, sense, or condition by which an expression applies.",
+      logic:"rules of inference and form governing valid transitions between thoughts or propositions.",
+      inference:"a transition from one thought, proposition, or sign to another under a rule.",
+      identity:"the relation of being the same object, sense, sign, or role under a criterion.",
+      signifier:"the material or acoustic side of a sign in a structural system.",
+      signified:"the conceptual side of a sign in a structural system.",
+      code:"a system of differences and conventions that licenses sign relations.",
+      convention:"a public regularity or agreement stabilizing use, value, or interpretation.",
+      opposition:"a contrast that helps determine a sign's value inside a system.",
+      chain:"an ordered sequence of signs or expressions whose neighboring terms affect value.",
+      paradigm:"a set of replaceable alternatives that define each item by contrast.",
+      speech:"situated acts of language use by speakers.",
+      speaker:"a person producing utterances, signs, or texts within a situation.",
+      utterance:"a situated act of saying, writing, gesturing, or otherwise expressing something.",
+      game:"a rule-governed practice in which words have roles through moves and responses.",
+      family:"a network of overlapping similarities without a single essence shared by every case.",
+      criterion:"a public mark or test used to count a use, application, or response as correct.",
+      example:"a case used to teach, compare, test, or extend an application.",
+      training:"the social learning of uses, rules, examples, and responses.",
+      agreement:"shared convergence in action, judgment, or response sufficient for a practice.",
+      life:"the background form of human activity within which language-games make sense.",
+      pain:"a bodily and expressive case where meaning is learned through criteria, behavior, and response.",
+      private:"available only to an isolated subject, without public criteria for correctness.",
+      public:"available to shared checking, correction, repetition, and response.",
+      role:"the function an item has inside a system, practice, inference, or activity.",
+      norm:"a standard by which use or action can be counted correct, incorrect, expected, or deviant.",
+      correction:"a public response marking a use, action, or claim as needing change.",
+      response:"an action, utterance, or adjustment made after a sign, event, rule, or claim.",
+      evidence:"material, testimony, record, or observation offered as support for a claim.",
+      claim:"an assertion put forward as true, supported, doubtful, or open to challenge.",
+      category:"a highest or basic kind under which beings, claims, or predicates are organized.",
+      predicate:"what is said of a subject in judgment, definition, or classification.",
+      subject:"that of which something is predicated, asserted, perceived, or judged.",
+      judgment:"an act or content in which something is affirmed, denied, classified, or evaluated.",
+      representation:"a sign, idea, model, image, sentence, or structure that stands for something else.",
+      description:"an expression or text characterizing a thing, event, state, or case.",
+      event:"something that happens and can enter a description, memory, record, or interpretation.",
+      situation:"a concrete arrangement of people, objects, events, constraints, and purposes.",
+      definition:"an account of what a term or thing is by stating its essential structure or governing use.",
+      signification:"the relation by which a word or sign makes an idea or meaning present to a speaker or hearer.",
+      communication:"the sharing of ideas, claims, signs, or responses through public expression.",
+      comparison:"an operation of setting items together so likeness, difference, identity, or order can be noticed.",
+      custom:"a stabilized practice or convention learned through repeated social use.",
+      combination:"the joining of simpler ideas, signs, or elements into a complex whole.",
+      mode:"a determinate way in which something is presented, understood, or given.",
+      presentation:"the manner in which an object, sense, or content is made available to thought.",
+      function:"a rule-governed mapping, role, or operation relating inputs to outputs.",
+      part:"something treated as belonging to a larger arrangement, system, substance, or whole.",
+      order:"an arrangement by sequence, rank, relation, rule, or intelligible form.",
+      purpose:"an aim or practical end that organizes action, attention, relevance, and interpretation.",
+      experience:"what a person or body undergoes, perceives, remembers, or learns through action.",
+      move:"an intelligible action within a language-game or practice.",
+      similarity:"a likeness relevant under some criterion, example, family, or comparison.",
+      continuation:"the next application, response, or move that shows how a rule has been understood."
+    };
+
+    const REGIMES = {
+      aristotle: {
+        short:"Aristotle", label:"Scholastic / Aristotelian", basis:"good-faith genus-differentia reconstruction from Categories, Topics, and Metaphysics motifs",
+        thesis:"Grounding is strongest when a term bottoms out in substance, form, matter, cause, category, and real definition rather than in linguistic use alone.",
+        anchors:["substance","form","matter","cause","category","subject","predicate","world"],
+        edges:{
+          meaning:["definition","essence","form","word","thought"], definition:["genus","differentia","essence","species","predicate"], sign:["mark","sound","meaning","object"],
+          word:["sound","mark","meaning","predicate"], language:["word","sentence","speech","rule"], concept:["form","species","genus","abstraction"],
+          reference:["name","object","substance"], truth:["judgment","proposition","world","subject","predicate"], thought:["concept","judgment","form"],
+          proposition:["subject","predicate","truth"], assertion:["proposition","truth","speech"], interpretation:["text","meaning","context","judgment"],
+          understanding:["definition","cause","essence","example"], use:["practice","speech","purpose"], rule:["form","norm","practice"], practice:["action","rule","training"],
+          context:["situation","speech","purpose"], expression:["word","sentence","sign"], sentence:["subject","predicate","assertion"], object:["substance","matter","form"],
+          world:["object","event","situation"], perception:["body","object","quality"], action:["cause","body","purpose"], body:["substance","matter","form"],
+          mark:["matter","difference"], sound:["event","perception"], gesture:["body","action","sign"], text:["mark","word","interpretation"],
+          system:["part","relation","form"], relation:["category","order"], difference:["differentia","opposition"], value:["role","system","difference"],
+          substance:["form","matter"], essence:["form","genus","differentia"], genus:["category","species"], differentia:["difference","form"], species:["genus","differentia"],
+          accident:["substance","quality"], cause:["form","matter","action"], quality:["accident","perception"], abstraction:["concept","example"], name:["word","substance"]
+        }
+      },
+      locke: {
+        short:"Locke", label:"Lockean / Empiricist", basis:"good-faith reconstruction from Essay II-III: words signify ideas; ideas trace to sensation/reflection",
+        thesis:"A word is grounded when its idea can be traced to simple ideas from sensation or reflection, then composed by mental operations.",
+        anchors:["impression","sensation","reflection","perception","memory","body","object","world"],
+        edges:{
+          meaning:["word","idea","signification","understanding"], signification:["word","idea","speaker"], sign:["mark","sound","idea"],
+          word:["sound","mark","idea","speaker"], language:["word","use","communication","convention"], communication:["speaker","idea","word","understanding"],
+          concept:["idea","abstraction","complex"], reference:["word","idea","object"], truth:["proposition","agreement","idea","world"],
+          thought:["idea","reflection","memory"], proposition:["idea","word","truth"], assertion:["proposition","speaker","truth"],
+          interpretation:["word","idea","context","understanding"], understanding:["idea","memory","comparison"], comparison:["idea","difference"],
+          use:["word","practice","purpose"], rule:["custom","use","correction"], custom:["practice","convention"], practice:["training","use","agreement"],
+          context:["situation","speaker","purpose"], expression:["word","sign","idea"], sentence:["word","proposition","assertion"],
+          object:["quality","sensation","perception"], world:["object","body","event"], perception:["sensation","body","object"], action:["reflection","body","purpose"],
+          body:["sensation","action"], mark:["perception","difference"], sound:["sensation","event"], gesture:["body","sign","idea"],
+          text:["mark","word","idea"], relation:["comparison","idea"], difference:["comparison","sensation"], value:["use","idea","convention"],
+          idea:["impression","simple","complex","memory"], impression:["sensation","reflection"], sensation:["object","quality","body"], reflection:["thought","action"],
+          quality:["object","sensation"], simple:["impression"], complex:["simple","combination"], combination:["simple","complex"], abstraction:["idea","comparison"],
+          memory:["idea","experience"], name:["word","idea","object"], evidence:["perception","memory","claim"], claim:["assertion","proposition"]
+        }
+      },
+      frege: {
+        short:"Frege", label:"Fregean / Early Analytic", basis:"good-faith reconstruction from On Sense and Reference and Begriffsschrift-style logical form",
+        thesis:"Meaning splits into sense and reference, and grounding requires preserving truth through logical form rather than reducing terms to experience.",
+        anchors:["truth","reference","object","logic","identity","world"],
+        edges:{
+          meaning:["sense","reference","expression"], sign:["expression","sense","reference"], word:["expression","sense","language"],
+          language:["expression","logic","rule"], concept:["predicate","extension","intension","rule"], reference:["object","denotation","truth"],
+          truth:["thought","reference","world"], thought:["sense","proposition","truth"], proposition:["thought","truth","assertion"],
+          assertion:["judgment","truth","proposition"], interpretation:["expression","sense","context"], understanding:["sense","inference","rule"],
+          use:["expression","rule","practice"], rule:["logic","inference","criterion"], practice:["assertion","correction"], context:["expression","sense"],
+          expression:["name","sentence","sign"], sentence:["thought","logic","assertion"], object:["reference","identity"], world:["object","truth"],
+          perception:["object","thought"], action:["assertion","practice"], mark:["expression","sign"], sound:["expression","sign"], gesture:["sign","expression"],
+          text:["expression","sentence"], system:["logic","relation"], relation:["identity","function"], difference:["identity","sense"], value:["truth","reference"],
+          sense:["mode","thought","reference"], mode:["presentation","sense"], presentation:["sense","object"], name:["sense","reference","object"],
+          denotation:["reference","object"], extension:["concept","object"], intension:["sense","rule"], logic:["inference","form"],
+          inference:["thought","rule","truth"], identity:["object","sense"], predicate:["concept","object"], judgment:["thought","truth"],
+          representation:["expression","sense","reference"], claim:["assertion","proposition"], evidence:["claim","truth"], description:["expression","sense","object"]
+        }
+      },
+      saussure: {
+        short:"Saussure", label:"Saussurean / Structuralist", basis:"good-faith reconstruction from Course in General Linguistics: value, difference, signifier/signified",
+        thesis:"Grounding is internally differential: signs gain value by opposition inside a system, so the graph should show systematic refusal of external bottoming-out.",
+        anchors:["difference","system","convention","speech"],
+        edges:{
+          meaning:["value","sign","system","difference"], sign:["signifier","signified","value"], word:["sign","value","chain"],
+          language:["system","sign","difference","code"], concept:["signified","value","opposition"], reference:["sign","denotation","code"],
+          truth:["claim","code","convention"], thought:["signified","language","value"], proposition:["sentence","signified","claim"],
+          assertion:["speech","claim","code"], interpretation:["code","sign","value","context"], understanding:["code","difference","value"],
+          use:["speech","convention","code"], rule:["system","convention","difference"], practice:["speech","convention"], context:["chain","system","speech"],
+          expression:["signifier","chain","speech"], sentence:["chain","sign","speech"], object:["denotation","signified","difference"], world:["denotation","code"],
+          perception:["signifier","difference"], action:["speech","practice"], mark:["signifier","difference"], sound:["signifier","difference"], gesture:["signifier","code"],
+          text:["chain","signifier","code"], system:["relation","difference","opposition"], relation:["difference","system"], difference:["opposition","value"],
+          value:["difference","system","opposition"], signifier:["sound","mark","difference","sign"], signified:["concept","value","sign"],
+          code:["system","convention","sign"], convention:["practice","speech","agreement"], opposition:["difference","paradigm"], chain:["signifier","relation"],
+          paradigm:["opposition","system"], speech:["speaker","utterance","language"], speaker:["speech","language"], utterance:["speech","chain"],
+          denotation:["sign","code"], claim:["assertion","truth"], identity:["difference","system"], representation:["sign","value"], description:["text","chain"]
+        }
+      },
+      wittgenstein: {
+        short:"Wittgenstein", label:"Wittgensteinian / Ordinary Language", basis:"good-faith reconstruction from Philosophical Investigations: meaning as use, rule-following, family resemblance",
+        thesis:"Grounding is public criteria in practice: a word means by its place in language-games, training, correction, and forms of life.",
+        anchors:["practice","public","action","response","body","life","example","correction"],
+        edges:{
+          meaning:["use","practice","game","criterion"], sign:["use","gesture","practice"], word:["use","game","rule","training"],
+          language:["game","practice","life","rule"], concept:["family","use","example","criterion"], reference:["use","name","criterion","object"],
+          truth:["assertion","rule","practice","criterion"], thought:["expression","use","private"], proposition:["sentence","game","assertion"],
+          assertion:["game","rule","response"], interpretation:["use","context","practice","response"], understanding:["use","training","criterion","continuation"],
+          continuation:["rule","practice","response"], use:["practice","game","action"], rule:["practice","training","agreement","correction"],
+          practice:["life","public","training"], context:["situation","game","practice"], expression:["word","gesture","sentence"], sentence:["game","assertion","response"],
+          object:["criterion","example","action"], world:["life","situation","practice"], perception:["body","criterion","practice"], action:["body","practice","response"],
+          body:["pain","gesture","action"], mark:["public","text","use"], sound:["public","speech","use"], gesture:["body","criterion","response"],
+          text:["mark","practice","interpretation"], system:["practice","rule"], relation:["use","criterion"], difference:["criterion","example"], value:["use","role","game"],
+          game:["rule","practice","move"], move:["game","response","rule"], family:["similarity","example"], similarity:["example","criterion"], criterion:["public","correction","example"],
+          example:["training","practice"], training:["practice","correction","agreement"], agreement:["action","judgment","practice"], life:["practice","body","world"],
+          pain:["body","expression","criterion"], private:["criterion","public","rule"], public:["correction","response","practice"], role:["game","use"],
+          norm:["rule","correction"], correction:["response","rule"], response:["action","practice"], name:["word","use","object"], claim:["assertion","response"],
+          judgment:["agreement","criterion"], speech:["utterance","practice"], speaker:["speech","practice"], utterance:["speech","game"]
+        }
+      }
+    };
+
+    const CORPUS = [
+      {id:"ar-1",regime:"aristotle",tier:"direct",work:"De Interpretatione",locus:"1, 16a3-8",text:"Spoken sounds are treated as symbols of affections in the soul; written marks are symbols of spoken sounds.",licenses:[["word","sound"],["word","mark"],["sign","sound"],["sign","mark"],["sign","meaning"]]},
+      {id:"ar-2",regime:"aristotle",tier:"direct",work:"Categories",locus:"5, substance",text:"Primary substances are individual things; other predicates are said of or present in them.",licenses:[["object","substance"],["reference","substance"],["subject","substance"],["predicate","subject"]]},
+      {id:"ar-3",regime:"aristotle",tier:"direct",work:"Topics",locus:"I.5",text:"A definition states what a thing is, commonly by genus joined to differentia.",licenses:[["definition","genus"],["definition","differentia"],["definition","essence"],["species","genus"],["species","differentia"]]},
+      {id:"ar-4",regime:"aristotle",tier:"paraphrase",work:"Metaphysics",locus:"Z-H motifs",text:"Substance is analyzed through form and matter; form carries the intelligible what-it-is of the thing.",licenses:[["substance","form"],["substance","matter"],["essence","form"],["object","form"],["body","matter"]]},
+      {id:"ar-5",regime:"aristotle",tier:"direct",work:"Physics",locus:"II.3",text:"Causes answer why a thing is or comes to be: material, formal, efficient, and final explanations.",licenses:[["cause","form"],["cause","matter"],["cause","action"],["understanding","cause"],["action","cause"]]},
+      {id:"ar-6",regime:"aristotle",tier:"paraphrase",work:"Categories",locus:"1-4",text:"Categories organize predication: what is said of a subject is classified by basic modes of being said.",licenses:[["relation","category"],["genus","category"],["truth","subject"],["truth","predicate"],["proposition","subject"],["proposition","predicate"]]},
+      {id:"ar-7",regime:"aristotle",tier:"paraphrase",work:"Posterior Analytics",locus:"II",text:"Scientific grasp seeks the cause and essence, not merely a name or accidental description.",licenses:[["meaning","definition"],["meaning","essence"],["understanding","essence"],["accident","substance"],["accident","quality"]]},
+      {id:"ar-8",regime:"aristotle",tier:"paraphrase",work:"Poetics/Rhetoric",locus:"lexis motifs",text:"Expression, speech, and textual interpretation depend on words, sentences, signs, and the circumstances of saying.",licenses:[["language","word"],["language","sentence"],["language","speech"],["expression","word"],["expression","sentence"],["text","word"],["interpretation","context"]]},
+      {id:"ar-9",regime:"aristotle",tier:"paraphrase",work:"De Anima",locus:"II.5-12",text:"Perception is bodily affection by sensible qualities of objects.",licenses:[["perception","body"],["perception","object"],["perception","quality"],["quality","perception"],["sound","perception"]]},
+      {id:"ar-10",regime:"aristotle",tier:"inference",work:"editorial bridge",locus:"project reconstruction",text:"System, value, context, and practice vocabulary are mapped onto Aristotelian relation, form, purpose, and action terms for comparison.",licenses:[["system","relation"],["system","form"],["value","role"],["value","system"],["context","situation"],["context","purpose"],["practice","action"],["practice","rule"]]},
+
+      {id:"lo-1",regime:"locke",tier:"direct",work:"Essay",locus:"III.ii.2",text:"Words are voluntary signs of ideas in the speaker's mind.",licenses:[["word","idea"],["signification","word"],["signification","idea"],["meaning","word"],["meaning","idea"],["speaker","idea"]]},
+      {id:"lo-2",regime:"locke",tier:"direct",work:"Essay",locus:"II.i.2-4",text:"All ideas come from sensation or reflection.",licenses:[["idea","impression"],["impression","sensation"],["impression","reflection"],["thought","reflection"],["perception","sensation"]]},
+      {id:"lo-3",regime:"locke",tier:"paraphrase",work:"Essay",locus:"II.xii",text:"The mind makes complex ideas by compounding, comparing, and abstracting simpler materials.",licenses:[["complex","simple"],["combination","simple"],["combination","complex"],["abstraction","idea"],["abstraction","comparison"],["comparison","idea"]]},
+      {id:"lo-4",regime:"locke",tier:"direct",work:"Essay",locus:"II.viii",text:"Qualities are powers in bodies to produce ideas in us.",licenses:[["object","quality"],["quality","object"],["quality","sensation"],["sensation","quality"],["sensation","body"]]},
+      {id:"lo-5",regime:"locke",tier:"paraphrase",work:"Essay",locus:"III.iii",text:"General terms arise by abstraction from particular ideas and are stabilized by use.",licenses:[["concept","idea"],["concept","abstraction"],["language","use"],["value","use"],["name","word"],["name","idea"]]},
+      {id:"lo-6",regime:"locke",tier:"paraphrase",work:"Essay",locus:"IV.v",text:"Truth concerns propositions made by joining or separating signs according to agreement of ideas.",licenses:[["truth","proposition"],["truth","agreement"],["truth","idea"],["proposition","idea"],["proposition","word"],["assertion","proposition"]]},
+      {id:"lo-7",regime:"locke",tier:"paraphrase",work:"Essay",locus:"II.x",text:"Memory preserves ideas so they can be recognized, compared, and used in understanding.",licenses:[["memory","idea"],["memory","experience"],["understanding","memory"],["understanding","comparison"],["thought","memory"]]},
+      {id:"lo-8",regime:"locke",tier:"paraphrase",work:"Essay",locus:"III.xi",text:"Communication works when hearers connect public words with ideas sufficiently like the speaker's intended ideas.",licenses:[["language","communication"],["communication","speaker"],["communication","idea"],["communication","word"],["communication","understanding"],["interpretation","understanding"]]},
+      {id:"lo-9",regime:"locke",tier:"paraphrase",work:"Essay",locus:"II.i/II.xxii",text:"External objects affect the senses; reflection supplies ideas of mental operations and voluntary action.",licenses:[["object","sensation"],["object","perception"],["action","reflection"],["body","sensation"],["world","object"]]},
+      {id:"lo-10",regime:"locke",tier:"inference",work:"editorial bridge",locus:"project reconstruction",text:"Rule, custom, correction, and evidence vocabulary are attached to Locke's account of use, agreement, memory, and perception.",licenses:[["rule","custom"],["rule","correction"],["custom","practice"],["practice","agreement"],["evidence","perception"],["evidence","memory"],["claim","assertion"]]},
+
+      {id:"fr-1",regime:"frege",tier:"direct",work:"On Sense and Reference",locus:"opening sections",text:"A sign can have both a sense and a reference.",licenses:[["meaning","sense"],["meaning","reference"],["sign","sense"],["sign","reference"],["name","sense"],["name","reference"]]},
+      {id:"fr-2",regime:"frege",tier:"direct",work:"On Sense and Reference",locus:"identity discussion",text:"Identity statements can differ in cognitive value because modes of presentation differ.",licenses:[["identity","object"],["identity","sense"],["difference","identity"],["sense","mode"],["mode","presentation"],["presentation","sense"]]},
+      {id:"fr-3",regime:"frege",tier:"direct",work:"On Sense and Reference",locus:"thought/truth-value",text:"The reference of a sentence is its truth-value; the thought is its sense.",licenses:[["sentence","thought"],["thought","truth"],["truth","thought"],["proposition","thought"],["proposition","truth"]]},
+      {id:"fr-4",regime:"frege",tier:"paraphrase",work:"Begriffsschrift",locus:"logical form",text:"Inference depends on formal logical structure rather than psychology of ideas.",licenses:[["language","logic"],["rule","logic"],["logic","inference"],["inference","rule"],["inference","truth"],["system","logic"]]},
+      {id:"fr-5",regime:"frege",tier:"paraphrase",work:"Function and Concept",locus:"concept/function",text:"Concepts behave as predicative functions whose extension is tied to objects falling under them.",licenses:[["concept","predicate"],["concept","extension"],["predicate","concept"],["predicate","object"],["extension","object"],["relation","function"]]},
+      {id:"fr-6",regime:"frege",tier:"paraphrase",work:"On Sense and Reference",locus:"proper names",text:"Proper names present objects through sense; denotation is the object picked out.",licenses:[["reference","object"],["reference","denotation"],["denotation","reference"],["denotation","object"],["object","reference"]]},
+      {id:"fr-7",regime:"frege",tier:"paraphrase",work:"On Sense and Reference",locus:"indirect speech",text:"Interpretation of expressions is context-sensitive when ordinary and indirect reference diverge.",licenses:[["interpretation","expression"],["interpretation","sense"],["interpretation","context"],["context","expression"],["context","sense"]]},
+      {id:"fr-8",regime:"frege",tier:"paraphrase",work:"logical writings",locus:"assertion/judgment",text:"Assertion marks the presentation of a thought as true; judgment relates thought to truth.",licenses:[["assertion","judgment"],["assertion","truth"],["assertion","proposition"],["judgment","thought"],["judgment","truth"]] },
+      {id:"fr-9",regime:"frege",tier:"paraphrase",work:"editorial synthesis",locus:"sign/expression",text:"Marks and sounds are treated as expressions when they can carry sense and reference in language.",licenses:[["word","expression"],["expression","name"],["expression","sentence"],["expression","sign"],["mark","expression"],["sound","expression"],["text","expression"]]},
+      {id:"fr-10",regime:"frege",tier:"inference",work:"editorial bridge",locus:"project reconstruction",text:"Practice, correction, evidence, and action terms are peripheral bridges required to compare Frege with ordinary-language regimes.",licenses:[["practice","assertion"],["practice","correction"],["action","assertion"],["evidence","claim"],["evidence","truth"],["use","practice"]]},
+
+      {id:"sa-1",regime:"saussure",tier:"paraphrase",work:"Course in General Linguistics",locus:"part I",text:"The linguistic sign joins a sound-image/signifier with a concept/signified.",licenses:[["sign","signifier"],["sign","signified"],["signifier","sound"],["signified","concept"],["word","sign"]]},
+      {id:"sa-2",regime:"saussure",tier:"paraphrase",work:"Course in General Linguistics",locus:"linguistic value",text:"Value is produced by differences and oppositions inside the system, not by isolated positive terms.",licenses:[["meaning","value"],["meaning","system"],["meaning","difference"],["value","difference"],["value","system"],["value","opposition"],["difference","opposition"]]},
+      {id:"sa-3",regime:"saussure",tier:"paraphrase",work:"Course in General Linguistics",locus:"language/speech",text:"Langue is the social system; parole is situated speech by speakers.",licenses:[["language","system"],["language","sign"],["speech","speaker"],["speech","utterance"],["speaker","speech"],["utterance","speech"]]},
+      {id:"sa-4",regime:"saussure",tier:"paraphrase",work:"Course in General Linguistics",locus:"arbitrariness",text:"Convention stabilizes arbitrary sign relations in a code shared by a community.",licenses:[["code","system"],["code","convention"],["code","sign"],["use","convention"],["rule","convention"],["practice","convention"]]},
+      {id:"sa-5",regime:"saussure",tier:"paraphrase",work:"Course in General Linguistics",locus:"syntagmatic/associative",text:"Chains and paradigms determine value by neighboring sequence and replaceable alternatives.",licenses:[["chain","signifier"],["chain","relation"],["paradigm","opposition"],["paradigm","system"],["context","chain"],["expression","chain"],["sentence","chain"]]},
+      {id:"sa-6",regime:"saussure",tier:"paraphrase",work:"Course in General Linguistics",locus:"negative terms",text:"Identity in language is differential: a sign is what it is by not being neighboring signs.",licenses:[["identity","difference"],["identity","system"],["relation","difference"],["relation","system"],["opposition","difference"]]},
+      {id:"sa-7",regime:"saussure",tier:"inference",work:"editorial bridge",locus:"project reconstruction",text:"Truth, denotation, object, and world vocabulary are intentionally weak bridges in a structuralist regime.",licenses:[["truth","claim"],["truth","code"],["truth","convention"],["reference","denotation"],["denotation","sign"],["world","denotation"],["object","denotation"]]},
+      {id:"sa-8",regime:"saussure",tier:"paraphrase",work:"Course in General Linguistics",locus:"written/spoken signs",text:"Marks and sounds count as signifiers only through the differential system that recognizes them.",licenses:[["mark","signifier"],["mark","difference"],["sound","signifier"],["sound","difference"],["text","signifier"],["perception","signifier"]]},
+      {id:"sa-9",regime:"saussure",tier:"paraphrase",work:"Course in General Linguistics",locus:"social fact",text:"Understanding a sign requires the code of differences and values available in the language system.",licenses:[["interpretation","code"],["interpretation","sign"],["interpretation","value"],["understanding","code"],["understanding","difference"],["understanding","value"]]},
+      {id:"sa-10",regime:"saussure",tier:"inference",work:"editorial bridge",locus:"project reconstruction",text:"Representation, description, gesture, and action are included to keep the comparative vocabulary connected.",licenses:[["representation","sign"],["representation","value"],["description","text"],["description","chain"],["gesture","code"],["action","practice"]]},
+
+      {id:"wi-1",regime:"wittgenstein",tier:"paraphrase",work:"Philosophical Investigations",locus:"§43",text:"For a large class of cases, the meaning of a word is its use in the language.",licenses:[["meaning","use"],["word","use"],["sign","use"],["reference","use"],["value","use"],["role","use"]]},
+      {id:"wi-2",regime:"wittgenstein",tier:"paraphrase",work:"Philosophical Investigations",locus:"§7, §23",text:"Language-games tie words to activities, moves, and forms of life.",licenses:[["meaning","game"],["language","game"],["game","rule"],["game","practice"],["game","move"],["move","game"],["life","practice"]]},
+      {id:"wi-3",regime:"wittgenstein",tier:"paraphrase",work:"Philosophical Investigations",locus:"§65-71",text:"Many concepts are held together by family resemblances rather than one shared essence.",licenses:[["concept","family"],["family","similarity"],["family","example"],["similarity","example"],["similarity","criterion"]]},
+      {id:"wi-4",regime:"wittgenstein",tier:"paraphrase",work:"Philosophical Investigations",locus:"§143-242",text:"Following a rule shows itself in trained continuation, agreement, correction, and public standards.",licenses:[["rule","practice"],["rule","training"],["rule","agreement"],["rule","correction"],["continuation","rule"],["continuation","practice"],["training","correction"],["training","agreement"]]},
+      {id:"wi-5",regime:"wittgenstein",tier:"paraphrase",work:"Philosophical Investigations",locus:"§244-271",text:"Pain language is learned through expression, bodily behavior, criteria, and response.",licenses:[["pain","body"],["pain","expression"],["pain","criterion"],["body","pain"],["gesture","body"],["gesture","criterion"],["gesture","response"]]},
+      {id:"wi-6",regime:"wittgenstein",tier:"paraphrase",work:"Philosophical Investigations",locus:"private language argument",text:"A purely private sign lacks independent criteria for correct use.",licenses:[["private","criterion"],["private","public"],["private","rule"],["criterion","public"],["criterion","correction"],["criterion","example"]]},
+      {id:"wi-7",regime:"wittgenstein",tier:"paraphrase",work:"Philosophical Investigations",locus:"§198-202",text:"Understanding is exhibited by going on correctly in the practice, not by an inner item alone.",licenses:[["understanding","use"],["understanding","training"],["understanding","criterion"],["understanding","continuation"],["thought","private"],["thought","use"]]},
+      {id:"wi-8",regime:"wittgenstein",tier:"paraphrase",work:"Philosophical Investigations",locus:"§1-21",text:"Naming, objects, sentences, and assertions function as moves within practices rather than as the whole of meaning.",licenses:[["name","word"],["name","use"],["name","object"],["sentence","game"],["sentence","assertion"],["assertion","game"],["assertion","response"]]},
+      {id:"wi-9",regime:"wittgenstein",tier:"paraphrase",work:"Philosophical Investigations",locus:"forms of life",text:"Agreement in judgments and actions belongs to the shared form of life in which criteria operate.",licenses:[["agreement","action"],["agreement","judgment"],["agreement","practice"],["life","body"],["life","world"],["public","practice"],["response","practice"]]},
+      {id:"wi-10",regime:"wittgenstein",tier:"inference",work:"editorial bridge",locus:"project reconstruction",text:"Truth, proposition, system, text, and interpretation terms are reconstructed through public language-games and criteria.",licenses:[["truth","assertion"],["truth","criterion"],["proposition","sentence"],["proposition","assertion"],["system","practice"],["text","practice"],["interpretation","context"],["interpretation","response"]]}
+    ];
+
+    const CRITIQUES = [
+      {id:"lo-ar-1",from:"locke",against:"aristotle",era:"1690",tier:"paraphrase",work:"Essay",locus:"II.i, III.iii",targetWords:["essence","form","definition"],analogs:["idea","impression","simple","complex"],text:"The empiricist repair rejects innate or scholastic essences as the immediate ground of words and asks for ideas traceable to experience.",escapeClaim:"Replace real definition through essence with simple ideas from sensation and reflection."},
+      {id:"lo-ar-2",from:"locke",against:"aristotle",era:"1690",tier:"paraphrase",work:"Essay",locus:"III.iii",targetWords:["genus","differentia","species"],analogs:["abstraction","comparison","idea"],text:"General terms are explained by abstraction from particulars rather than by a fixed genus-differentia order.",escapeClaim:"Move classification from objective species-essence to mental abstraction over ideas."},
+      {id:"fr-lo-1",from:"frege",against:"locke",era:"1892",tier:"direct",work:"On Sense and Reference",locus:"opening identity problem",targetWords:["meaning","word","idea"],analogs:["sense","reference","thought"],text:"Frege's sense/reference split refuses to make cognitive value a private idea attached to a word.",escapeClaim:"Replace word-to-idea signification with public sense and reference."},
+      {id:"fr-lo-2",from:"frege",against:"locke",era:"1879-1892",tier:"paraphrase",work:"Begriffsschrift / logical writings",locus:"anti-psychologistic logical form",targetWords:["truth","proposition","idea"],analogs:["truth","thought","logic","inference"],text:"Logical consequence is not grounded in the association of ideas but in form, thought, and truth-preserving inference.",escapeClaim:"Move truth from agreement of ideas to logical articulation of thoughts."},
+      {id:"fr-ar-1",from:"frege",against:"aristotle",era:"1879",tier:"paraphrase",work:"Begriffsschrift",locus:"concept-script against subject-predicate grammar",targetWords:["subject","predicate","proposition"],analogs:["function","concept","predicate","thought"],text:"Frege's function-argument analysis repairs the limits of traditional subject-predicate logic.",escapeClaim:"Replace grammatical predication with concept/function structure."},
+      {id:"sa-ar-1",from:"saussure",against:"aristotle",era:"1916",tier:"paraphrase",work:"Course in General Linguistics",locus:"linguistic value",targetWords:["name","object","substance"],analogs:["sign","value","difference","system"],text:"Structural linguistics refuses the nomenclature picture in which words are labels for pre-given things.",escapeClaim:"Ground signs by differential value inside the system, not by direct attachment to substances."},
+      {id:"sa-lo-1",from:"saussure",against:"locke",era:"1916",tier:"paraphrase",work:"Course in General Linguistics",locus:"signifier/signified",targetWords:["word","idea","speaker"],analogs:["signifier","signified","value","code"],text:"The sign is a social linguistic unit, not a public noise plus a private idea in a speaker's mind.",escapeClaim:"Replace speaker-idea signification with the signifier/signified relation stabilized by code."},
+      {id:"sa-fr-1",from:"saussure",against:"frege",era:"1916",tier:"inference",work:"editorial bridge",locus:"structural value against denotational primacy",targetWords:["reference","object","truth"],analogs:["value","difference","system","code"],text:"The structuralist regime makes truth and denotation peripheral relative to differential value.",escapeClaim:"Move semantic explanation from reference-first logic to internal contrasts in langue."},
+      {id:"wi-ar-1",from:"wittgenstein",against:"aristotle",era:"1953",tier:"paraphrase",work:"Philosophical Investigations",locus:"§65-71",targetWords:["essence","definition","species"],analogs:["family","example","criterion","use"],text:"Family resemblance arguments undercut the demand that every concept be grounded by one shared essence.",escapeClaim:"Replace essence-definition with overlapping examples and public criteria."},
+      {id:"wi-lo-1",from:"wittgenstein",against:"locke",era:"1953",tier:"paraphrase",work:"Philosophical Investigations",locus:"private language argument",targetWords:["idea","private","meaning"],analogs:["public","criterion","practice","training"],text:"Private inner items cannot by themselves fix correctness; meaning requires public criteria and trained use.",escapeClaim:"Move meaning from private idea to public rule-governed practice."},
+      {id:"wi-fr-1",from:"wittgenstein",against:"frege",era:"1953",tier:"paraphrase",work:"Philosophical Investigations",locus:"§1-23, §43",targetWords:["sense","reference","proposition"],analogs:["use","game","rule","response"],text:"The later ordinary-language view treats naming and propositions as some language-games, not the essence of language.",escapeClaim:"Relocate sense/reference into plural uses, games, and responses."},
+      {id:"wi-sa-1",from:"wittgenstein",against:"saussure",era:"1953",tier:"inference",work:"editorial bridge",locus:"forms of life versus system autonomy",targetWords:["system","difference","value"],analogs:["practice","life","action","response"],text:"Ordinary-language reconstruction refuses to leave meaning in an autonomous sign-system without embodied practice.",escapeClaim:"Test whether differential value opens when tied to forms of life and action."}
+    ];
+
+    const state = { regime:"frege", compareRegime:"locke", root:"meaning", target:"object", selected:"meaning", selectedEdge:null, selectedCritique:"fr-lo-1", depth:3, mode:"succession", warrant:"all" };
+    const regimeKeys = Object.keys(REGIMES);
+    const allWords = [...new Set([...Object.keys(DEFINITIONS), ...regimeKeys.flatMap(k => Object.keys(REGIMES[k].edges).concat(Object.values(REGIMES[k].edges).flat()))])].sort();
+    for (const w of allWords) if (!DEFINITIONS[w]) DEFINITIONS[w] = `${w} as a local reconstructed term in the selected regime.`;
+
+    const $ = id => document.getElementById(id);
+    const svg = $("graph");
+    const rootSelect = $("rootSelect"), targetSelect = $("targetSelect"), compareRegime = $("compareRegime"), searchInput = $("search"), depthInput = $("depth"), warrantMode = $("warrantMode");
+
+    function edgesFor(regime) { return REGIMES[regime].edges; }
+    function outgoing(regime, word) { return (edgesFor(regime)[word] || []).filter(w => allWords.includes(w)); }
+    function graphFor(regime, nodes) {
+      const set = new Set(nodes), edges = [];
+      for (const n of nodes) for (const t of outgoing(regime, n)) if (set.has(t)) edges.push([n,t]);
+      return {nodes:[...set], edges};
+    }
+    const tierRank = {inference:0, paraphrase:1, direct:2};
+    const tierLabel = {direct:"direct warrant", paraphrase:"close paraphrase", inference:"editorial bridge"};
+    const EVIDENCE = new Map();
+    CORPUS.forEach(item => item.licenses.forEach(([a,b]) => {
+      const sig = `${item.regime}:${a}>${b}`;
+      if (!EVIDENCE.has(sig)) EVIDENCE.set(sig, []);
+      EVIDENCE.get(sig).push(item);
+    }));
+    function evidenceFor(regime, a, b) { return EVIDENCE.get(`${regime}:${a}>${b}`) || []; }
+    function edgeTier(regime, a, b) {
+      const ev = evidenceFor(regime,a,b);
+      return ev.length ? ev.map(x => x.tier).sort((a,b) => tierRank[b]-tierRank[a])[0] : "inference";
+    }
+    function edgeEvidence(regime, a, b) {
+      const ev = evidenceFor(regime,a,b);
+      return ev.length ? ev : [{id:`${regime}-${a}-${b}-gap`,regime,tier:"inference",work:"editorial bridge",locus:"no embedded source span",text:"No direct embedded warrant licenses this edge. It remains in the graph as an explicit reconstruction bridge.",licenses:[[a,b]]}];
+    }
+    function filterByWarrant(regime, edges) {
+      return state.warrant === "direct" ? edges.filter(([a,b]) => edgeTier(regime,a,b) === "direct") : edges;
+    }
+    function warrantCounts(regime, edges) {
+      const counts = {direct:0, paraphrase:0, inference:0};
+      edges.forEach(([a,b]) => counts[edgeTier(regime,a,b)]++);
+      return counts;
+    }
+    function directSubgraph(regime, graph) {
+      return {nodes:graph.nodes, edges:graph.edges.filter(([a,b]) => edgeTier(regime,a,b) === "direct")};
+    }
+    function visibleGraph(regime, root, maxDepth) {
+      const nodes = new Set([root]), edges = [], depth = new Map([[root,0]]), q = [{w:root,d:0}];
+      while (q.length) {
+        const {w,d} = q.shift();
+        if (d >= maxDepth) continue;
+        for (const t of outgoing(regime,w)) {
+          nodes.add(t); edges.push([w,t]);
+          if (!depth.has(t) || d + 1 < depth.get(t)) { depth.set(t,d+1); q.push({w:t,d:d+1}); }
+        }
+      }
+      return {nodes:[...nodes], edges, depth};
+    }
+    function globalGraph(regime) { return graphFor(regime, [...new Set(Object.keys(edgesFor(regime)).concat(Object.values(edgesFor(regime)).flat()))]); }
+    function edgeSig(e) { return e[0] + ">" + e[1]; }
+
+    function tarjan(nodes, edges) {
+      const adj = new Map(nodes.map(n => [n, []])); edges.forEach(([a,b]) => adj.get(a)?.push(b));
+      let index = 0; const stack = [], on = new Set(), idx = new Map(), low = new Map(), comps = [];
+      function strong(v) {
+        idx.set(v,index); low.set(v,index); index++; stack.push(v); on.add(v);
+        for (const w of adj.get(v) || []) {
+          if (!idx.has(w)) { strong(w); low.set(v, Math.min(low.get(v), low.get(w))); }
+          else if (on.has(w)) low.set(v, Math.min(low.get(v), idx.get(w)));
+        }
+        if (low.get(v) === idx.get(v)) {
+          const comp = []; let w;
+          do { w = stack.pop(); on.delete(w); comp.push(w); } while (w !== v);
+          if (comp.length > 1 || (adj.get(v) || []).includes(v)) comps.push(comp);
+        }
+      }
+      nodes.forEach(n => { if (!idx.has(n)) strong(n); });
+      return comps;
+    }
+    function hasCycle(nodes, edges, removed) {
+      return tarjan(nodes.filter(n => !removed.has(n)), edges.filter(([a,b]) => !removed.has(a) && !removed.has(b))).length > 0;
+    }
+    function exactFVS(nodes, edges) {
+      const cycleNodes = [...new Set(tarjan(nodes, edges).flat())].sort();
+      if (!cycleNodes.length) return [];
+      if (cycleNodes.length > 13) return greedyFVS(nodes, edges);
+      for (let size = 1; size <= cycleNodes.length; size++) {
+        const chosen = [];
+        function rec(start) {
+          if (chosen.length === size) return hasCycle(nodes, edges, new Set(chosen)) ? null : chosen.slice();
+          for (let i = start; i < cycleNodes.length; i++) { chosen.push(cycleNodes[i]); const got = rec(i + 1); if (got) return got; chosen.pop(); }
+          return null;
+        }
+        const got = rec(0); if (got) return got;
+      }
+      return greedyFVS(nodes, edges);
+    }
+    function greedyFVS(nodes, edges) {
+      const removed = new Set(); let guard = 0;
+      while (guard++ < nodes.length && hasCycle(nodes, edges, removed)) {
+        const activeNodes = nodes.filter(n => !removed.has(n)), activeEdges = edges.filter(([a,b]) => !removed.has(a) && !removed.has(b));
+        const cyc = new Set(tarjan(activeNodes, activeEdges).flat()), score = new Map([...cyc].map(n => [n,0]));
+        activeEdges.forEach(([a,b]) => { if (cyc.has(a) && cyc.has(b)) { score.set(a,score.get(a)+1.1); score.set(b,score.get(b)+1); } });
+        const best = [...score].sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0]))[0]?.[0]; if (!best) break; removed.add(best);
+      }
+      for (const n of [...removed]) { const trial = new Set(removed); trial.delete(n); if (!hasCycle(nodes, edges, trial)) removed.delete(n); }
+      return [...removed].sort();
+    }
+    function cycleWitnesses(nodes, edges, limit = 11) {
+      const adj = new Map(nodes.map(n => [n, []])); edges.forEach(([a,b]) => adj.get(a)?.push(b));
+      const out = [], sigs = new Set();
+      for (const start of nodes.sort()) {
+        const path = [start], seen = new Set([start]);
+        function dfs(v) {
+          if (out.length >= limit) return;
+          for (const nxt of adj.get(v) || []) {
+            if (nxt === start && path.length > 1) {
+              const sig = [...new Set(path)].sort().join("|"); if (!sigs.has(sig)) { sigs.add(sig); out.push([...path,start]); }
+            } else if (!seen.has(nxt) && path.length < 7) { seen.add(nxt); path.push(nxt); dfs(nxt); path.pop(); seen.delete(nxt); }
+          }
+        }
+        dfs(start);
+      }
+      return out;
+    }
+    function shortestPath(regime, from, to) {
+      if (from === to) return [from];
+      const q = [[from]], seen = new Set([from]);
+      while (q.length) {
+        const path = q.shift();
+        for (const n of outgoing(regime, path[path.length-1])) {
+          if (seen.has(n)) continue;
+          const next = [...path,n]; if (n === to) return next;
+          seen.add(n); q.push(next);
+        }
+      }
+      return [];
+    }
+    function distanceToAnchor(regime, start) {
+      const anchors = new Set(REGIMES[regime].anchors), q = [{w:start,d:0}], seen = new Set([start]);
+      while (q.length) {
+        const {w,d} = q.shift();
+        if (anchors.has(w) || outgoing(regime,w).length === 0) return d;
+        for (const n of outgoing(regime,w)) if (!seen.has(n)) { seen.add(n); q.push({w:n,d:d+1}); }
+      }
+      return Infinity;
+    }
+    const ANALYSIS = Object.fromEntries(regimeKeys.map(k => {
+      const g = globalGraph(k), sccs = tarjan(g.nodes, g.edges), kernel = greedyFVS(g.nodes, g.edges);
+      const anchors = new Set(REGIMES[k].anchors), giant = Math.max(0, ...sccs.map(c => c.length));
+      return [k, {g, sccs, kernel, giant, anchorCount:[...anchors].filter(a => g.nodes.includes(a)).length}];
+    }));
+
+    function cycleThrough(regime, words, fallback=true) {
+      const g = globalGraph(regime), wordSet = new Set(words.filter(w => g.nodes.includes(w)));
+      const adj = new Map(g.nodes.map(n => [n, []])); g.edges.forEach(([a,b]) => adj.get(a)?.push(b));
+      for (const start of [...wordSet].sort()) {
+        const path = [start], seen = new Set([start]);
+        function dfs(v) {
+          for (const nxt of adj.get(v) || []) {
+            if (nxt === start && path.length > 1) return [...path,start];
+            if (!seen.has(nxt) && path.length < 8) { seen.add(nxt); path.push(nxt); const got = dfs(nxt); if (got) return got; path.pop(); seen.delete(nxt); }
+          }
+          return null;
+        }
+        const got = dfs(start); if (got) return got;
+      }
+      if (!fallback) return [];
+      const comp = tarjan(g.nodes,g.edges).find(c => c.some(w => wordSet.has(w)));
+      return comp ? comp.slice(0,7).concat(comp[0]) : [];
+    }
+    function localCycleSize(regime, words) {
+      const g = globalGraph(regime), set = new Set(words);
+      const comp = tarjan(g.nodes,g.edges).filter(c => c.some(w => set.has(w))).sort((a,b) => b.length-a.length)[0];
+      return comp ? comp.length : 0;
+    }
+    function escapeVerdict(critique) {
+      const againstCycle = cycleThrough(critique.against, critique.targetWords);
+      const fromCycle = cycleThrough(critique.from, critique.analogs, false);
+      const sameDebt = cycleThrough(critique.from, critique.targetWords, false);
+      const beforeSize = localCycleSize(critique.against, critique.targetWords);
+      const afterSize = fromCycle.length ? localCycleSize(critique.from, critique.analogs) : 0;
+      let verdict = "escaped";
+      if (fromCycle.length) verdict = !sameDebt.length && afterSize <= Math.max(1,beforeSize) ? "escaped" : afterSize > Math.max(1,beforeSize) ? "widened" : "relocated";
+      return {verdict, againstCycle, fromCycle, sameDebt, beforeSize, afterSize};
+    }
+    const CRITIQUE_RESULTS = new Map(CRITIQUES.map(c => [c.id, escapeVerdict(c)]));
+    function critiqueById(id) { return CRITIQUES.find(c => c.id === id) || CRITIQUES[0]; }
+    function critiqueCounts(role, regime) {
+      const counts = {escaped:0, relocated:0, widened:0, total:0};
+      CRITIQUES.filter(c => c[role] === regime).forEach(c => { counts[CRITIQUE_RESULTS.get(c.id).verdict]++; counts.total++; });
+      return counts;
+    }
+    function verdictText(counts) { return `${counts.escaped}/${counts.relocated}/${counts.widened}`; }
+
+    function scopedGraph() {
+      if (state.mode === "drift") {
+        const graphs = regimeKeys.map(k => {
+          const gr = visibleGraph(k, state.root, state.depth);
+          gr.edges = state.warrant === "direct" ? filterByWarrant(k, gr.edges) : gr.edges;
+          return [k, gr];
+        });
+        const edgeHits = new Map(), activeEdges = new Set(graphs.find(([k]) => k === state.regime)[1].edges.map(edgeSig));
+        graphs.forEach(([,gr]) => gr.edges.forEach(e => edgeHits.set(edgeSig(e), (edgeHits.get(edgeSig(e)) || 0) + 1)));
+        const nodes = [...new Set(graphs.flatMap(([,gr]) => gr.nodes))], edgeMap = new Map(), depth = new Map();
+        graphs.forEach(([,gr]) => {
+          gr.edges.forEach(e => edgeMap.set(edgeSig(e), e));
+          gr.depth.forEach((d,n) => depth.set(n, Math.min(depth.get(n) ?? d, d)));
+        });
+        const edgeMembership = new Map([...edgeMap.keys()].map(sig => [sig, edgeHits.get(sig) > 1 ? "shared" : activeEdges.has(sig) ? "onlyA" : "onlyB"]));
+        return {nodes, edges:[...edgeMap.values()], depth, edgeMembership, delta:true};
+      }
+      if (state.mode === "delta") {
+        const a = visibleGraph(state.regime, state.root, state.depth), b = visibleGraph(state.compareRegime, state.root, state.depth);
+        if (state.warrant === "direct") { a.edges = filterByWarrant(state.regime,a.edges); b.edges = filterByWarrant(state.compareRegime,b.edges); }
+        const aEdges = new Set(a.edges.map(edgeSig)), bEdges = new Set(b.edges.map(edgeSig)), edges = [], membership = new Map();
+        for (const e of a.edges) { const sig = edgeSig(e); edges.push(e); membership.set(sig, bEdges.has(sig) ? "shared" : "onlyA"); }
+        for (const e of b.edges) { const sig = edgeSig(e); if (!aEdges.has(sig)) { edges.push(e); membership.set(sig, "onlyB"); } }
+        const nodes = [...new Set([...a.nodes, ...b.nodes])], depth = new Map([...b.depth, ...a.depth]);
+        return {nodes, edges, depth, edgeMembership:membership, delta:true};
+      }
+      const g = visibleGraph(state.regime, state.root, state.depth);
+      g.edges = filterByWarrant(state.regime,g.edges);
+      if (state.mode === "route") {
+        const path = shortestPath(state.regime, state.root, state.target);
+        if (path.length) {
+          const nodes = new Set(path); path.forEach(n => outgoing(state.regime,n).forEach(t => nodes.add(t)));
+          const gg = graphFor(state.regime, [...nodes]); gg.depth = new Map(path.map((w,i) => [w,i]));
+          gg.edges = filterByWarrant(state.regime,gg.edges);
+          gg.nodes.forEach(n => { if (!gg.depth.has(n)) gg.depth.set(n,path.length); }); gg.path = path; return gg;
+        }
+      }
+      return g;
+    }
+    function roleFor(regime, word, cycleSet, kernelSet) {
+      if (kernelSet.has(word)) return "kernel";
+      if (cycleSet.has(word)) return "cycle";
+      if (REGIMES[regime].anchors.includes(word) || outgoing(regime, word).length === 0) return "anchor";
+      return "bridge";
+    }
+    function layout(nodes, edges, depthMap, width, height, compact=false) {
+      const pos = new Map(), vel = new Map(), maxDepth = Math.max(1, ...nodes.map(n => depthMap?.get(n) ?? 0));
+      nodes.forEach((n,i) => {
+        const d = depthMap?.get(n) ?? (i % (maxDepth + 1));
+        const lane = nodes.filter(x => (depthMap?.get(x) ?? 0) === d).sort(), rank = Math.max(0,lane.indexOf(n));
+        pos.set(n,{x:34+(width-68)*(d/maxDepth), y:28+(height-58)*((rank+1)/(lane.length+1))}); vel.set(n,{x:0,y:0});
+      });
+      const repel = compact ? 300 : (state.mode === "delta" ? 980 : 1230), steps = compact ? 38 : 82;
+      for (let s=0;s<steps;s++) {
+        const force = new Map(nodes.map(n => [n,{x:0,y:0}]));
+        for (let i=0;i<nodes.length;i++) for (let j=i+1;j<nodes.length;j++) {
+          const a=nodes[i], b=nodes[j], p=pos.get(a), q=pos.get(b), dx=p.x-q.x, dy=p.y-q.y, dist2=Math.max(36,dx*dx+dy*dy), f=repel/dist2;
+          force.get(a).x += dx*f; force.get(a).y += dy*f; force.get(b).x -= dx*f; force.get(b).y -= dy*f;
+        }
+        edges.slice(0,450).forEach(([a,b]) => {
+          const p=pos.get(a), q=pos.get(b); if (!p || !q) return; const dx=q.x-p.x, dy=q.y-p.y;
+          force.get(a).x += dx*.018; force.get(a).y += dy*.018; force.get(b).x -= dx*.012; force.get(b).y -= dy*.012;
+        });
+        nodes.forEach(n => {
+          const p=pos.get(n), v=vel.get(n), f=force.get(n), d=depthMap?.get(n) ?? 0, rail=34+(width-68)*(d/maxDepth);
+          f.x += (rail-p.x)*.035; v.x=(v.x+f.x)*.55; v.y=(v.y+f.y)*.55;
+          p.x=Math.max(18,Math.min(width-52,p.x+v.x)); p.y=Math.max(18,Math.min(height-25,p.y+v.y));
+        });
+      }
+      return pos;
+    }
+    function renderSuccessionGraph(g,sccs,kernel,witnesses,cycleSet,kernelSet,path) {
+      const rect = svg.getBoundingClientRect(), width = Math.max(650, rect.width || 850), height = Math.max(540, rect.height || 680);
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.innerHTML = "";
+      const eras = {aristotle:"c. 350 BCE", locke:"1690", frege:"1879/1892", saussure:"1916", wittgenstein:"1953"};
+      const order = ["aristotle","locke","frege","saussure","wittgenstein"];
+      const xFor = new Map(order.map((k,i) => [k, 70 + i * ((width - 140) / (order.length - 1))]));
+      const y = height * .43;
+      const rail = document.createElementNS("http://www.w3.org/2000/svg","line");
+      rail.setAttribute("x1",45); rail.setAttribute("x2",width-45); rail.setAttribute("y1",y); rail.setAttribute("y2",y);
+      rail.setAttribute("stroke","#c8c0b1"); rail.setAttribute("stroke-width","1.2"); svg.appendChild(rail);
+      order.forEach(k => {
+        const x = xFor.get(k), node = document.createElementNS("http://www.w3.org/2000/svg","g");
+        node.setAttribute("class",`succession-node ${k === state.regime ? "active" : ""}`);
+        node.setAttribute("transform",`translate(${x-47},${y-31})`);
+        node.addEventListener("click", () => { state.regime=k; state.selectedEdge=null; syncControls(); render(); });
+        const r = document.createElementNS("http://www.w3.org/2000/svg","rect"); r.setAttribute("width",94); r.setAttribute("height",62); r.setAttribute("rx",3);
+        const t = document.createElementNS("http://www.w3.org/2000/svg","text"); t.setAttribute("x",8); t.setAttribute("y",20); t.textContent = REGIMES[k].short;
+        const e = document.createElementNS("http://www.w3.org/2000/svg","text"); e.setAttribute("x",8); e.setAttribute("y",38); e.textContent = eras[k];
+        const c = critiqueCounts("from",k);
+        const s = document.createElementNS("http://www.w3.org/2000/svg","text"); s.setAttribute("x",8); s.setAttribute("y",54); s.textContent = `E/R/W ${verdictText(c)}`;
+        node.appendChild(r); node.appendChild(t); node.appendChild(e); node.appendChild(s); svg.appendChild(node);
+      });
+      CRITIQUES.forEach((c,i) => {
+        const fromX = xFor.get(c.against), toX = xFor.get(c.from); if (!fromX || !toX) return;
+        const result = CRITIQUE_RESULTS.get(c.id), arc = document.createElementNS("http://www.w3.org/2000/svg","path");
+        const lift = 70 + (i % 4) * 33 + Math.max(0, Math.abs(toX-fromX)-180) * .08;
+        const top = y - lift, d = `M ${fromX} ${y-34} C ${fromX} ${top}, ${toX} ${top}, ${toX} ${y-34}`;
+        arc.setAttribute("d",d); arc.setAttribute("class",`succession-arrow ${result.verdict} ${state.selectedCritique === c.id ? "selected" : ""}`);
+        svg.appendChild(arc);
+        const hit = document.createElementNS("http://www.w3.org/2000/svg","path");
+        hit.setAttribute("d",d); hit.setAttribute("class","critique-hit");
+        hit.addEventListener("click", () => { state.selectedCritique=c.id; state.regime=c.from; state.compareRegime=c.against; state.selectedEdge=null; syncControls(); render(); });
+        svg.appendChild(hit);
+        const midX = (fromX+toX)/2, lab = document.createElementNS("http://www.w3.org/2000/svg","text");
+        lab.setAttribute("x",midX-18); lab.setAttribute("y",top-4); lab.setAttribute("font-size","9"); lab.setAttribute("fill","#69645b"); lab.textContent = c.id;
+        svg.appendChild(lab);
+      });
+      const selected = critiqueById(state.selectedCritique), selectedResult = CRITIQUE_RESULTS.get(selected.id);
+      const note = document.createElementNS("http://www.w3.org/2000/svg","text");
+      note.setAttribute("x",46); note.setAttribute("y",height-58); note.setAttribute("font-size","12"); note.setAttribute("fill","#161512");
+      note.textContent = `${REGIMES[selected.from].short} against ${REGIMES[selected.against].short}: ${selectedResult.verdict.toUpperCase()} - ${selected.escapeClaim}`;
+      svg.appendChild(note);
+      const care = document.createElementNS("http://www.w3.org/2000/svg","text");
+      care.setAttribute("x",46); care.setAttribute("y",height-36); care.setAttribute("font-size","10"); care.setAttribute("fill","#69645b");
+      care.textContent = "Arrows are curated historical judgments; verdict colors are computed from this file's graph cycles.";
+      svg.appendChild(care);
+      updatePanels(g,sccs,kernel,witnesses,cycleSet,kernelSet,path);
+    }
+    function renderGraph() {
+      const g = scopedGraph(), sccs = tarjan(g.nodes, g.edges), cycleSet = new Set(sccs.flat()), kernel = exactFVS(g.nodes,g.edges), kernelSet = new Set(kernel);
+      const witnesses = cycleWitnesses(g.nodes,g.edges), witnessEdges = new Set(witnesses.flatMap(c => c.slice(0,-1).map((n,i) => n + ">" + c[i+1])));
+      const path = state.mode === "route" ? shortestPath(state.regime,state.root,state.target) : [], pathEdges = new Set(path.slice(0,-1).map((n,i) => n + ">" + path[i+1]));
+      if (state.mode === "succession") return renderSuccessionGraph(g,sccs,kernel,witnesses,cycleSet,kernelSet,path);
+      const rect = svg.getBoundingClientRect(), width = Math.max(650, rect.width || 850), height = Math.max(540, rect.height || 680);
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.innerHTML = `<defs><marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#81776a"/></marker><marker id="arrC" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#d2771d"/></marker></defs>`;
+      const pos = layout(g.nodes,g.edges,g.depth,width,height);
+      const edgeLayer = document.createElementNS("http://www.w3.org/2000/svg","g");
+      g.edges.forEach(([a,b]) => {
+        const p=pos.get(a), q=pos.get(b); if (!p || !q) return;
+        const line = document.createElementNS("http://www.w3.org/2000/svg","path"), mid=(p.x+q.x)/2, sig=a+">"+b;
+        const d = `M ${p.x} ${p.y} C ${mid} ${p.y}, ${mid} ${q.y}, ${q.x} ${q.y}`;
+        line.setAttribute("d",d);
+        const delta = g.edgeMembership?.get(sig), cyc = witnessEdges.has(sig);
+        const tier = edgeTier(state.regime,a,b), selected = state.selectedEdge === sig;
+        line.setAttribute("class","edge " + tier + (cyc ? " cycle" : "") + (pathEdges.has(sig) ? " pathline" : "") + (delta === "onlyA" ? " onlyA" : "") + (delta === "onlyB" ? " onlyB" : "") + (selected ? " selectedEdge" : ""));
+        line.setAttribute("marker-end", cyc ? "url(#arrC)" : "url(#arr)");
+        edgeLayer.appendChild(line);
+        const hit = document.createElementNS("http://www.w3.org/2000/svg","path");
+        hit.setAttribute("d",d); hit.setAttribute("class","edge-hit");
+        hit.addEventListener("click", () => { state.selectedEdge=sig; state.selected=a; render(); });
+        edgeLayer.appendChild(hit);
+      });
+      svg.appendChild(edgeLayer);
+      const nodeLayer = document.createElementNS("http://www.w3.org/2000/svg","g");
+      g.nodes.forEach(n => {
+        const p=pos.get(n), role=roleFor(state.regime,n,cycleSet,kernelSet), node=document.createElementNS("http://www.w3.org/2000/svg","g");
+        let deltaClass = "";
+        if (g.delta) {
+          const inA = g.edges.some(e => g.edgeMembership.get(edgeSig(e)) !== "onlyB" && e.includes(n));
+          const inB = g.edges.some(e => g.edgeMembership.get(edgeSig(e)) !== "onlyA" && e.includes(n));
+          deltaClass = inA && !inB ? "deltaA" : inB && !inA ? "deltaB" : "";
+        }
+        node.setAttribute("class",`node ${role} ${deltaClass} ${n === state.selected ? "selected" : ""}`);
+        node.setAttribute("transform",`translate(${p.x},${p.y})`);
+        node.addEventListener("click", () => { state.selected=n; state.selectedEdge=null; render(); });
+        const c=document.createElementNS("http://www.w3.org/2000/svg","circle"); c.setAttribute("r", n === state.root ? 14 : 10);
+        const t=document.createElementNS("http://www.w3.org/2000/svg","text"); t.setAttribute("x",14); t.setAttribute("y",4); t.textContent=n;
+        node.appendChild(c); node.appendChild(t); nodeLayer.appendChild(node);
+      });
+      svg.appendChild(nodeLayer);
+      updatePanels(g,sccs,kernel,witnesses,cycleSet,kernelSet,path);
+    }
+    function renderMultiples() {
+      $("multiples").innerHTML = regimeKeys.map(k => `<div class="thumb ${k === state.regime ? "active" : ""}" data-regime="${k}"><b>${REGIMES[k].short}</b><span></span><svg></svg></div>`).join("");
+      document.querySelectorAll(".thumb").forEach(th => {
+        const k = th.dataset.regime, g = visibleGraph(k,state.root,2), sccs = tarjan(g.nodes,g.edges), kernel = exactFVS(g.nodes,g.edges);
+        th.querySelector("span").textContent = `${g.nodes.length}/${kernel.length}`;
+        const ts = th.querySelector("svg"), w=170, h=86; ts.setAttribute("viewBox",`0 0 ${w} ${h}`); const pos=layout(g.nodes,g.edges,g.depth,w,h,true);
+        g.edges.forEach(([a,b]) => { const p=pos.get(a), q=pos.get(b); if (!p || !q) return; const line=document.createElementNS("http://www.w3.org/2000/svg","line"); line.setAttribute("x1",p.x); line.setAttribute("y1",p.y); line.setAttribute("x2",q.x); line.setAttribute("y2",q.y); line.setAttribute("stroke","#8b8173"); line.setAttribute("stroke-width",".8"); line.setAttribute("opacity",".65"); ts.appendChild(line); });
+        const cyc = new Set(sccs.flat()), ker = new Set(kernel);
+        g.nodes.forEach(n => { const p=pos.get(n), c=document.createElementNS("http://www.w3.org/2000/svg","circle"); c.setAttribute("cx",p.x); c.setAttribute("cy",p.y); c.setAttribute("r",n===state.root?4:2.7); c.setAttribute("fill",ker.has(n)?"#b62b21":cyc.has(n)?"#d2771d":REGIMES[k].anchors.includes(n)?"#26715c":"#315f8e"); c.setAttribute("opacity",".95"); ts.appendChild(c); });
+        th.addEventListener("click", () => { state.regime=k; if (state.compareRegime === k) state.compareRegime = regimeKeys.find(x => x !== k); syncControls(); render(); });
+      });
+    }
+    function updatePanels(g,sccs,kernel,witnesses,cycleSet,kernelSet,path) {
+      const regime = REGIMES[state.regime], selectedOut = outgoing(state.regime,state.selected), incoming = g.edges.filter(([,b]) => b === state.selected).map(([a]) => a);
+      const dist = distanceToAnchor(state.regime,state.selected), global = ANALYSIS[state.regime];
+      const directLocal = directSubgraph(state.regime,g), hardKernel = exactFVS(directLocal.nodes,directLocal.edges), wc = warrantCounts(state.regime,g.edges);
+      const coverage = g.edges.length ? Math.round(wc.direct / g.edges.length * 100) : 0;
+      if (state.mode === "succession") {
+        const c = critiqueById(state.selectedCritique), r = CRITIQUE_RESULTS.get(c.id);
+        const claimant = critiqueCounts("from",c.from), target = critiqueCounts("against",c.against);
+        $("entry").innerHTML = `
+          <div class="badge ${r.verdict}">${r.verdict}</div>
+          <span class="tag ${c.tier}">${tierLabel[c.tier]}</span><span class="badge">${c.work}</span><span class="badge">${c.locus}</span>
+          <p class="definition"><b>${REGIMES[c.from].short}</b> repairs <b>${REGIMES[c.against].short}</b>: ${c.escapeClaim}</p>
+          <div class="quote">${c.text}</div>
+          <div class="chips">
+            <div class="chip"><b>${r.beforeSize}</b><span>criticized SCC</span></div>
+            <div class="chip"><b>${r.afterSize}</b><span>successor SCC</span></div>
+            <div class="chip"><b>${claimant.escaped}/${claimant.total}</b><span>claimant escapes</span></div>
+            <div class="chip"><b>${target.total}</b><span>incoming critiques</span></div>
+          </div>
+          <div class="badge">targeted debt</div><div>${c.targetWords.map(w => `<span class="tag onlyB">${w}</span>`).join("")}</div>
+          <div class="badge">successor analogs</div><div>${c.analogs.map(w => `<span class="tag onlyA">${w}</span>`).join("")}</div>
+          <div class="note">The target and analog vocabularies are interpretive; the cycle verdict is recomputed mechanically from those fixed words.</div>
+        `;
+        $("selectedKind").textContent = "succession critique";
+      } else if (state.selectedEdge) {
+        const [ea, eb] = state.selectedEdge.split(">");
+        const ev = edgeEvidence(state.regime,ea,eb), tier = edgeTier(state.regime,ea,eb);
+        $("entry").innerHTML = `
+          <div class="badge ${tier}">${tierLabel[tier]}</div>
+          <p class="definition"><b>${ea}</b> -> <b>${eb}</b></p>
+          <div class="chips">
+            <div class="chip"><b>${ev.length}</b><span>warrant item(s)</span></div>
+            <div class="chip"><b>${tier}</b><span>highest tier</span></div>
+            <div class="chip"><b>${cycleSet.has(ea) && cycleSet.has(eb) ? "yes" : "no"}</b><span>cycle-zone edge</span></div>
+            <div class="chip"><b>${hardKernel.includes(ea) || hardKernel.includes(eb) ? "yes" : "no"}</b><span>hard-kernel touch</span></div>
+          </div>
+          ${ev.map(item => `<div class="edge-row"><b>${item.id}</b><div><span class="tag ${item.tier}">${tierLabel[item.tier]}</span><span class="badge">${item.work}</span><span class="badge">${item.locus}</span><div class="quote">${item.text}</div></div></div>`).join("")}
+          <div class="note">Edge warrants are embedded demonstration data. Missing direct support is displayed as an editorial bridge rather than hidden.</div>
+        `;
+        $("selectedKind").textContent = `${REGIMES[state.regime].short} edge warrant`;
+      } else {
+        $("entry").innerHTML = `
+        <p class="definition"><b>${state.selected}</b>: ${DEFINITIONS[state.selected]}</p>
+        <div>${selectedOut.map(t => `<span class="tag ${kernelSet.has(t) ? "kernel" : REGIMES[state.regime].anchors.includes(t) ? "anchor" : ""}">${t}</span>`).join("") || `<span class="tag anchor">terminal in ${regime.short}</span>`}</div>
+        <div class="chips">
+          <div class="chip"><b>${selectedOut.length}</b><span>regime edges</span></div>
+          <div class="chip"><b>${incoming.length}</b><span>visible incoming</span></div>
+          <div class="chip"><b>${cycleSet.has(state.selected) ? "yes" : "no"}</b><span>in local cycle</span></div>
+          <div class="chip"><b>${dist === Infinity ? "inf" : dist}</b><span>anchor distance</span></div>
+        </div>
+        <div>${selectedOut.map(t => {
+          const tier = edgeTier(state.regime,state.selected,t);
+          return `<span class="tag ${tier}" data-edge="${state.selected}>${t}">${t}: ${tier}</span>`;
+        }).join("")}</div>
+        <div class="badge">${regime.label}</div>
+        <div class="note">${regime.thesis}</div>
+        <div class="note">Basis: ${regime.basis}. Warrant coverage in scope: ${coverage}% direct, ${wc.paraphrase} paraphrase, ${wc.inference} bridge.</div>
+      `;
+        document.querySelectorAll("[data-edge]").forEach(el => el.addEventListener("click", () => { state.selectedEdge = el.dataset.edge; render(); }));
+        $("selectedKind").textContent = REGIMES[state.regime].anchors.includes(state.selected) ? "regime primitive" : roleFor(state.regime,state.selected,cycleSet,kernelSet);
+      }
+      const selectedCrit = critiqueById(state.selectedCritique), selectedVerdict = CRITIQUE_RESULTS.get(selectedCrit.id);
+      const escapeTotals = CRITIQUES.reduce((acc,c) => { acc[CRITIQUE_RESULTS.get(c.id).verdict]++; return acc; }, {escaped:0, relocated:0, widened:0});
+      $("metrics").innerHTML = [
+        ["regimes", regimeKeys.length], ["terms", allWords.length], [state.mode === "succession" ? "critiques" : "scope words", state.mode === "succession" ? CRITIQUES.length : g.nodes.length], ["scope edges", g.edges.length], ["cyclic SCCs", sccs.length], [state.mode === "succession" ? "escaped" : "local cut", state.mode === "succession" ? escapeTotals.escaped : kernel.length]
+      ].map(([k,v]) => `<div class="metric"><b>${v}</b><span>${k}</span></div>`).join("");
+      $("factsLine").textContent = state.mode === "succession" ? `${CRITIQUES.length} critique claims, ${escapeTotals.escaped} escaped, ${escapeTotals.relocated} relocated, ${escapeTotals.widened} widened by graph verdict.` : `${g.nodes.length} nodes, ${g.edges.length} directed edges, ${sccs.length} cyclic SCC(s), ${kernel.length} full cut, ${hardKernel.length} direct-warrant cut.`;
+      $("reconLine").textContent = state.mode === "succession" ? `${selectedCrit.id}: ${REGIMES[selectedCrit.from].short} against ${REGIMES[selectedCrit.against].short}; ${tierLabel[selectedCrit.tier]}.` : `${regime.short}: ${wc.direct} direct, ${wc.paraphrase} paraphrase, ${wc.inference} bridge edge(s) visible.`;
+      $("judgmentLine").textContent = state.mode === "succession" ? `Selected verdict: ${selectedVerdict.verdict}; before SCC ${selectedVerdict.beforeSize}, after SCC ${selectedVerdict.afterSize}.` : hardKernel.length ? `Defensible kernel survives on direct-warrant edges: ${hardKernel.slice(0,6).join(", ")}.` : `Direct-warrant subgraph has no visible cycle; full circularity depends on paraphrase/bridges here.`;
+      $("graphLabel").textContent = state.mode === "succession" ? `historical repairs / ${selectedCrit.id}` : `${REGIMES[state.regime].short} / ${state.root} / depth ${state.depth}`;
+      $("readout").innerHTML = [
+        ["mode",state.mode],["warrant",state.warrant],["active",REGIMES[state.regime].short],["root",state.mode === "succession" ? selectedCrit.id : state.root],["direct",`${coverage}%`],["hard cut",hardKernel.length]
+      ].map(([k,v]) => `<span>${k}: <b>${v}</b></span>`).join("");
+      const localRows = kernel.length ? kernel.map(w => `<tr><td><b>${w}</b></td><td>${roleFor(state.regime,w,cycleSet,kernelSet)}</td><td>${outgoing(state.regime,w).join(", ")}</td></tr>`).join("") : `<tr><td colspan="3">No local cycle cut needed in the visible graph.</td></tr>`;
+      const hardRows = hardKernel.length ? hardKernel.map(w => `<span class="tag direct">${w}</span>`).join("") : `<span class="tag">none in direct-warrant subgraph</span>`;
+      const scoreRows = regimeKeys.map(k => {
+        const a = ANALYSIS[k], gg = visibleGraph(k,state.root,state.depth), kk = exactFVS(gg.nodes,gg.edges), hk = exactFVS(gg.nodes,gg.edges.filter(([x,y]) => edgeTier(k,x,y) === "direct")), dd = distanceToAnchor(k,state.root), c = warrantCounts(k,gg.edges), pct = gg.edges.length ? Math.round(c.direct/gg.edges.length*100) : 0;
+        const out = critiqueCounts("from",k), inc = critiqueCounts("against",k);
+        return `<tr><td><b>${REGIMES[k].short}</b></td><td>${gg.nodes.length}/${gg.edges.length}</td><td>${pct}%</td><td>${kk.length ? kk.join(", ") : "none"}</td><td>${verdictText(out)}</td><td>${verdictText(inc)}</td></tr>`;
+      }).join("");
+      const sizes = global.sccs.map(c => c.length).sort((a,b) => b-a), max = Math.max(1,...sizes);
+      $("diagnostics").innerHTML = `
+        <div class="split">
+          <div><div class="badge">local feedback set</div><table><thead><tr><th>term</th><th>role</th><th>outgoing debt</th></tr></thead><tbody>${localRows}</tbody></table></div>
+          <div>
+            <div class="badge">regime scorecard</div>
+            <table><thead><tr><th>regime</th><th>N/E</th><th>direct</th><th>full cut</th><th>as fixer E/R/W</th><th>as target E/R/W</th></tr></thead><tbody>${scoreRows}</tbody></table>
+            <div class="badge">active global kernel</div><div>${global.kernel.map(w => `<span class="tag kernel">${w}</span>`).join("")}</div>
+            <div class="badge">defensible local kernel</div><div>${hardRows}</div>
+            <div class="badge">warrant mix</div><div><span class="tag direct">direct ${wc.direct}</span><span class="tag paraphrase">paraphrase ${wc.paraphrase}</span><span class="tag inference">bridge ${wc.inference}</span></div>
+            <div class="bars">${sizes.slice(0,8).map((s,i) => `<div class="bar"><span>SCC ${i+1}</span><i style="width:${Math.max(4,s/max*100)}%"></i><b>${s}</b></div>`).join("")}</div>
+          </div>
+        </div>`;
+      const delta = deltaSummary();
+      const corpusNeedle = searchInput.value.trim().toLowerCase();
+      const corpusRows = CORPUS.filter(item => item.regime === state.regime)
+        .filter(item => !corpusNeedle || item.text.toLowerCase().includes(corpusNeedle) || item.work.toLowerCase().includes(corpusNeedle) || item.licenses.some(([a,b]) => `${a} ${b}`.includes(corpusNeedle)))
+        .slice(0,18)
+        .map(item => `<div class="edge-row"><b>${item.id}</b><div><span class="tag ${item.tier}">${tierLabel[item.tier]}</span><span class="badge">${item.work}</span><span class="badge">${item.locus}</span><div>${item.licenses.slice(0,7).map(([a,b]) => `<span class="tag">${a}->${b}</span>`).join("")}</div><div class="quote">${item.text}</div></div></div>`).join("");
+      const critiqueRows = CRITIQUES.map(c => {
+        const r = CRITIQUE_RESULTS.get(c.id);
+        return `<div class="edge-row" data-critique="${c.id}"><b>${c.id}</b><div><span class="tag ${r.verdict}">${r.verdict}</span><span class="tag ${c.tier}">${tierLabel[c.tier]}</span><span class="badge">${REGIMES[c.from].short} -> ${REGIMES[c.against].short}</span><div>${c.targetWords.map(w => `<span class="tag onlyB">${w}</span>`).join("")}${c.analogs.map(w => `<span class="tag onlyA">${w}</span>`).join("")}</div><div class="quote">${c.escapeClaim}</div></div></div>`;
+      }).join("");
+      $("routes").innerHTML = state.mode === "succession" ? `
+        <div class="badge">selected succession evidence</div>
+        <div class="path">${selectedCrit.id}: ${REGIMES[selectedCrit.from].short} against ${REGIMES[selectedCrit.against].short} -> ${selectedVerdict.verdict}</div>
+        <div class="badge">criticized cycle witness</div>
+        ${selectedVerdict.againstCycle.length ? `<div class="path">${selectedVerdict.againstCycle.join(" -> ")}</div>` : `<div class="note">No cycle witness through the targeted words in the criticized regime.</div>`}
+        <div class="badge">successor analog cycle</div>
+        ${selectedVerdict.fromCycle.length ? `<div class="path">${selectedVerdict.fromCycle.join(" -> ")}</div>` : `<div class="note">No cycle witness through the successor analog vocabulary.</div>`}
+        <div class="badge">same criticized vocabulary in successor</div>
+        ${selectedVerdict.sameDebt.length ? `<div class="path">${selectedVerdict.sameDebt.join(" -> ")}</div>` : `<div class="note">The original target words do not re-close as a short successor cycle.</div>`}
+        <div class="badge">critique ledger</div>
+        ${critiqueRows}
+      ` : `
+        <div class="badge">shortest route in active regime</div>
+        ${path.length ? `<div class="path">${path.join(" -> ")}</div>` : `<div class="note">No directed route from ${state.root} to ${state.target} in ${regime.short}.</div>`}
+        <div class="badge">cross-regime edge delta for ${state.root}</div>
+        <div>${delta.onlyA.map(e => `<span class="tag onlyA">${e}</span>`).join("") || `<span class="tag">no active-only edge</span>`}</div>
+        <div>${delta.onlyB.map(e => `<span class="tag onlyB">${e}</span>`).join("") || `<span class="tag">no against-only edge</span>`}</div>
+        <div class="badge">cycle witnesses in current scope</div>
+        ${witnesses.length ? witnesses.map(c => `<div class="path">${c.join(" -> ")}</div>`).join("") : `<div class="note">No cycle witness found at this depth.</div>`}
+        <div class="badge">corpus hits ${corpusNeedle ? `for "${corpusNeedle}"` : "for active regime"}</div>
+        ${corpusRows || `<div class="note">No embedded warrant item matches the current text filter.</div>`}`;
+      document.querySelectorAll("[data-critique]").forEach(el => el.addEventListener("click", () => {
+        const c = critiqueById(el.dataset.critique);
+        state.selectedCritique = c.id; state.regime = c.from; state.compareRegime = c.against; state.selectedEdge = null; syncControls(); render();
+      }));
+    }
+    function deltaSummary() {
+      const a = new Set(outgoing(state.regime,state.root)), b = new Set(outgoing(state.compareRegime,state.root));
+      return {onlyA:[...a].filter(x => !b.has(x)).sort(), onlyB:[...b].filter(x => !a.has(x)).sort()};
+    }
+    function renderDrift() {
+      const rows = regimeKeys.map(k => {
+        const g = visibleGraph(k,state.root,state.depth), sccs = tarjan(g.nodes,g.edges), kernel = exactFVS(g.nodes,g.edges), anchors = [...new Set(g.nodes.filter(n => REGIMES[k].anchors.includes(n)))], d = distanceToAnchor(k,state.root);
+        const c = warrantCounts(k,g.edges), hk = exactFVS(g.nodes,g.edges.filter(([a,b]) => edgeTier(k,a,b) === "direct"));
+        return `<tr><td><b>${REGIMES[k].short}</b></td><td>${g.nodes.length}</td><td>${g.edges.length}</td><td>${c.direct}/${c.paraphrase}/${c.inference}</td><td>${kernel.join(", ") || "none"}</td><td>${hk.join(", ") || "none"}</td><td>${d === Infinity ? "inf" : d}</td></tr>`;
+      }).join("");
+      $("driftPanel").innerHTML = `<table><thead><tr><th>regime</th><th>N</th><th>E</th><th>D/P/B</th><th>full cut</th><th>hard cut</th><th>dist</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+    function renderWordList() {
+      const filter = searchInput.value.trim().toLowerCase(), g = visibleGraph(state.regime,state.root,state.depth), sccs = tarjan(g.nodes,g.edges), cyc = new Set(sccs.flat()), ker = new Set(exactFVS(g.nodes,g.edges));
+      const rows = allWords.filter(w => !filter || w.includes(filter) || DEFINITIONS[w].includes(filter)).map(w => {
+        const role = ker.has(w) ? "kernel" : cyc.has(w) ? "cycle" : REGIMES[state.regime].anchors.includes(w) ? "anchor" : outgoing(state.regime,w).length ? "bridge" : "term";
+        const hits = regimeKeys.filter(k => outgoing(k,w).length).length, dist = distanceToAnchor(state.regime,w);
+        return `<div class="word-row ${w === state.selected ? "active" : ""}" data-word="${w}"><b>${w}</b><span class="${role === "kernel" ? "hot" : ""}">${role}</span><span>${hits}/5</span><span>${dist === Infinity ? "inf" : dist}</span></div>`;
+      }).join("");
+      $("wordList").innerHTML = rows;
+      document.querySelectorAll(".word-row").forEach(r => r.addEventListener("click", () => { state.root = r.dataset.word; state.selected = state.root; state.selectedEdge=null; syncControls(); render(); }));
+    }
+    function syncControls() {
+      rootSelect.value = state.root; targetSelect.value = state.target; compareRegime.value = state.compareRegime; depthInput.value = state.depth; warrantMode.value = state.warrant;
+      document.querySelectorAll("[data-mode]").forEach(b => b.classList.toggle("active", b.dataset.mode === state.mode));
+      document.querySelectorAll("#regimeTabs button").forEach(b => b.classList.toggle("active", b.dataset.regime === state.regime));
+    }
+    function render() { renderMultiples(); renderGraph(); renderDrift(); renderWordList(); }
+
+    $("regimeTabs").innerHTML = regimeKeys.map(k => `<button data-regime="${k}">${REGIMES[k].short}</button>`).join("");
+    document.querySelectorAll("#regimeTabs button").forEach(btn => btn.addEventListener("click", () => { state.regime = btn.dataset.regime; state.selectedEdge=null; if (state.compareRegime === state.regime) state.compareRegime = regimeKeys.find(k => k !== state.regime); syncControls(); render(); }));
+    allWords.forEach(w => { const o = document.createElement("option"); o.value = w; o.textContent = w; rootSelect.appendChild(o.cloneNode(true)); targetSelect.appendChild(o.cloneNode(true)); });
+    regimeKeys.forEach(k => { const o = document.createElement("option"); o.value = k; o.textContent = REGIMES[k].short; compareRegime.appendChild(o); });
+    rootSelect.addEventListener("change", e => { state.root=e.target.value; state.selected=state.root; state.selectedEdge=null; render(); });
+    targetSelect.addEventListener("change", e => { state.target=e.target.value; state.selectedEdge=null; render(); });
+    compareRegime.addEventListener("change", e => { state.compareRegime=e.target.value; state.selectedEdge=null; render(); });
+    warrantMode.addEventListener("change", e => { state.warrant=e.target.value; state.selectedEdge=null; render(); });
+    depthInput.addEventListener("input", e => { state.depth=Number(e.target.value); state.selectedEdge=null; render(); });
+    searchInput.addEventListener("input", render);
+    document.querySelectorAll("[data-mode]").forEach(btn => btn.addEventListener("click", () => { state.mode=btn.dataset.mode; state.selectedEdge=null; syncControls(); render(); }));
+    window.addEventListener("resize", renderGraph);
+    syncControls(); render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interpretant Lathe</title>
+<style>
+  :root {
+    --paper:#fbfaf5; --ink:#171713; --muted:#686257; --line:#c9c1b2;
+    --f:#b23b3b; --s:#2f6f73; --p:#7b5b13; --w:#4d5f9e; --h:#5d6f3d;
+    --wash:#eee8dc; --mark:#fff3b0; --grid:#d9d1c2;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:12px/1.25 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  button, select { font:inherit; color:inherit; }
+  .app { min-height:100vh; display:grid; grid-template-rows:auto 1fr; }
+  header { border-bottom:2px solid var(--ink); padding:7px 9px 6px; display:grid; grid-template-columns: 280px 1fr 360px; gap:10px; align-items:end; background:#fffdf8; }
+  h1 { margin:0; font-size:19px; line-height:1; letter-spacing:0; text-transform:uppercase; }
+  .dek { color:var(--muted); font-size:11px; max-width:760px; }
+  .refs { text-align:right; font-size:10px; color:var(--muted); }
+  main { display:grid; grid-template-columns: 300px 1.22fr 360px; gap:0; min-height:0; }
+  aside, section { border-right:1px solid var(--line); min-width:0; }
+  .panel { border-bottom:1px solid var(--line); padding:7px; }
+  .panel h2 { margin:0 0 5px; font-size:11px; text-transform:uppercase; letter-spacing:.08em; display:flex; justify-content:space-between; align-items:center; }
+  .small { color:var(--muted); font-size:10px; font-weight:500; letter-spacing:0; text-transform:none; }
+  .utterance-list { display:grid; gap:3px; max-height:360px; overflow:auto; }
+  .urow { border:1px solid var(--line); background:#fffdf8; padding:5px 6px; text-align:left; display:grid; grid-template-columns:19px 1fr auto; gap:6px; align-items:start; cursor:pointer; }
+  .urow:hover, .urow.active { border-color:var(--ink); background:#fff8d6; }
+  .uid { font-variant-numeric:tabular-nums; color:var(--muted); }
+  .utext { font-family: ui-serif, Georgia, serif; font-size:13px; line-height:1.16; }
+  .tag { font-size:9px; text-transform:uppercase; border:1px solid var(--line); padding:1px 3px; color:#4e493f; background:var(--wash); white-space:nowrap; }
+  .controls { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  .controls button, .mode button { border:1px solid var(--line); background:#fffdf8; padding:5px; cursor:pointer; }
+  .controls button:hover, .mode button:hover, .mode button.active { border-color:var(--ink); background:var(--mark); }
+  .mode { display:grid; grid-template-columns:repeat(5, 1fr); gap:3px; }
+  .mode button { padding:4px 2px; font-weight:700; }
+  .mode [data-theory="frege"] { color:var(--f); } .mode [data-theory="saussure"] { color:var(--s); }
+  .mode [data-theory="peirce"] { color:var(--p); } .mode [data-theory="wittgenstein"] { color:var(--w); }
+  .mode [data-theory="hybrid"] { color:var(--h); }
+  .core { display:grid; grid-template-rows:auto 1fr; min-height:0; }
+  .clamp { padding:8px; border-bottom:1px solid var(--line); display:grid; grid-template-columns:1fr 220px; gap:8px; background:#fffdf8; }
+  .sentence { border:2px solid var(--ink); padding:7px 9px; min-height:72px; display:grid; align-content:center; background:linear-gradient(90deg,#fff 0,#fffdf8 70%,#f4efe4); }
+  .sentence .txt { font-family: ui-serif, Georgia, serif; font-size:24px; line-height:1.08; }
+  .sentence .meta { margin-top:5px; color:var(--muted); font-size:11px; }
+  .scores { display:grid; grid-template-columns:repeat(5, 1fr); gap:3px; }
+  .score { border:1px solid var(--line); padding:4px; background:#fff; }
+  .bar { height:46px; display:flex; align-items:end; border-bottom:1px solid var(--ink); }
+  .bar i { display:block; width:100%; min-height:2px; background:currentColor; }
+  .score b { display:block; font-size:10px; margin-top:2px; }
+  .workgrid { display:grid; grid-template-columns: 1fr 1fr; grid-auto-rows:minmax(188px, auto); min-height:0; overflow:auto; }
+  .workgrid .panel { border-right:1px solid var(--line); min-height:188px; }
+  table { width:100%; border-collapse:collapse; font-size:11px; }
+  th, td { border:1px solid var(--grid); padding:3px 4px; vertical-align:top; }
+  th { background:#ece5d8; text-align:left; font-weight:800; }
+  td.y { background:#fff5bf; font-weight:800; text-align:center; }
+  td.n { color:#a7a096; text-align:center; }
+  .token { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .note { color:var(--muted); }
+  .lathe-wrap { padding:0; }
+  canvas { display:block; width:100%; height:260px; background:#fffdf8; border-top:1px solid var(--line); }
+  .right { border-right:0; display:grid; grid-template-rows:auto auto 1fr; min-height:0; }
+  .trace { display:grid; gap:5px; }
+  .trace div { border-left:4px solid var(--line); padding:3px 5px; background:#fffdf8; }
+  .trace b { display:inline-block; width:76px; }
+  .svgbox { background:#fffdf8; border:1px solid var(--line); min-height:232px; }
+  svg { width:100%; height:232px; display:block; }
+  .node { cursor:pointer; }
+  .node circle { fill:#fffdf8; stroke:#333; stroke-width:1.2; }
+  .node.active circle { fill:var(--mark); stroke-width:2.2; }
+  .edge { stroke:#81796b; stroke-width:1; }
+  .legend { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+  .chip { border:1px solid var(--line); background:#fffdf8; padding:2px 4px; font-size:10px; }
+  .kbd { font-family:ui-monospace, monospace; border:1px solid var(--line); padding:0 3px; background:#fff; }
+  .compare { display:grid; grid-template-columns:repeat(2, 1fr); gap:4px; }
+  .compare .chip { cursor:pointer; }
+  .compare .chip.on { border-color:var(--ink); background:#fff5bf; }
+  .apparatus { display:grid; grid-template-columns:72px 1fr; gap:3px 6px; }
+  .apparatus b { text-transform:uppercase; font-size:10px; }
+  .apparatus span { color:#37332d; }
+  .scroll { overflow:auto; max-height:260px; }
+  @media (max-width: 1050px) {
+    header, main { grid-template-columns:1fr; }
+    header .refs { text-align:left; }
+    aside, section { border-right:0; }
+    .clamp { grid-template-columns:1fr; }
+    .workgrid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><h1>Interpretant Lathe</h1><div class="small">semantic theories as text-working tools</div></div>
+    <div class="dek">Clamp one utterance, then turn it through Fregean reference, Saussurean differential value, Peircean semiosis, Wittgensteinian use, and a modern hybrid formal-distributional pressure. Dense by design: every mark is an analytic commitment.</div>
+    <div class="refs">Offline seed. Historical apparatus: Frege, Saussure, Peirce, Wittgenstein. Modern pressure: distributional-formal semantics and vector logic.</div>
+  </header>
+  <main>
+    <aside>
+      <div class="panel">
+        <h2>Utterance Stock <span class="small"><span class="kbd">j</span>/<span class="kbd">k</span> navigate</span></h2>
+        <div class="utterance-list" id="utterances"></div>
+      </div>
+      <div class="panel">
+        <h2>Theory Dial</h2>
+        <div class="mode" id="modes"></div>
+      </div>
+      <div class="panel">
+        <h2>Comparison Pins</h2>
+        <div class="compare" id="compare"></div>
+      </div>
+      <div class="panel">
+        <h2>Controls</h2>
+        <div class="controls">
+          <button id="prev">Previous</button>
+          <button id="next">Next</button>
+          <button id="sortStress">Sort by stress</button>
+          <button id="reset">Reset order</button>
+        </div>
+      </div>
+    </aside>
+    <section class="core">
+      <div class="clamp">
+        <div class="sentence">
+          <div class="txt" id="sentence"></div>
+          <div class="meta" id="meta"></div>
+        </div>
+        <div class="scores" id="scores"></div>
+      </div>
+      <div class="workgrid">
+        <div class="panel">
+          <h2>Token Ledger <span class="small">text as material</span></h2>
+          <div id="tokens"></div>
+        </div>
+        <div class="panel">
+          <h2>Apparatus <span class="small" id="apparatusName"></span></h2>
+          <div class="apparatus" id="apparatus"></div>
+        </div>
+        <div class="panel">
+          <h2>Incidence Matrix <span class="small">× means committed</span></h2>
+          <div class="scroll"><table id="matrix"></table></div>
+        </div>
+        <div class="panel lathe-wrap">
+          <h2 style="padding:7px 7px 0;margin:0">Lathe Canvas <span class="small">cutter pressure from attributes</span></h2>
+          <canvas id="lathe" width="760" height="360"></canvas>
+        </div>
+      </div>
+    </section>
+    <section class="right">
+      <div class="panel">
+        <h2>Interpretive Trace</h2>
+        <div class="trace" id="trace"></div>
+      </div>
+      <div class="panel">
+        <h2>Concept Lattice <span class="small">click a node</span></h2>
+        <div class="svgbox" id="lattice"></div>
+        <div class="legend" id="nodeReadout"></div>
+      </div>
+      <div class="panel">
+        <h2>Selected Concept</h2>
+        <div id="conceptText" class="note"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+const DATA = {
+  theories: {
+    frege: {label:"Frege", color:"#b23b3b", score:["ref","sense","truth","substitution","composition"], apparatus:{
+      "unit":"proper name, predicate, sentence",
+      "meaning test":"same reference can differ in cognitive value",
+      "danger":"substitution failure in opaque contexts",
+      "best at":"identity, truth-condition, compositional contribution"
+    }},
+    saussure: {label:"Saussure", color:"#2f6f73", score:["signifier","contrast","system","translation","metaphor"], apparatus:{
+      "unit":"sign within a language system",
+      "meaning test":"value by difference from neighboring signs",
+      "danger":"treating reference as primary",
+      "best at":"lexical value, opposition, translation pressure"
+    }},
+    peirce: {label:"Peirce", color:"#7b5b13", score:["index","icon","symbol","interpretant","growth"], apparatus:{
+      "unit":"sign-object-interpretant triad",
+      "meaning test":"what interpretant the sign produces",
+      "danger":"stopping semiosis too early",
+      "best at":"indexicals, diagrams, inference, uptake"
+    }},
+    wittgenstein: {label:"Wittgenstein", color:"#4d5f9e", score:["use","rule","game","practice","performative"], apparatus:{
+      "unit":"move in a language-game",
+      "meaning test":"what role the expression has in an activity",
+      "danger":"inventing a hidden essence of meaning",
+      "best at":"commands, criteria, ordinary use, rule-following"
+    }},
+    hybrid: {label:"Hybrid", color:"#5d6f3d", score:["context","distribution","composition","quantifier","truth"], apparatus:{
+      "unit":"formal object plus distributional profile",
+      "meaning test":"can similarity and entailment be modeled together?",
+      "danger":"collapsing unlike representational currencies",
+      "best at":"graded similarity under compositional constraints"
+    }}
+  },
+  attrs: [
+    ["ref","reference-bearing"],["sense","sense/reference split"],["truth","truth-condition"],["substitution","substitution risk"],
+    ["signifier","signifier material"],["contrast","differential value"],["system","language-system pressure"],["translation","translation stress"],
+    ["index","indexical anchor"],["icon","iconic/diagrammatic aspect"],["symbol","conventional symbol"],["interpretant","interpretant growth"],
+    ["use","use over object"],["rule","rule criterion"],["game","language-game move"],["practice","form-of-life dependence"],
+    ["quantifier","quantifier structure"],["composition","composition needed"],["context","corpus/context sensitivity"],["distribution","distributional profile"],
+    ["performative","social act"],["growth","semiosis growth"],["metaphor","figurative transfer"]
+  ],
+  utterances: [
+    {id:"U01", text:"The morning star is the evening star.", tag:"identity", note:"A single bearer under two modes of presentation.", attrs:["ref","sense","truth","substitution","signifier","contrast","symbol","interpretant","composition"]},
+    {id:"U02", text:"Water!", tag:"game", note:"May be order, request, warning, answer, or mere exclamation.", attrs:["index","symbol","interpretant","use","rule","game","practice","context","performative"]},
+    {id:"U03", text:"This is red.", tag:"deixis", note:"A demonstrative plus a criterion-laden color predicate.", attrs:["ref","truth","index","symbol","interpretant","use","rule","game","practice","context"]},
+    {id:"U04", text:"Every philosopher doubts some premise.", tag:"quantifier", note:"Scope, entailment, and compositional structure dominate.", attrs:["truth","quantifier","composition","symbol","context","distribution"]},
+    {id:"U05", text:"Pegasus is winged.", tag:"empty", note:"A grammatical subject without an ordinary object.", attrs:["sense","truth","substitution","signifier","symbol","interpretant","use","context"]},
+    {id:"U06", text:"The word 'bank' changed sides.", tag:"material", note:"Quotation turns the signifier into the object handled.", attrs:["signifier","contrast","system","translation","icon","symbol","interpretant","use","metaphor","context"]},
+    {id:"U07", text:"I promise to return the book.", tag:"act", note:"The sentence performs an obligation under the right practice.", attrs:["index","symbol","interpretant","use","rule","game","practice","context","performative"]},
+    {id:"U08", text:"Juliet is the sun.", tag:"metaphor", note:"Reference is strained; interpretive transfer does the work.", attrs:["sense","signifier","contrast","icon","symbol","interpretant","growth","use","metaphor","context"]},
+    {id:"U09", text:"Colorless green ideas sleep furiously.", tag:"syntax", note:"Grammatical composition without ordinary selectional fit.", attrs:["signifier","contrast","system","symbol","composition","context","distribution"]},
+    {id:"U10", text:"A diagram proves what it displays.", tag:"diagram", note:"A Peircean case: seeing relations can become inference.", attrs:["truth","index","icon","symbol","interpretant","growth","rule","composition"]},
+    {id:"U11", text:"Meaning is use.", tag:"thesis", note:"A slogan that changes force across lecture, argument, and caricature.", attrs:["signifier","contrast","symbol","interpretant","use","rule","game","practice","context"]},
+    {id:"U12", text:"More than half the arrows point left.", tag:"exact", note:"Exact quantifier with perceptual and formal readings.", attrs:["ref","truth","quantifier","composition","icon","symbol","rule","context","distribution"]}
+  ],
+  concepts: [
+    {id:"C0", x:180,y:24, label:"all utterances", intent:["symbol"], extent:["U01","U02","U03","U04","U05","U06","U07","U08","U09","U10","U11","U12"]},
+    {id:"C1", x:75,y:88, label:"referential", intent:["ref","truth"], extent:["U01","U03","U12"]},
+    {id:"C2", x:175,y:92, label:"differential", intent:["signifier","contrast"], extent:["U01","U06","U08","U09","U11"]},
+    {id:"C3", x:285,y:90, label:"pragmatic", intent:["use","rule","game"], extent:["U02","U03","U07","U11"]},
+    {id:"C4", x:62,y:158, label:"quantified", intent:["truth","composition","quantifier"], extent:["U04","U12"]},
+    {id:"C5", x:177,y:161, label:"semiotic growth", intent:["interpretant","context"], extent:["U02","U06","U08","U11"]},
+    {id:"C6", x:296,y:160, label:"performative move", intent:["use","practice","performative"], extent:["U02","U07"]},
+    {id:"C7", x:180,y:220, label:"hard cases", intent:["substitution","translation","metaphor"], extent:["U01","U06","U08"]}
+  ],
+  edges: [["C0","C1"],["C0","C2"],["C0","C3"],["C1","C4"],["C2","C5"],["C3","C5"],["C3","C6"],["C2","C7"],["C1","C7"]]
+};
+let order = DATA.utterances.map((_,i)=>i), current = 0, theory = "frege", selectedConcept = "C0";
+const $ = id => document.getElementById(id);
+function scoreFor(u, t) { return DATA.theories[t].score.reduce((n,a)=>n+(u.attrs.includes(a)?1:0),0); }
+function stress(u) { return Object.keys(DATA.theories).reduce((n,t)=>n+scoreFor(u,t),0); }
+function renderList(){
+  $("utterances").innerHTML = order.map((idx,pos)=>{ const u=DATA.utterances[idx]; return `<button class="urow ${pos===current?'active':''}" data-pos="${pos}"><span class="uid">${u.id}</span><span class="utext">${u.text}</span><span class="tag">${u.tag}</span></button>`; }).join("");
+  document.querySelectorAll(".urow").forEach(b=>b.onclick=()=>{current=+b.dataset.pos; render();});
+}
+function renderModes(){
+  $("modes").innerHTML = Object.entries(DATA.theories).map(([k,t])=>`<button data-theory="${k}" class="${k===theory?'active':''}">${t.label[0]}</button>`).join("");
+  document.querySelectorAll(".mode button").forEach(b=>b.onclick=()=>{theory=b.dataset.theory; render();});
+}
+function renderCompare(){
+  const u = DATA.utterances[order[current]];
+  $("compare").innerHTML = Object.entries(DATA.theories).map(([k,t])=>`<span class="chip ${scoreFor(u,k)>2?'on':''}" data-theory="${k}" style="color:${t.color}">${t.label}: ${scoreFor(u,k)}/5</span>`).join("");
+  document.querySelectorAll(".compare .chip").forEach(c=>c.onclick=()=>{theory=c.dataset.theory; render();});
+}
+function renderClamp(){
+  const u = DATA.utterances[order[current]];
+  $("sentence").textContent = u.text;
+  $("meta").textContent = `${u.id} / ${u.tag} / ${u.note}`;
+  $("scores").innerHTML = Object.entries(DATA.theories).map(([k,t])=>{ const s=scoreFor(u,k); return `<div class="score" style="color:${t.color}"><div class="bar"><i style="height:${8+s*7}px"></i></div><b>${t.label}</b><span class="small">${s}/5</span></div>`; }).join("");
+}
+function renderTokens(){
+  const u = DATA.utterances[order[current]];
+  const toks = u.text.match(/'[^']+'|[A-Za-z]+|[.!?]/g) || [];
+  $("tokens").innerHTML = `<table><tr><th>#</th><th>token</th><th>material reading</th><th>semantic risk</th></tr>` + toks.map((tok,i)=>{
+    const lower=tok.toLowerCase();
+    let mat = /[.!?]/.test(tok) ? "punctuation boundary" : tok.startsWith("'") ? "quoted signifier" : /^[A-Z]/.test(tok) ? "initial/case marked" : "lexical item";
+    let risk = ["this","i"].includes(lower) ? "indexical anchoring" : ["every","some","half"].includes(lower) ? "quantifier force" : lower==="is" ? "identity/predication split" : tok.startsWith("'") ? "use/mention switch" : "contextual value";
+    return `<tr><td>${i+1}</td><td class="token">${tok}</td><td>${mat}</td><td>${risk}</td></tr>`;
+  }).join("") + `</table>`;
+}
+function renderApparatus(){
+  const t = DATA.theories[theory];
+  $("apparatusName").textContent = t.label;
+  $("apparatus").innerHTML = Object.entries(t.apparatus).map(([k,v])=>`<b style="color:${t.color}">${k}</b><span>${v}</span>`).join("");
+}
+function renderMatrix(){
+  const keys = DATA.attrs.map(a=>a[0]);
+  const names = Object.fromEntries(DATA.attrs);
+  const focus = new Set(DATA.theories[theory].score);
+  $("matrix").innerHTML = `<tr><th>utterance</th>${keys.map(k=>`<th title="${names[k]}" style="${focus.has(k)?'background:#fff3b0':''}">${k}</th>`).join("")}</tr>` + order.map(idx=>{
+    const u=DATA.utterances[idx], active=idx===order[current];
+    return `<tr style="${active?'outline:2px solid #171713;':''}"><th>${u.id}</th>${keys.map(k=>`<td class="${u.attrs.includes(k)?'y':'n'}" style="${focus.has(k)?'box-shadow:inset 0 0 0 1px #171713':''}">${u.attrs.includes(k)?'×':'·'}</td>`).join("")}</tr>`;
+  }).join("");
+}
+function renderTrace(){
+  const u=DATA.utterances[order[current]];
+  $("trace").innerHTML = Object.entries(DATA.theories).map(([k,t])=>{
+    const hits=t.score.filter(a=>u.attrs.includes(a)).map(a=>Object.fromEntries(DATA.attrs)[a]||a);
+    return `<div style="border-color:${t.color}"><b style="color:${t.color}">${t.label}</b>${hits.length?hits.join("; "):"low pressure on this utterance"}</div>`;
+  }).join("");
+}
+function renderLattice(){
+  const activeU = DATA.utterances[order[current]].id;
+  const nodes = DATA.concepts.map(c=>{
+    const active = c.id===selectedConcept || c.extent.includes(activeU);
+    return `<g class="node ${active?'active':''}" data-c="${c.id}" transform="translate(${c.x},${c.y})"><circle r="${c.id===selectedConcept?17:14}"></circle><text text-anchor="middle" y="3" font-size="9">${c.id}</text><title>${c.label}</title></g>`;
+  }).join("");
+  const byId = Object.fromEntries(DATA.concepts.map(c=>[c.id,c]));
+  const edges = DATA.edges.map(([a,b])=>`<line class="edge" x1="${byId[a].x}" y1="${byId[a].y+14}" x2="${byId[b].x}" y2="${byId[b].y-14}"/>`).join("");
+  $("lattice").innerHTML = `<svg viewBox="0 0 360 240" role="img" aria-label="formal concept lattice">${edges}${nodes}</svg>`;
+  document.querySelectorAll(".node").forEach(n=>n.onclick=()=>{selectedConcept=n.dataset.c; renderLattice(); renderConcept();});
+}
+function renderConcept(){
+  const c = DATA.concepts.find(x=>x.id===selectedConcept);
+  $("nodeReadout").innerHTML = c.intent.map(i=>`<span class="chip">${i}</span>`).join("");
+  $("conceptText").innerHTML = `<b>${c.id}: ${c.label}</b><br>Intent: ${c.intent.join(", ")}.<br>Extent: ${c.extent.join(", ")}.<br><span class="note">Read as: all listed utterances share every listed attribute; adding an attribute usually shrinks the extent.</span>`;
+  $("legend").innerHTML = DATA.attrs.slice(0,10).map(([k,v])=>`<span class="chip">${k}: ${v}</span>`).join("");
+}
+function drawLathe(){
+  const canvas=$("lathe"), ctx=canvas.getContext("2d"), u=DATA.utterances[order[current]];
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#fffdf8"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle="#d9d1c2"; ctx.lineWidth=1;
+  for(let x=20;x<canvas.width;x+=24){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
+  for(let y=22;y<canvas.height;y+=22){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+  ctx.fillStyle="#171713"; ctx.font="18px Georgia, serif"; ctx.fillText(u.text,30,178);
+  ctx.strokeStyle="#171713"; ctx.lineWidth=3; ctx.strokeRect(22,142,canvas.width-44,54);
+  const entries=Object.entries(DATA.theories);
+  entries.forEach(([k,t],i)=>{
+    const s=scoreFor(u,k), x=70+i*150, y=54+s*10;
+    ctx.strokeStyle=t.color; ctx.fillStyle=t.color; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x,38); ctx.lineTo(x+30,y); ctx.lineTo(x-30,y); ctx.closePath(); ctx.stroke();
+    ctx.fillRect(x-2,y,4,142-y);
+    ctx.font="12px ui-sans-serif"; ctx.fillText(t.label, x-34, 28);
+    ctx.fillText(`${s}/5`, x-8, y+16);
+    ctx.globalAlpha=.14; ctx.fillRect(26,142+(i*8),canvas.width-52,6+s*2); ctx.globalAlpha=1;
+  });
+  const attrs=u.attrs.slice(0,12);
+  ctx.font="11px ui-monospace, monospace"; ctx.fillStyle="#4d463c";
+  attrs.forEach((a,i)=>ctx.fillText(a, 30+(i%6)*112, 232+Math.floor(i/6)*22));
+}
+function render(){ renderList(); renderModes(); renderCompare(); renderClamp(); renderTokens(); renderApparatus(); renderMatrix(); renderTrace(); renderLattice(); renderConcept(); drawLathe(); }
+$("prev").onclick=()=>{current=(current+order.length-1)%order.length; render();};
+$("next").onclick=()=>{current=(current+1)%order.length; render();};
+$("sortStress").onclick=()=>{ const active=order[current]; order.sort((a,b)=>stress(DATA.utterances[b])-stress(DATA.utterances[a])); current=order.indexOf(active); render(); };
+$("reset").onclick=()=>{ const active=order[current]; order=DATA.utterances.map((_,i)=>i); current=order.indexOf(active); render(); };
+addEventListener("keydown", e=>{ if(e.target.tagName==="BUTTON") return; if(e.key==="j"){current=(current+1)%order.length; render();} if(e.key==="k"){current=(current+order.length-1)%order.length; render();} });
+render();
+</script>
+</body>
+</html>

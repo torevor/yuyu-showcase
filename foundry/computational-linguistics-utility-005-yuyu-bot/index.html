@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lexeme Foundry</title>
+<style>
+:root{
+  --ink:#171512;
+  --muted:#5c584f;
+  --line:#c6bdaa;
+  --hair:#e6dece;
+  --paper:#f6f1e7;
+  --panel:#fffdf7;
+  --wash:#ece3d2;
+  --red:#9b3127;
+  --blue:#1e5b82;
+  --green:#356c46;
+  --gold:#896318;
+  --violet:#684977;
+  --cyan:#227271;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  font-size:12px;
+  line-height:1.24;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{min-height:100vh;display:grid;grid-template-rows:auto 1fr}
+header{
+  display:grid;
+  grid-template-columns:224px minmax(570px,1fr) 424px;
+  gap:7px;
+  align-items:stretch;
+  padding:7px;
+  border-bottom:2px solid var(--ink);
+  background:#fbf7ed;
+}
+.brand{
+  border:1px solid var(--ink);
+  padding:7px;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:8px;
+  align-items:center;
+  background:#fffaf0;
+}
+.sigil{width:38px;height:38px}
+h1{font-size:18px;line-height:1;margin:0;font-weight:850;letter-spacing:0}
+.subtitle{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);font-size:10px;margin-top:3px}
+.controls{
+  border:1px solid var(--line);
+  background:var(--panel);
+  display:grid;
+  grid-template-columns:1.05fr .72fr .72fr .72fr .9fr 1.28fr;
+  gap:6px;
+  padding:7px;
+  align-items:end;
+}
+label{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#4b463d;font-weight:850;margin-bottom:3px}
+input,select,textarea{width:100%;border:1px solid #9d9484;background:#fff;padding:5px 6px;border-radius:0}
+input[type=range]{padding:0;height:19px;accent-color:var(--blue)}
+button{cursor:pointer}
+.weightBox{
+  border:1px solid var(--line);
+  background:var(--panel);
+  padding:7px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+}
+.weightBox label{margin-bottom:1px}
+.main{
+  display:grid;
+  grid-template-columns:318px minmax(570px,1fr) 408px;
+  gap:7px;
+  padding:7px;
+  min-height:0;
+}
+.stack{display:grid;gap:7px;align-content:start;min-width:0}
+.panel{border:1px solid var(--line);background:var(--panel);min-width:0}
+.panel h2{
+  margin:0;
+  padding:5px 7px;
+  border-bottom:1px solid var(--line);
+  background:#ece3d3;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.body{padding:7px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.metric{border:1px solid var(--line);padding:5px;background:#fff;min-height:40px}
+.metric b{display:block;font-size:18px;line-height:1.05}
+.metric span{font-size:9px;text-transform:uppercase;color:var(--muted);font-weight:750}
+.tabs{display:flex;border-bottom:1px solid var(--line);background:#eee5d7;overflow:auto}
+.tabs button{border:0;border-right:1px solid var(--line);background:transparent;padding:6px 8px;font-size:10px;font-weight:850;text-transform:uppercase;white-space:nowrap}
+.tabs button.active{background:#fff;color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+table{width:100%;border-collapse:collapse;font-size:11px;background:#fff}
+th,td{border-bottom:1px solid var(--hair);padding:4px 5px;text-align:left;vertical-align:top}
+th{font-size:9px;text-transform:uppercase;color:#4b463d;background:#f0e9dd;position:sticky;top:0;z-index:1}
+td.num,.num{text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.scroll{max-height:246px;overflow:auto}
+.scrollTall{max-height:326px;overflow:auto}
+.kwic{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px}
+.kwic td:nth-child(1){text-align:right;color:#565044;width:35%}
+.kwic td:nth-child(2){font-weight:900;color:var(--red);text-align:center;width:12%;white-space:nowrap}
+.kwic td:nth-child(3){width:35%}
+.kwic td:nth-child(4){font-family:ui-sans-serif,system-ui;font-size:9px;color:var(--muted)}
+.canvasWrap{height:398px;position:relative;background:#fff;border-bottom:1px solid var(--line)}
+.riverWrap{height:184px;position:relative;background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+canvas{display:block;width:100%;height:100%}
+.legend{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border-bottom:1px solid var(--line);font-size:9px}
+.legend div{padding:4px 5px;border-right:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{display:inline-block;width:8px;height:8px;margin-right:4px;border:1px solid #333;vertical-align:-1px}
+.lens{display:grid;grid-template-columns:94px 1fr 38px;gap:5px;align-items:center;margin-bottom:4px}
+.lens b{font-size:10px}
+.bar{height:9px;border:1px solid #9e9688;background:#fff;position:relative}
+.bar i{display:block;height:100%}
+.note{font-size:10px;color:var(--muted)}
+.chiprow{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid var(--line);background:#fff;padding:2px 5px;font-size:10px}
+.chip strong{color:var(--red)}
+.sourceItem{border-bottom:1px solid var(--hair);padding:5px 0}
+.sourceItem b{display:inline-block;min-width:72px;color:#2e2a24}
+.tag{font-size:9px;text-transform:uppercase;border:1px solid #b7ad9d;padding:1px 3px;background:#f9f4e9;margin-right:3px;white-space:nowrap}
+.ruleTag{background:#fff;border-color:#9b8f7a}
+.denseText{font-size:11px}
+.hypothesis{display:grid;grid-template-columns:70px 1fr;gap:5px;border-bottom:1px solid var(--hair);padding:5px 0}
+.hypothesis b{font-size:9px;text-transform:uppercase;color:#4b463d}
+.quote{font-family:ui-serif,Georgia,serif;font-size:12px}
+.footerline{padding:5px 7px;border-top:1px solid var(--line);background:#f3ebdd;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9px;color:#554e44}
+.editArea{height:116px;resize:vertical}
+.mini{font-size:9px;color:var(--muted)}
+.ledger{display:grid;gap:4px}
+.evidenceRow{display:grid;grid-template-columns:86px 44px 1fr;gap:5px;border-bottom:1px solid var(--hair);padding:4px 0}
+.evidenceRow b{font-size:9px;text-transform:uppercase}
+.evidenceRow code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#fff7e6;border:1px solid #d8cbb8;padding:1px 3px}
+.selectedRow td{background:#fff3cf}
+.timebar{display:grid;grid-template-columns:1fr 76px 76px;gap:5px;align-items:end;padding:6px 7px;border-bottom:1px solid var(--line);background:#f8f2e7}
+.timebar button{border:1px solid var(--line);background:#fff;padding:5px 6px;font-size:10px;font-weight:800;text-transform:uppercase}
+.rivalGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.clusterCard{border:1px solid var(--line);background:#fff;padding:5px;margin-bottom:5px}
+.clusterCard h3{margin:0 0 4px;font-size:10px;text-transform:uppercase}
+.matrix{display:grid;gap:2px;align-items:stretch}
+.matrix button{border:1px solid #bdb3a1;background:#fff;min-height:28px;padding:3px;font-size:9px;text-align:left;overflow:hidden}
+.matrix .head{background:#ece3d3;font-weight:850;text-transform:uppercase;color:#4b463d}
+.matrix .hot{color:#fff;border-color:#171512}
+.matrix .active{outline:2px solid #171512;outline-offset:-2px}
+.spark{height:56px;border:1px solid var(--line);background:#fff;margin-bottom:6px}
+.filterbar{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.filterbar button{border:1px solid var(--line);background:#fff;padding:4px 6px;font-size:10px;font-weight:800;text-transform:uppercase}
+@media (max-width:1180px){
+  header{grid-template-columns:1fr}
+  .main{grid-template-columns:1fr}
+  .controls{grid-template-columns:repeat(2,1fr)}
+  .weightBox{grid-template-columns:repeat(2,1fr)}
+  .canvasWrap{height:390px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <svg class="sigil" viewBox="0 0 80 80" aria-hidden="true">
+        <rect x="7" y="7" width="66" height="66" fill="#fff" stroke="#171512" stroke-width="3"/>
+        <path d="M17 55 C24 18, 54 18, 63 55" fill="none" stroke="#9c3328" stroke-width="5"/>
+        <path d="M18 26 H63 M18 40 H63 M18 54 H63" stroke="#171512" stroke-width="3"/>
+        <circle cx="29" cy="40" r="5" fill="#1f5a83"/><circle cx="51" cy="40" r="5" fill="#396b46"/>
+      </svg>
+      <div><h1>Lexeme Foundry</h1><div class="subtitle">evidence grammar / sense river / text as material</div></div>
+    </div>
+    <div class="controls">
+      <div><label for="target">Target expression</label><input id="target" value="meaning"></div>
+      <div><label for="preset">Preset lexeme</label><select id="preset"></select></div>
+      <div><label for="genre">Genre filter</label><select id="genre"></select></div>
+      <div><label for="mode">River bands</label><select id="mode"><option value="theory">theory</option><option value="register">register</option></select></div>
+      <div><label for="window">Context window <span id="windowVal">5</span></label><input id="window" type="range" min="2" max="10" value="5"></div>
+      <div><label for="custom">Add temporary sentence</label><input id="custom" placeholder="Paste one dated sentence, press Enter"></div>
+    </div>
+    <div class="weightBox">
+      <div><label>Frege</label><input id="wFrege" type="range" min="0" max="100" value="70"></div>
+      <div><label>Saussure</label><input id="wSaussure" type="range" min="0" max="100" value="68"></div>
+      <div><label>Peirce</label><input id="wPeirce" type="range" min="0" max="100" value="72"></div>
+      <div><label>Wittgenstein</label><input id="wWitt" type="range" min="0" max="100" value="82"></div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="stack">
+      <div class="panel">
+        <h2>Corpus Ledger</h2>
+        <div class="body">
+          <div class="metrics" id="metrics"></div>
+          <div class="sourceItem denseText" id="domainSummary"></div>
+          <div class="chiprow" id="targets"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Evidence Grammar Load</h2>
+        <div class="body" id="grammarLoad"></div>
+      </div>
+      <div class="panel">
+        <h2>Sign-Theory Decomposition</h2>
+        <div class="body" id="theory"></div>
+      </div>
+      <div class="panel">
+        <h2>Language-Game Register</h2>
+        <div class="body" id="games"></div>
+      </div>
+      <div class="panel">
+        <h2>Operator Notes</h2>
+        <div class="body denseText">
+          <textarea id="notes" class="editArea">Hypothesis: begin with rule firings, not semantic labels. Treat every interpretation as a claim that must point back to a local span.</textarea>
+          <div class="mini">Notes remain in memory only. The app is offline, dependency-free, and inspectable.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Interpretant Loom</h2>
+      <div class="legend">
+        <div><span class="dot" style="background:#9b3127"></span>Frege</div>
+        <div><span class="dot" style="background:#1e5b82"></span>Saussure</div>
+        <div><span class="dot" style="background:#356c46"></span>Peirce</div>
+        <div><span class="dot" style="background:#896318"></span>Wittgenstein</div>
+        <div><span class="dot" style="background:#684977"></span>contrast</div>
+        <div><span class="dot" style="background:#227271"></span>report</div>
+      </div>
+      <div class="canvasWrap"><canvas id="loom"></canvas></div>
+      <div class="timebar">
+        <div><label>Sense River time brush</label><div class="mini" id="timeLabel"></div></div>
+        <button id="clearTime">All years</button>
+        <button id="focusSel">Focus hit</button>
+      </div>
+      <div class="riverWrap"><canvas id="river"></canvas></div>
+      <div class="tabs" id="tabs">
+        <button data-tab="kwic" class="active">KWIC</button>
+        <button data-tab="collocates">Collocates</button>
+        <button data-tab="opposition">Opposition</button>
+        <button data-tab="evidence">Evidence</button>
+        <button data-tab="rival">Rival Reading</button>
+        <button data-tab="hypotheses">Hypotheses</button>
+      </div>
+      <div class="body" id="tabBody"></div>
+      <div class="footerline" id="statusLine"></div>
+    </section>
+
+    <section class="stack">
+      <div class="panel">
+        <h2>Selected Occurrence</h2>
+        <div class="body" id="selected"></div>
+      </div>
+      <div class="panel">
+        <h2>Evidence Ledger</h2>
+        <div class="body scroll" id="ledger"></div>
+      </div>
+      <div class="panel">
+        <h2>Material Sentences</h2>
+        <div class="body scrollTall" id="sentences"></div>
+      </div>
+      <div class="panel">
+        <h2>Sense Minimal Pairs</h2>
+        <div class="body" id="pairs"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const corpus=[
+{source:"Frege note",genre:"philosophy",year:1892,text:"The meaning of a proper name is not exhausted by the object it designates; the mode of presentation matters to judgment.",roles:["metalinguistic","proof"]},
+{source:"Frege classroom",genre:"philosophy",year:1892,text:"Two signs may have the same reference while differing in sense, so substitution can disturb the cognitive value of a proposition.",roles:["metalinguistic","proof"]},
+{source:"Wittgenstein diary",genre:"philosophy",year:1953,text:"For a large class of cases, the meaning of a word is its use in the language, not a hidden mental vapor.",roles:["metalinguistic","rule"]},
+{source:"Builder game",genre:"philosophy",year:1953,text:"A slab called at the right moment is a move in a language-game, not a miniature theory of slabs.",roles:["command","rule"]},
+{source:"Saussure lecture",genre:"semiotics",year:1916,text:"In language there are only differences; the sign has value because other possible signs are absent or opposed.",roles:["metalinguistic","opposition"]},
+{source:"Peirce fragment",genre:"semiotics",year:1903,text:"A sign stands to somebody for something in some respect and produces an interpretant, a further habit of reading.",roles:["metalinguistic","habit"]},
+{source:"Lexicographer slip",genre:"note",year:1931,text:"The entry meaning is too smooth: each citation pulls the headword toward a different trade, rite, proof, or quarrel.",roles:["metalinguistic","report"]},
+{source:"Court syllabus",genre:"legal",year:1978,text:"The right to inspect records does not imply the right to alter them, and the remedy depends on statutory purpose.",roles:["entitlement","contrast"]},
+{source:"Policy memo",genre:"policy",year:2024,text:"The model shall explain the meaning of a denial notice in plain language and show the right appeal deadline.",roles:["policy","obligation"]},
+{source:"Interface copy",genre:"interface",year:2025,text:"Right-click the token to pin its concordance line; the model view will keep the selected sense visible.",roles:["command","interface"]},
+{source:"Spec sheet",genre:"technical",year:2022,text:"The model maps each token to a context vector, but the displayed meaning remains an annotation, not a prediction.",roles:["technical","metalinguistic"]},
+{source:"Clinical note",genre:"clinical",year:2019,text:"Patient reports right-sided pain and asks whether the phrase normal result means no disease or only no finding today.",roles:["report","diagnosis"]},
+{source:"Poet notebook",genre:"literature",year:1968,text:"The sign on the road says river, but its meaning arrives as wet shoes and a change in the air.",roles:["aesthetic","index"]},
+{source:"Parser log",genre:"technical",year:2026,text:"A proof trace is right when every inference preserves form under the grammar and each symbol is licensed.",roles:["proof","rule"]},
+{source:"Treaty draft",genre:"legal",year:1948,text:"Every person has the right to recognition as a person before the law, a formula that binds status to language.",roles:["entitlement","policy"]},
+{source:"Annotation guide",genre:"technical",year:2026,text:"Mark sense only when local evidence licenses the interpretation; otherwise tag the occurrence as underspecified.",roles:["rule","metalinguistic"]},
+{source:"Museum label",genre:"literature",year:2021,text:"The broken sign is still legible because absence has become part of the object on display.",roles:["aesthetic","semiotics"]},
+{source:"Meeting transcript",genre:"policy",year:2025,text:"When users say fair, they often mean transparent, but the policy team treats fair as right procedure.",roles:["report","policy","contrast"]},
+{source:"Grammar marginalia",genre:"semiotics",year:1972,text:"A morpheme has no stable meaning outside the contrasts that make it segmentable in the first place.",roles:["opposition","metalinguistic"]},
+{source:"QA script",genre:"interface",year:2026,text:"If the model chooses the wrong sense, show the nearest examples and ask the reviewer to name the missing contrast.",roles:["interface","rule"]},
+{source:"Legal clinic",genre:"legal",year:2023,text:"The tenant was right about notice but wrong about remedy, so the word right split into correctness and entitlement.",roles:["entitlement","contrast","report"]},
+{source:"Research abstract",genre:"technical",year:2024,text:"Distributional semantics estimates meaning from neighboring words, yet pragmatic force appears in what the sentence permits a reader to do.",roles:["technical","habit"]},
+{source:"Field note",genre:"note",year:1987,text:"The elder refused a direct translation and gave three scenes where the term would be right.",roles:["report","rule"]},
+{source:"Product audit",genre:"interface",year:2026,text:"The button label model is misleading because it names the artifact, not the action users expect.",roles:["interface","metalinguistic"]},
+{source:"Logic workbook",genre:"philosophy",year:1918,text:"A proposition has sense when it pictures a possible state of affairs; nonsense fails by missing the rules of projection.",roles:["proof","metalinguistic"]},
+{source:"Index card",genre:"semiotics",year:1905,text:"Smoke is a sign by connection, portrait by likeness, password by rule; the interpretant differs in each case.",roles:["semiotics","rule","habit"]},
+{source:"Chancery form",genre:"legal",year:1677,text:"No grant shall alter the meaning of a covenant unless the parties set the new sense under seal.",roles:["legal","obligation"]},
+{source:"Printer preface",genre:"literature",year:1712,text:"The word wit was praised by one party and narrowed by another, while common readers kept a looser meaning.",roles:["aesthetic","contrast"]},
+{source:"Philology lecture",genre:"semiotics",year:1846,text:"A root has value not by sound alone but by the family of forms that oppose it in use.",roles:["opposition","metalinguistic"]},
+{source:"Factory rule",genre:"policy",year:1899,text:"The inspector must mark a sign at the gate when the machine is unsafe.",roles:["policy","command"]},
+{source:"Hospital circular",genre:"clinical",year:1911,text:"A normal sign does not mean recovery; it may indicate only that the fever has not returned.",roles:["diagnosis","contrast"]},
+{source:"Radio manual",genre:"technical",year:1938,text:"The right dial should remain fixed while the operator tunes the carrier signal.",roles:["technical","command"]},
+{source:"Ordinary language seminar",genre:"philosophy",year:1957,text:"To ask for the meaning is often to ask what counts as a proper continuation of the practice.",roles:["rule","metalinguistic"]},
+{source:"Civil rights brief",genre:"legal",year:1964,text:"A right without a remedy is a sign that the institution recognizes status but withholds action.",roles:["entitlement","contrast"]},
+{source:"Database manual",genre:"technical",year:1984,text:"The model is defined as a schema, and the schema constrains the meaning of each stored field.",roles:["technical","definition"]},
+{source:"Hypertext guide",genre:"interface",year:1995,text:"Click the sign to follow a reference; the link means travel, not ownership.",roles:["interface","contrast"]},
+{source:"Standards draft",genre:"technical",year:2008,text:"A conforming parser shall report an error when the token has no licensed sense in context.",roles:["technical","obligation"]},
+{source:"ML explainer",genre:"technical",year:2017,text:"The model may learn a vector that predicts use, but it cannot by itself settle legal meaning.",roles:["technical","contrast"]},
+{source:"Moderation policy",genre:"policy",year:2021,text:"Reviewers should ask whether the phrase means threat, quotation, or report before removing the post.",roles:["policy","rule"]},
+{source:"Appeal notice",genre:"legal",year:2024,text:"You have the right to appeal within thirty days, and the agency must explain the reason in plain language.",roles:["entitlement","obligation"]},
+{source:"Notebook gloss",genre:"note",year:2026,text:"If meaning appears stable, test the nearest contrast and write down which rule made it stable.",roles:["rule","report"]},
+{source:"Equity report",genre:"legal",year:1821,text:"The right of redemption survives only while the statute names a remedy and the court can enforce it.",roles:["entitlement","obligation"]},
+{source:"Patent digest",genre:"legal",year:1883,text:"A model is not the invention itself, but a sign by which the examiner may understand the claimed machine.",roles:["technical","semiotics"]},
+{source:"School grammar",genre:"semiotics",year:1909,text:"The meaning of the case ending appears only when one form is opposed to another in the paradigm.",roles:["opposition","metalinguistic"]},
+{source:"Proof manual",genre:"philosophy",year:1927,text:"A proof has force only if each sign is introduced under a rule and no step borrows hidden meaning.",roles:["proof","rule"]},
+{source:"Broadcast code",genre:"policy",year:1942,text:"The operator shall use the right signal when the line is clear and shall report uncertain signs immediately.",roles:["command","obligation"]},
+{source:"Clinical chart",genre:"clinical",year:1958,text:"The sign of improvement means less if the patient reports pain on the right side after exertion.",roles:["diagnosis","contrast"]},
+{source:"Dictionary committee",genre:"note",year:1962,text:"Do not merge the meanings merely because the spelling is the same; cite a minimal pair for each sense.",roles:["rule","metalinguistic"]},
+{source:"Planning ordinance",genre:"legal",year:1971,text:"The right to build is limited by setback rules, and the model drawing does not waive inspection.",roles:["entitlement","technical"]},
+{source:"Semiotic seminar",genre:"semiotics",year:1979,text:"A sign may imitate, indicate, or legislate; the interpretant is different in each model of relation.",roles:["semiotics","contrast"]},
+{source:"Usability lab",genre:"interface",year:1989,text:"Users read the right arrow as next, not as a direction label, because the button sits inside a sequence.",roles:["interface","report"]},
+{source:"Corpus memo",genre:"technical",year:1998,text:"The model overfits the training register, so the same token receives a brittle meaning in legal prose.",roles:["technical","contrast"]},
+{source:"Rights pamphlet",genre:"policy",year:2001,text:"You have the right to see the file, but not the right to delete entries made by another office.",roles:["entitlement","contrast"]},
+{source:"Annotation dispute",genre:"technical",year:2006,text:"Annotators marked sign as artifact in one sentence and as evidence in another, so agreement required a rule.",roles:["technical","rule"]},
+{source:"Search interface",genre:"interface",year:2012,text:"Type a term to model its neighborhoods; click a sign in the plot to inspect the sentence.",roles:["interface","command"]},
+{source:"Ethics protocol",genre:"policy",year:2016,text:"A transparent model must show why a phrase was given one meaning rather than a harmful neighboring sense.",roles:["policy","obligation"]},
+{source:"Emergency triage",genre:"clinical",year:2020,text:"Right facial droop is a sign requiring immediate action, although the word right is not an entitlement here.",roles:["diagnosis","contrast"]},
+{source:"Model card",genre:"technical",year:2022,text:"The model shall report uncertainty when evidence for a meaning is thin or split across domains.",roles:["technical","obligation"]},
+{source:"Appeals script",genre:"interface",year:2023,text:"Show the right to appeal as a deadline and an action, not as a generic help link.",roles:["interface","entitlement"]},
+{source:"Review bench",genre:"policy",year:2024,text:"If a reviewer cannot explain the meaning of the label, the policy requires escalation and a second example.",roles:["policy","rule"]},
+{source:"Red-team note",genre:"technical",year:2025,text:"A prompt can force the model to treat quotation as report unless the evidence grammar marks the sign as mentioned.",roles:["technical","metalinguistic"]},
+{source:"Workbench trace",genre:"note",year:2026,text:"The rival cluster grouped legal right with interface right because both licensed an action after a modal cue.",roles:["report","entitlement"]},
+{source:"Philology card",genre:"semiotics",year:1879,text:"The sign changes value when the old contrast disappears, even if the written form remains intact.",roles:["opposition","metalinguistic"]},
+{source:"Chapel record",genre:"literature",year:1734,text:"A right answer in the catechism was less a discovery than a permitted continuation of the rite.",roles:["aesthetic","rule"]},
+{source:"Navigation manual",genre:"technical",year:1931,text:"The right hand marker is a sign for safe passage, not proof that the channel is deep.",roles:["technical","contrast"]},
+{source:"Lab notebook",genre:"clinical",year:1976,text:"A negative sign does not prove absence; the model of disease still depends on history and timing.",roles:["diagnosis","uncertainty"]},
+{source:"Hypercard note",genre:"interface",year:1991,text:"The meaning of a link is the jump it permits, so label and action must be tested together.",roles:["interface","rule"]},
+{source:"Statute explainer",genre:"legal",year:2010,text:"The right attaches to the person, while the proof burden attaches to the agency that refuses access.",roles:["entitlement","proof"]},
+{source:"Dataset sheet",genre:"technical",year:2021,text:"Each proof example records the rule, the sign string, and the model answer separately.",roles:["technical","proof"]},
+{source:"Civic guide",genre:"policy",year:2024,text:"Plain meaning is not enough when the right depends on deadlines, exceptions, and notice.",roles:["policy","entitlement"]},
+{source:"Interface audit",genre:"interface",year:2026,text:"The model button looked right to designers but meant submit to users because of its position in the form.",roles:["interface","contrast"]}
+];
+
+let added=[];
+let state={target:"meaning",genre:"all",win:5,tab:"kwic",selected:0,mode:"theory",yearMin:null,yearMax:null,drag:null,rival:null,lastBase:[],lastOccs:[],lastRival:null,weights:{Frege:70,Saussure:68,Peirce:72,Wittgenstein:82}};
+const theoryNames=["Frege","Saussure","Peirce","Wittgenstein"];
+const theoryColor={Frege:"#9b3127",Saussure:"#1e5b82",Peirce:"#356c46",Wittgenstein:"#896318"};
+const registerColor={metalinguistic:"#9b3127",rule:"#1e5b82",obligation:"#356c46",command:"#896318",contrast:"#684977",report:"#227271",technical:"#77512a",entitlement:"#5d6f2e",diagnosis:"#7b4d68",aesthetic:"#8a6519",uncertainty:"#666"};
+const palette={philosophy:"#9b3127",semiotics:"#9b3127",legal:"#356c46",policy:"#356c46",interface:"#896318",technical:"#896318",clinical:"#684977",literature:"#684977",note:"#227271"};
+const stop=new Set("the a an and or but of to in for by with as is are was were be been being it its this that these those has have had not no only each every while when from on at into than then so under if which who what where why how do does did will would can could may might shall should must about above after before between without within because through toward under over same own new old one two three".split(" "));
+const modals={shall:"obligation",must:"obligation",should:"obligation",may:"permission",might:"uncertainty",could:"uncertainty",seems:"uncertainty",appears:"uncertainty",cannot:"limit","can't":"limit"};
+const speech={ask:"question",asks:"question",asked:"question",promise:"promise",promises:"promise",diagnose:"diagnosis",diagnoses:"diagnosis",define:"definition",defines:"definition",defined:"definition",report:"report",reports:"report",argue:"argument",argues:"argument",claim:"claim",claims:"claim",explain:"explanation",explains:"explanation",mark:"command",show:"command",click:"command",write:"command",test:"rule"};
+
+function norm(s){return s.toLowerCase().replace(/[^\p{L}\p{N}'-]+/gu," ").trim()}
+function toks(s){return norm(s).split(/\s+/).filter(Boolean)}
+function tokenObjects(text){
+  const out=[]; const re=/[\p{L}\p{N}'-]+|["'();:,.]/gu; let m;
+  while((m=re.exec(text)))out.push({t:m[0],n:norm(m[0]),i:out.length,at:m.index});
+  return out.filter(x=>x.n||/["'();:,.]/.test(x.t));
+}
+function wordTokens(text){return tokenObjects(text).filter(x=>x.n)}
+function activeCorpus(){return corpus.concat(added).filter(d=>(state.genre==="all"||d.genre===state.genre)&&inYear(d.year))}
+function inYear(y){return (state.yearMin==null||y>=state.yearMin)&&(state.yearMax==null||y<=state.yearMax)}
+function allYears(){return corpus.concat(added).map(d=>d.year)}
+function targetTokens(){return toks(state.target)}
+function makeEvidence(rule,span,weight,register,note){return {rule,span,weight:Object.assign({Frege:0,Saussure:0,Peirce:0,Wittgenstein:0},weight),register,note}}
+function hasAny(ws,set){return ws.some(w=>set.includes(w))}
+function near(words,i,n=5){return words.slice(Math.max(0,i-n),i+n+1).map(x=>x.n)}
+function contextText(words,a,b){return words.slice(Math.max(0,a),Math.min(words.length,b)).map(x=>x.t).join(" ")}
+
+const detectors=[
+  function exact(o){return [makeEvidence("target-match",o.target.join(" "),{Frege:.3,Wittgenstein:.2},"metalinguistic","orthographic target located; all later evidence is local to this occurrence")]},
+  function mention(o){const n=o.words.map(w=>w.n), i=o.i, left=n.slice(Math.max(0,i-5),i).join(" "); const hit=/word|term|phrase|entry|called|name|label/.test(left)||o.raw.includes('"'+o.target.join(" ")+'"')||/means|meaning|sense/.test(n.slice(i,i+6).join(" ")); return hit?[makeEvidence("mention-frame",contextText(o.words,i-5,i+6),{Frege:1.6,Saussure:.3,Wittgenstein:.4},"metalinguistic","target is framed as a word, term, label, or gloss rather than used transparently")]:[]},
+  function definition(o){const n=o.words.map(w=>w.n), c=n.slice(Math.max(0,o.i-4),o.i+8); const k=c.find(w=>["means","mean","defined","defines","counts","called","is","are","was"].includes(w)); return k?[makeEvidence("definition-copula",contextText(o.words,o.i-4,o.i+8),{Frege:1.2,Saussure:.2,Wittgenstein:.8},"definition","nearby copula or definition verb offers an explicit sense-gloss candidate")]:[]},
+  function negation(o){const n=near(o.words,o.i,7); const k=n.find(w=>["not","no","never","without","cannot","can't","does"].includes(w)); return k?[makeEvidence("negation-scope",k,{Frege:.2,Saussure:1.4,Peirce:.2,Wittgenstein:.3},"contrast","negator or exclusion marker scopes near the target and makes value by denial visible")]:[]},
+  function contrast(o){const n=near(o.words,o.i,9); const k=n.find(w=>["but","while","whereas","rather","unless","otherwise","however","different","opposed","contrast","split"].includes(w)); return k?[makeEvidence("contrast-marker",k,{Frege:.2,Saussure:1.7,Peirce:.2,Wittgenstein:.5},"contrast","discourse marker places the occurrence in an explicit alternative or correction frame")]:[]},
+  function modality(o){const n=near(o.words,o.i,8); const k=n.find(w=>modals[w]); if(!k)return[]; const reg=modals[k]==="obligation"||modals[k]==="permission"?"obligation":"uncertainty"; const wt=reg==="obligation"?{Peirce:.9,Wittgenstein:1.4,Saussure:.2}:{Frege:.4,Wittgenstein:.8}; return [makeEvidence("modal-force",k,wt,reg,"modal auxiliary changes the target's force into obligation, permission, uncertainty, or limit")]},
+  function imperative(o){const first=o.words.find(w=>w.n); const bare=first&&["click","mark","show","ask","write","test","pin","follow","explain"].includes(first.n); return bare?[makeEvidence("imperative-mood",first.n,{Peirce:.6,Wittgenstein:1.6},"command","sentence begins with a bare action verb, so meaning is tied to a command-game")]:[]},
+  function possession(o){const n=o.words.map(w=>w.n), c=n.slice(Math.max(0,o.i-3),o.i+7).join(" "); return /\b(right|duty|claim|license|permission)\s+to\b/.test(c)||/\bhave\s+the\s+right\b/.test(c)?[makeEvidence("entitlement-frame",c,{Peirce:1.4,Wittgenstein:1.1,Frege:.2},"entitlement","possessive or infinitival entitlement frame points to a permitted action as interpretant")]:[]},
+  function passive(o){const n=near(o.words,o.i,8); const k=n.find((w,idx)=>["is","was","were","be","been"].includes(w)&&/ed$/.test(n[idx+1]||"")); return k?[makeEvidence("passive-agent",contextText(o.words,o.i-5,o.i+7),{Peirce:.6,Wittgenstein:.6},"policy","passive construction suppresses the agent and makes institutional procedure salient")]:[]},
+  function speechAct(o){const n=near(o.words,o.i,8); const k=n.find(w=>speech[w]); if(!k)return[]; const reg=speech[k]==="diagnosis"?"diagnosis":speech[k]==="command"?"command":speech[k]==="definition"?"definition":"report"; return [makeEvidence("speech-act-verb",k,{Peirce:.7,Wittgenstein:1.2,Frege:.2},reg,"nearby speech-act verb classifies the language-game by action, not topic word")]},
+  function quotation(o){const before=o.raw.slice(0,o.startChar), after=o.raw.slice(o.endChar); const open=(before.match(/"/g)||[]).length%2===1; const close=after.includes('"'); return open&&close?[makeEvidence("quotation",o.target.join(" "),{Frege:1.5,Saussure:.4},"metalinguistic","target appears inside quotation marks or a mention-like string")]:[]},
+  function quantifier(o){const n=near(o.words,o.i,6); const k=n.find(w=>["every","all","any","each","some","only","no"].includes(w)); return k?[makeEvidence("quantifier-domain",k,{Frege:.8,Saussure:.3,Wittgenstein:.2},"rule","quantifier nearby changes the domain over which the expression is licensed")]:[]},
+  function causal(o){const n=near(o.words,o.i,9); const k=n.find(w=>["because","therefore","so","depends","produces","indicate","indicates"].includes(w)); return k?[makeEvidence("causal-link",k,{Peirce:1.1,Frege:.3},"index","causal or inferential connector makes object-to-interpretant movement explicit")]:[]},
+  function technical(o){const n=near(o.words,o.i,7); const k=n.find(w=>["model","token","vector","parser","schema","annotation","field","grammar","trace"].includes(w)); return k?[makeEvidence("technical-artifact",k,{Frege:.4,Peirce:.5,Wittgenstein:.7},"technical","computational or formal artifact nearby constrains the target as an operational object")]:[]},
+  function norm(o){const n=near(o.words,o.i,8); const k=n.find(w=>["licensed","proper","conforming","valid","wrong","correct","remedy","appeal","law","policy"].includes(w)); return k?[makeEvidence("normative-licensing",k,{Peirce:.8,Wittgenstein:1.1,Saussure:.4},"rule","normative vocabulary makes the occurrence answerable to a rule or institution")]:[]},
+  function aesthetic(o){const n=near(o.words,o.i,8); const k=n.find(w=>["poet","road","river","display","reader","common","party","praised"].includes(w)); return k?[makeEvidence("aesthetic-scene",k,{Peirce:.7,Wittgenstein:.6},"aesthetic","scene-like language makes interpretant depend on situated uptake")]:[]},
+  function genrePrior(o){const map={legal:["entitlement",{Peirce:.5,Wittgenstein:.4}],policy:["obligation",{Peirce:.4,Wittgenstein:.5}],technical:["technical",{Frege:.3,Wittgenstein:.4}],clinical:["diagnosis",{Peirce:.4,Wittgenstein:.4}],literature:["aesthetic",{Peirce:.3,Wittgenstein:.3}],semiotics:["metalinguistic",{Saussure:.5,Peirce:.5}],philosophy:["metalinguistic",{Frege:.5,Wittgenstein:.3}]}; const m=map[o.d.genre]||["report",{Peirce:.2}]; return [makeEvidence("genre-prior",o.d.genre,m[1],m[0],"weak prior from source genre; included so it can be discounted against stronger local rules")]}
+];
+
+function occurrences(useFilter=true){
+  const target=targetTokens(); if(!target.length)return [];
+  const docs=(useFilter?activeCorpus():corpus.concat(added).filter(d=>state.genre==="all"||d.genre===state.genre));
+  const out=[];
+  docs.forEach((d,di)=>{
+    const words=wordTokens(d.text);
+    for(let i=0;i<=words.length-target.length;i++){
+      let ok=true; for(let j=0;j<target.length;j++)if(words[i+j].n!==target[j])ok=false;
+      if(ok){
+        const left=words.slice(Math.max(0,i-state.win),i).map(w=>w.n);
+        const right=words.slice(i+target.length,i+target.length+state.win).map(w=>w.n);
+        const o={d,di,i,words,left,right,target:words.slice(i,i+target.length).map(w=>w.n),roles:d.roles||[],raw:d.text,startChar:words[i].at,endChar:words[i+target.length-1].at+words[i+target.length-1].t.length};
+        o.evidence=detectors.flatMap(fn=>fn(o));
+        o.scores=theoryScores(o);
+        o.register=dominantRegister(o);
+        out.push(o);
+      }
+    }
+  });
+  return out;
+}
+function collocates(occs){
+  const global={}, nearMap={}, side={L:{},R:{}};
+  activeCorpus().forEach(d=>toks(d.text).forEach(w=>{if(!stop.has(w))global[w]=(global[w]||0)+1}));
+  occs.forEach(o=>{
+    o.left.concat(o.right).forEach(w=>{if(!stop.has(w))nearMap[w]=(nearMap[w]||0)+1});
+    o.left.forEach(w=>{if(!stop.has(w))side.L[w]=(side.L[w]||0)+1});
+    o.right.forEach(w=>{if(!stop.has(w))side.R[w]=(side.R[w]||0)+1});
+  });
+  const total=Object.values(global).reduce((a,b)=>a+b,0)||1, nearTotal=Object.values(nearMap).reduce((a,b)=>a+b,0)||1;
+  return Object.keys(nearMap).map(w=>({w,n:nearMap[w],l:side.L[w]||0,r:side.R[w]||0,lift:(nearMap[w]/nearTotal)/((global[w]||1)/total)})).sort((a,b)=>b.lift-a.lift||b.n-a.n);
+}
+function ruleMass(e){return Math.sqrt(theoryNames.reduce((a,k)=>a+(e.weight[k]||0)*(e.weight[k]||0),0))}
+function vectorize(occs,rules){
+  return occs.map(o=>{
+    const m={}; o.evidence.forEach(e=>m[e.rule]=(m[e.rule]||0)+ruleMass(e));
+    const v=rules.map(r=>m[r]||0), len=Math.hypot(...v)||1;
+    return v.map(x=>x/len);
+  });
+}
+function dist(a,b){let s=0; for(let i=0;i<a.length;i++){const d=a[i]-b[i];s+=d*d} return Math.sqrt(s)}
+function meanVec(items,vecs,dims){
+  const c=Array(dims).fill(0); if(!items.length)return c;
+  items.forEach(i=>vecs[i].forEach((v,j)=>c[j]+=v));
+  return c.map(v=>v/items.length);
+}
+function farthestSeeds(vecs,k){
+  const seeds=[0];
+  while(seeds.length<k){
+    let best=0,bd=-1;
+    vecs.forEach((v,i)=>{if(seeds.includes(i))return; const d=Math.min(...seeds.map(s=>dist(v,vecs[s]))); if(d>bd){bd=d;best=i}});
+    seeds.push(best);
+  }
+  return seeds.map(i=>vecs[i].slice());
+}
+function kmeans(vecs,k){
+  let cent=farthestSeeds(vecs,k), assign=Array(vecs.length).fill(-1);
+  for(let iter=0;iter<24;iter++){
+    let changed=false;
+    vecs.forEach((v,i)=>{let bi=0,bd=1e9; cent.forEach((c,j)=>{const d=dist(v,c); if(d<bd){bd=d;bi=j}}); if(assign[i]!==bi){assign[i]=bi;changed=true}});
+    cent=cent.map((_,j)=>meanVec(assign.map((a,i)=>a===j?i:-1).filter(i=>i>=0),vecs,vecs[0]?.length||0));
+    if(!changed)break;
+  }
+  return {assign,cent};
+}
+function silhouette(vecs,assign,k){
+  const clusters=Array.from({length:k},()=>[]);
+  assign.forEach((c,i)=>clusters[c].push(i));
+  let total=0,count=0;
+  vecs.forEach((v,i)=>{
+    const own=assign[i], same=clusters[own].filter(j=>j!==i);
+    const a=same.length?same.reduce((s,j)=>s+dist(v,vecs[j]),0)/same.length:0;
+    let b=1e9; clusters.forEach((items,c)=>{if(c===own||!items.length)return; b=Math.min(b,items.reduce((s,j)=>s+dist(v,vecs[j]),0)/items.length)});
+    const den=Math.max(a,b); if(den>0&&b<1e9){total+=(b-a)/den;count++}
+  });
+  return count?total/count:0;
+}
+function clusterAnalysis(occs){
+  const rules=[...new Set(occs.flatMap(o=>o.evidence.map(e=>e.rule)))].sort();
+  if(occs.length<3||rules.length<2)return {ok:false,rules,clusters:[],curve:[],matrix:[],registers:[]};
+  const vecs=vectorize(occs,rules), maxK=Math.min(7,occs.length-1), curve=[]; let best=null;
+  for(let k=2;k<=maxK;k++){
+    const km=kmeans(vecs,k), sizes=Array.from({length:k},(_,i)=>km.assign.filter(x=>x===i).length);
+    if(sizes.some(s=>s===0)||(occs.length>8&&sizes.some(s=>s<2)))continue;
+    const sil=silhouette(vecs,km.assign,k);
+    curve.push({k,sil,sizes});
+    if(!best||sil>best.sil)best={k,sil,assign:km.assign,sizes};
+  }
+  if(!best)return {ok:false,rules,clusters:[],curve,matrix:[],registers:[]};
+  occs.forEach((o,i)=>o.cluster=best.assign[i]);
+  const clusters=Array.from({length:best.k},(_,id)=>{
+    const members=occs.filter(o=>o.cluster===id);
+    const means=rules.map(r=>({r,v:members.reduce((s,o)=>s+o.evidence.filter(e=>e.rule===r).reduce((a,e)=>a+ruleMass(e),0),0)/Math.max(1,members.length)})).sort((a,b)=>b.v-a.v);
+    const words=collocates(members).slice(0,5).map(c=>c.w);
+    const regs={}; members.forEach(o=>regs[o.register]=(regs[o.register]||0)+1);
+    return {id,members,top:means.slice(0,3),words,register:Object.keys(regs).sort((a,b)=>regs[b]-regs[a])[0]||"report"};
+  });
+  const registers=[...new Set(occs.map(o=>o.register))].sort();
+  const matrix=registers.map(r=>clusters.map(c=>({register:r,cluster:c.id,n:c.members.filter(o=>o.register===r).length})));
+  return {ok:true,rules,clusters,curve,matrix,registers,k:best.k,sil:best.sil};
+}
+function applyRivalFilter(occs,analysis){
+  if(!state.rival||!analysis.ok)return occs;
+  return occs.filter(o=>o.register===state.rival.register&&o.cluster===state.rival.cluster);
+}
+function theoryScores(o){
+  const s={Frege:0,Saussure:0,Peirce:0,Wittgenstein:0};
+  (o.evidence||[]).forEach(e=>theoryNames.forEach(k=>s[k]+=e.weight[k]||0));
+  theoryNames.forEach(k=>s[k]+=state.weights[k]/140);
+  return s;
+}
+function dominantTheory(o){return theoryNames.slice().sort((a,b)=>o.scores[b]-o.scores[a])[0]}
+function dominantRegister(o){
+  const c={}; (o.evidence||[]).forEach(e=>c[e.register]=(c[e.register]||0)+1);
+  (o.roles||[]).forEach(r=>c[r]=(c[r]||0)+.45);
+  return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]||"report";
+}
+function escape(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function render(){
+  state.target=document.getElementById("target").value.trim();
+  state.genre=document.getElementById("genre").value;
+  state.win=+document.getElementById("window").value;
+  state.mode=document.getElementById("mode").value;
+  theoryNames.forEach(k=>state.weights[k]=+document.getElementById("w"+(k==="Wittgenstein"?"Witt":k)).value);
+  document.getElementById("windowVal").textContent=state.win;
+  const base=occurrences(true), rival=clusterAnalysis(base), occs=applyRivalFilter(base,rival), cols=collocates(occs);
+  state.lastBase=base; state.lastOccs=occs; state.lastRival=rival;
+  if(state.selected>=occs.length)state.selected=Math.max(0,occs.length-1);
+  renderMetrics(occs,cols); renderGrammarLoad(occs); renderTheory(occs); renderGames(occs); renderTab(occs,cols,rival); renderSentences(occs); renderSelected(occs,rival); renderLedger(occs); renderPairs(occs); drawLoom(occs,cols); drawRiver(state.rival?occs:occurrences(false));
+  const yr=state.yearMin==null?"all years":state.yearMin===state.yearMax?String(state.yearMin):`${state.yearMin}-${state.yearMax}`;
+  document.getElementById("timeLabel").textContent=`active range: ${yr}; drag the river to brush time`;
+  const rf=state.rival?` / rival cell ${state.rival.register}->C${state.rival.cluster}`:"";
+  document.getElementById("statusLine").textContent=`target="${state.target||"(empty)"}" / ${occs.length}${base.length!==occs.length?` of ${base.length}`:""} hit(s) / ${activeCorpus().length} sentence(s) / ${detectors.length} grammar rules / rival k=${rival.ok?rival.k:"n/a"} sil=${rival.ok?rival.sil.toFixed(2):"n/a"}${rf} / window=${state.win} / weights F:${state.weights.Frege} S:${state.weights.Saussure} P:${state.weights.Peirce} W:${state.weights.Wittgenstein}`;
+}
+function renderMetrics(occs,cols){
+  const words=activeCorpus().flatMap(d=>toks(d.text)), types=new Set(words);
+  const firings=occs.reduce((a,o)=>a+o.evidence.length,0);
+  document.getElementById("metrics").innerHTML=[["sentences",activeCorpus().length],["tokens",words.length],["types",types.size],["hits",occs.length],["rule fires",firings],["collocates",cols.length]].map(([l,v])=>`<div class="metric"><b>${v}</b><span>${l}</span></div>`).join("");
+  const by={}; activeCorpus().forEach(d=>by[d.genre]=(by[d.genre]||0)+1);
+  document.getElementById("domainSummary").innerHTML=Object.keys(by).sort().map(k=>`<span class="tag">${k} ${by[k]}</span>`).join(" ");
+}
+function renderGrammarLoad(occs){
+  const c={}; occs.forEach(o=>o.evidence.forEach(e=>c[e.rule]=(c[e.rule]||0)+1));
+  const max=Math.max(1,...Object.values(c));
+  document.getElementById("grammarLoad").innerHTML=Object.keys(c).sort((a,b)=>c[b]-c[a]).slice(0,10).map(k=>`<div class="lens"><b>${k}</b><div class="bar"><i style="width:${c[k]/max*100}%;background:#1e5b82"></i></div><span>${c[k]}</span></div>`).join("")||`<p class="note">No rule fired because no target occurrence is active.</p>`;
+}
+function renderTheory(occs){
+  const sums={Frege:0,Saussure:0,Peirce:0,Wittgenstein:0};
+  occs.forEach(o=>theoryNames.forEach(k=>sums[k]+=o.scores[k]));
+  const max=Math.max(1,...Object.values(sums));
+  document.getElementById("theory").innerHTML=theoryNames.map(k=>`<div class="lens"><b>${k}</b><div class="bar"><i style="width:${(sums[k]/max*100).toFixed(1)}%;background:${theoryColor[k]}"></i></div><span class="num">${sums[k].toFixed(1)}</span></div>`).join("")+`<p class="note">Bars sum explicit evidence-rule weights plus the operator theory emphasis. No bar is a hidden embedding score.</p>`;
+}
+function renderGames(occs){
+  const counts={}; occs.forEach(o=>{counts[o.register]=(counts[o.register]||0)+1;o.roles.forEach(r=>counts[r]=(counts[r]||0)+.35)});
+  const max=Math.max(1,...Object.values(counts));
+  document.getElementById("games").innerHTML=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]).slice(0,12).map(k=>`<div class="lens"><b>${k}</b><div class="bar"><i style="width:${counts[k]/max*100}%;background:${registerColor[k]||"#227271"}"></i></div><span>${counts[k].toFixed(1)}</span></div>`).join("")||`<p class="note">No register evidence in current hit set.</p>`;
+}
+function renderTab(occs,cols,rival){
+  const body=document.getElementById("tabBody");
+  if(state.tab==="kwic"){
+    body.innerHTML=occs.length?`<div class="scroll"><table class="kwic"><tbody>${occs.map((o,i)=>`<tr data-sel="${i}" class="${i===state.selected?"selectedRow":""}"><td>${escape(o.left.join(" "))}</td><td>${escape(o.target.join(" "))}</td><td>${escape(o.right.join(" "))}</td><td>${o.d.year} ${escape(o.d.source)} <span class="tag">${escape(o.register)}</span></td></tr>`).join("")}</tbody></table></div>`:`<p class="note">No occurrences for this target/filter.</p>`;
+  } else if(state.tab==="collocates"){
+    body.innerHTML=cols.length?`<div class="scroll"><table><thead><tr><th>word</th><th class="num">n</th><th class="num">left</th><th class="num">right</th><th class="num">lift</th></tr></thead><tbody>${cols.slice(0,90).map(c=>`<tr><td>${escape(c.w)}</td><td class="num">${c.n}</td><td class="num">${c.l}</td><td class="num">${c.r}</td><td class="num">${c.lift.toFixed(2)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="note">No collocates because no active occurrence is available.</p>`;
+  } else if(state.tab==="opposition"){
+    const rows=occs.flatMap(o=>o.evidence.filter(e=>["negation-scope","contrast-marker","quantifier-domain"].includes(e.rule)).map(e=>({e,o})));
+    body.innerHTML=`<div class="grid2"><table><thead><tr><th>rule</th><th>span</th><th class="num">year</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.e.rule}</td><td>${escape(r.e.span)}</td><td class="num">${r.o.d.year}</td></tr>`).join("")}</tbody></table><div class="denseText">${rows.length?"Opposition is now directional evidence from scoped rule firings: negation, contrast markers, and quantifier domains near the target.":"No explicit opposition rules fired near the current target."}</div></div>`;
+  } else if(state.tab==="evidence"){
+    const c={}; occs.forEach(o=>o.evidence.forEach(e=>{const k=e.rule+"|"+e.register;c[k]=(c[k]||0)+1}));
+    body.innerHTML=`<div class="scroll"><table><thead><tr><th>rule</th><th>register</th><th class="num">fires</th></tr></thead><tbody>${Object.keys(c).sort((a,b)=>c[b]-c[a]).map(k=>{const p=k.split("|");return`<tr><td>${p[0]}</td><td>${p[1]}</td><td class="num">${c[k]}</td></tr>`}).join("")}</tbody></table></div>`;
+  } else if(state.tab==="rival"){
+    body.innerHTML=renderRival(rival);
+  } else {
+    body.innerHTML=buildHypotheses(occs,cols);
+  }
+  body.querySelectorAll("[data-sel]").forEach(r=>r.addEventListener("click",()=>{state.selected=+r.dataset.sel;render()}));
+  body.querySelectorAll("[data-rival]").forEach(b=>b.addEventListener("click",()=>{
+    const [register,cluster]=b.dataset.rival.split("|");
+    const same=state.rival&&state.rival.register===register&&state.rival.cluster===+cluster;
+    state.rival=same?null:{register,cluster:+cluster};
+    state.selected=0; render();
+  }));
+  const clear=body.querySelector("[data-clear-rival]");
+  if(clear)clear.addEventListener("click",()=>{state.rival=null;state.selected=0;render()});
+}
+function renderRival(rival){
+  if(!rival.ok)return`<p class="note">Need at least three target occurrences with multiple evidence-rule dimensions before the rival geometry can be induced.</p>`;
+  const maxCell=Math.max(1,...rival.matrix.flat().map(c=>c.n));
+  const matrixCols=`92px repeat(${rival.clusters.length}, minmax(46px,1fr))`;
+  const filter=state.rival?`<div class="filterbar"><span class="tag">filter ${escape(state.rival.register)} -> C${state.rival.cluster}</span><button data-clear-rival>clear rival filter</button></div>`:`<div class="filterbar"><span class="mini">Click any matrix cell to filter KWIC, Loom, River, ledger, and sentences to that disagreement/alignment slice.</span></div>`;
+  const curve=`<div class="spark"><svg viewBox="0 0 300 56" width="100%" height="56" preserveAspectRatio="none">${rival.curve.map((p,i,a)=>{const x=18+i*(260/Math.max(1,a.length-1)), y=45-(p.sil+1)/2*34; return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${p.k===rival.k?4:3}" fill="${p.k===rival.k?"#9b3127":"#1e5b82"}"/><text x="${(x-5).toFixed(1)}" y="54" font-size="7">${p.k}</text>`}).join("")}<path d="${rival.curve.map((p,i,a)=>{const x=18+i*(260/Math.max(1,a.length-1)), y=45-(p.sil+1)/2*34; return `${i?"L":"M"}${x.toFixed(1)},${y.toFixed(1)}`}).join(" ")}" fill="none" stroke="#171512" stroke-width="1.2"/><text x="6" y="9" font-size="8" font-weight="700">silhouette; chosen k=${rival.k}, mean=${rival.sil.toFixed(2)}</text></svg></div>`;
+  const clusters=rival.clusters.map(c=>`<div class="clusterCard"><h3>C${c.id} / ${c.members.length} hit(s) / ${escape(c.register)}</h3><div>${c.top.map(t=>`<span class="tag">${escape(t.r)} ${t.v.toFixed(2)}</span>`).join(" ")}</div><div class="mini">words: ${escape(c.words.join(", ")||"none")}</div><div class="quote">"${escape(c.members[0]?.d.text||"")}"</div></div>`).join("");
+  const head=`<div class="head">register</div>${rival.clusters.map(c=>`<div class="head">C${c.id}</div>`).join("")}`;
+  const rows=rival.matrix.map(row=>`<div class="head">${escape(row[0].register)}</div>${row.map(cell=>{const hot=cell.n/maxCell; const active=state.rival&&state.rival.register===cell.register&&state.rival.cluster===cell.cluster; return `<button data-rival="${escape(cell.register)}|${cell.cluster}" class="${hot>.55?"hot":""} ${active?"active":""}" style="${hot>.55?`background:rgba(30,91,130,${.45+.45*hot})`:`background:rgba(155,49,39,${.08+.26*hot})`}"><b>${cell.n}</b><br>${escape(cell.register)} -> C${cell.cluster}</button>`}).join("")}`).join("");
+  const grid=`<div class="matrix" style="grid-template-columns:${matrixCols}">${head}${rows}</div>`;
+  return `${filter}${curve}<div class="rivalGrid"><div>${clusters}</div><div>${grid}<p class="note">Clusters use raw rule-firing vectors only; the matrix compares that induced geometry against the grammar's dominant register labels.</p></div></div>`;
+}
+function buildHypotheses(occs,cols){
+  if(!occs.length)return`<p class="note">No evidence to hypothesize from.</p>`;
+  const groups={}; occs.forEach(o=>(groups[o.register]||(groups[o.register]=[])).push(o));
+  return Object.keys(groups).sort((a,b)=>groups[b].length-groups[a].length).map(k=>{
+    const sample=groups[k][0], rules=[...new Set(groups[k].flatMap(o=>o.evidence.map(e=>e.rule)))].slice(0,6).join(", ");
+    const anchors=cols.filter(c=>sample.words.some(w=>w.n===c.w)).slice(0,5).map(c=>c.w).join(", ");
+    return `<div class="hypothesis"><b>${escape(k)}</b><div><div>${groups[k].length} occurrence(s). Rules: ${escape(rules||"genre prior")}. Anchors: ${escape(anchors||"local syntax")}.</div><div class="quote">"${escape(sample.d.text)}"</div></div></div>`;
+  }).join("");
+}
+function renderSentences(occs){
+  const hitSet=new Set(occs.map(o=>o.d.source+"|"+o.d.text));
+  document.getElementById("sentences").innerHTML=activeCorpus().map(d=>`<div class="sourceItem" style="${hitSet.has(d.source+"|"+d.text)?"background:#fff4d8":""}"><b>${escape(d.source)}</b> <span class="tag">${escape(d.genre)}</span><span class="tag">${d.year}</span><div>${escape(d.text)}</div></div>`).join("");
+}
+function renderSelected(occs,rival){
+  const o=occs[state.selected];
+  if(!o){document.getElementById("selected").innerHTML=`<p class="note">No selected occurrence.</p>`;return}
+  const dom=dominantTheory(o), packet=signPacket(o);
+  const cl=rival&&rival.ok?rival.clusters[o.cluster]:null;
+  const split=cl&&cl.register!==o.register;
+  document.getElementById("selected").innerHTML=`<div class="quote">${escape(o.d.text)}</div>
+  <p><span class="tag">${escape(o.d.genre)}</span><span class="tag">${o.d.year}</span><span class="tag">${escape(o.register)}</span><span class="tag">${dom}</span>${cl?`<span class="tag">C${o.cluster} ${escape(cl.register)}</span>`:""}${split?`<span class="tag" style="border-color:#9b3127;color:#9b3127">rival split</span>`:""}</p>
+  <table><tbody><tr><th>left</th><td>${escape(o.left.join(" "))}</td></tr><tr><th>target</th><td>${escape(o.target.join(" "))}</td></tr><tr><th>right</th><td>${escape(o.right.join(" "))}</td></tr><tr><th>grammar</th><td>${escape(o.register)} / ${dom}</td></tr><tr><th>rival</th><td>${cl?`C${o.cluster}: ${escape(cl.top.map(t=>t.r).join(" + "))}`:"not enough data"}</td></tr><tr><th>object</th><td>${escape(packet.object)}</td></tr><tr><th>interpretant</th><td>${escape(packet.interpretant)}</td></tr><tr><th>habit</th><td>${escape(packet.habit)}</td></tr></tbody></table>
+  <p class="mini">Selected packet is assembled from evidence rules, source genre, and local spans. It is a trace, not a solved meaning.</p>`;
+}
+function signPacket(o){
+  const top=o.evidence.slice().sort((a,b)=>Object.values(b.weight).reduce((x,y)=>x+y,0)-Object.values(a.weight).reduce((x,y)=>x+y,0));
+  const reg=o.register, span=top[0]?.span||o.right.join(" ")||o.left.join(" ");
+  const object=reg==="entitlement"?"permitted action or legal status":reg==="technical"?"formal artifact under an operational rule":reg==="definition"?"candidate sense-gloss":reg==="contrast"?"boundary between alternative uses":reg==="diagnosis"?"clinical distinction under uncertainty":`${reg} discourse object`;
+  const interpretant=top.slice(0,3).map(e=>`${e.rule}: ${e.span}`).join("; ")||"no rule evidence";
+  const habit=reg==="command"?"perform or withhold an action":reg==="obligation"||reg==="entitlement"?"determine duty, permission, or remedy":reg==="definition"||reg==="metalinguistic"?"separate use from mention and test glosses":reg==="contrast"?"inspect what the occurrence is not allowed to mean":"compare concordance, rules, and year";
+  return {object,interpretant,habit};
+}
+function renderLedger(occs){
+  const o=occs[state.selected];
+  if(!o){document.getElementById("ledger").innerHTML=`<p class="note">No evidence ledger.</p>`;return}
+  document.getElementById("ledger").innerHTML=`<div class="ledger">${o.evidence.map(e=>`<div class="evidenceRow"><b>${escape(e.rule)}</b><span class="tag ruleTag">${escape(e.register)}</span><div><code>${escape(e.span)}</code><div class="mini">${escape(e.note)}</div><div class="mini">F ${e.weight.Frege||0} / S ${e.weight.Saussure||0} / P ${e.weight.Peirce||0} / W ${e.weight.Wittgenstein||0}</div></div></div>`).join("")}</div>`;
+}
+function renderPairs(occs){
+  const pairs=[];
+  for(let i=0;i<occs.length;i++)for(let j=i+1;j<occs.length;j++){
+    if(occs[i].register===occs[j].register)continue;
+    const ar=new Set(occs[i].evidence.map(e=>e.rule)), br=new Set(occs[j].evidence.map(e=>e.rule));
+    const shared=[...ar].filter(r=>br.has(r)), decisive=[...ar].filter(r=>!br.has(r)).slice(0,3).concat([...br].filter(r=>!ar.has(r)).slice(0,3));
+    pairs.push({i,j,score:shared.length*2+decisive.length,shared,decisive});
+  }
+  pairs.sort((a,b)=>b.score-a.score);
+  document.getElementById("pairs").innerHTML=pairs.slice(0,5).map(p=>{const A=occs[p.i],B=occs[p.j];return`<div class="sourceItem"><span class="tag">${escape(A.register)}</span><span class="tag">${escape(B.register)}</span><div>${escape(A.d.source)} / ${escape(B.d.source)}</div><div class="mini">shared rules: ${escape(p.shared.join(", ")||"none")}; decisive: ${escape(p.decisive.join(", ")||"genre/year")}</div></div>`}).join("")||`<p class="note">Need two differently classified occurrences.</p>`;
+}
+function drawLoom(occs,cols){
+  const canvas=document.getElementById("loom"), wrap=canvas.parentElement, dpr=window.devicePixelRatio||1, w=wrap.clientWidth,h=wrap.clientHeight;
+  canvas.width=w*dpr; canvas.height=h*dpr; canvas.style.width=w+"px"; canvas.style.height=h+"px";
+  const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h); ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#e4dccd"; ctx.lineWidth=1; for(let x=36;x<w;x+=52){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()} for(let y=30;y<h;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+  ctx.strokeStyle="#171512"; ctx.strokeRect(66,48,w-132,h-94);
+  const axes=[["Frege","sense / reference",34,28],["Saussure","difference / value",w-178,28],["Peirce","object -> interpretant",34,h-30],["Wittgenstein","use / move",w-160,h-30]];
+  axes.forEach(a=>{ctx.fillStyle="#171512";ctx.font="800 11px system-ui";ctx.fillText(a[0],a[2],a[3]);ctx.font="10px system-ui";ctx.fillText(a[1],a[2],a[3]+13)});
+  const top=cols.slice(0,14);
+  top.forEach((c,i)=>{const x=88+(w-176)*(i/Math.max(1,top.length-1)), y=14+(i%2)*15; ctx.fillStyle=i%3===0?"#9b3127":i%3===1?"#1e5b82":"#356c46"; ctx.fillRect(x-2,y+2,4,4); ctx.fillStyle="#4d473e"; ctx.font="9px system-ui"; ctx.fillText(c.w,x+5,y+7)});
+  occs.forEach((o,i)=>{
+    const s=o.scores, sum=Object.values(s).reduce((a,b)=>a+b,0)||1;
+    const x=66+(w-132)*((s.Saussure+s.Wittgenstein*.45)/(sum+state.weights.Saussure/150));
+    const y=48+(h-94)*((s.Peirce+s.Wittgenstein*.35)/(sum+state.weights.Peirce/150));
+    o._x=Math.max(72,Math.min(w-72,x+(i%6-2.5)*8)); o._y=Math.max(54,Math.min(h-52,y+(Math.floor(i/6)%5-2)*7));
+    top.slice(0,8).forEach((c,j)=>{if(o.words.some(w=>w.n===c.w)){ctx.strokeStyle="rgba(30,91,130,.22)";ctx.beginPath();ctx.moveTo(o._x,o._y);ctx.lineTo(88+(w-176)*(j/Math.max(1,top.length-1)),22+(j%2)*15);ctx.stroke()}});
+  });
+  if(state.lastRival&&state.lastRival.ok){
+    state.lastRival.clusters.forEach(c=>{
+      const members=occs.filter(o=>o.cluster===c.id&&Number.isFinite(o._x));
+      if(!members.length)return;
+      const cx=members.reduce((s,o)=>s+o._x,0)/members.length, cy=members.reduce((s,o)=>s+o._y,0)/members.length;
+      const rx=Math.max(24,Math.max(...members.map(o=>Math.abs(o._x-cx)))+18), ry=Math.max(18,Math.max(...members.map(o=>Math.abs(o._y-cy)))+14);
+      const rgb=c.id%3===0?"155,49,39":c.id%3===1?"30,91,130":"53,108,70";
+      ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${rgb},.075)`; ctx.fill();
+      ctx.strokeStyle=`rgba(${rgb},.42)`; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle="#171512"; ctx.font="800 9px system-ui"; ctx.fillText(`C${c.id} ${c.top[0]?.r||""}`,cx-rx+5,cy-ry+12);
+    });
+  }
+  occs.forEach((o,i)=>{ctx.beginPath();ctx.arc(o._x,o._y,i===state.selected?7:5,0,Math.PI*2);ctx.fillStyle=registerColor[o.register]||palette[o.d.genre]||"#227271";ctx.fill();ctx.strokeStyle="#171512";ctx.lineWidth=i===state.selected?2:1;ctx.stroke(); if(i===state.selected){ctx.fillStyle="#171512";ctx.font="800 10px system-ui";ctx.fillText(o.d.year+" "+o.d.source,o._x+9,o._y-8)}});
+  ctx.fillStyle="#f7f1e6";ctx.fillRect(12,h-70,300,50);ctx.strokeStyle="#c6bdaa";ctx.strokeRect(12,h-70,300,50);ctx.fillStyle="#171512";ctx.font="800 10px system-ui";ctx.fillText("Reading rule",22,h-51);ctx.font="9px system-ui";ctx.fillText("Knots are occurrences. Position is rule-weighted evidence;",22,h-37);ctx.fillText("color is grammar register; dashed fields are rival clusters.",22,h-24);
+}
+function riverBins(occs){
+  const years=allYears(), min=Math.min(...years), max=Math.max(...years), span=Math.max(1,max-min), bins=Math.min(12,Math.max(4,Math.ceil(Math.sqrt(corpus.length))));
+  const out=Array.from({length:bins},(_,i)=>({a:Math.round(min+i*span/bins),b:Math.round(min+(i+1)*span/bins),items:[]}));
+  occs.forEach(o=>{let idx=Math.min(bins-1,Math.floor((o.d.year-min)/(span/bins||1))); out[idx].items.push(o)});
+  return {bins,min,max};
+}
+function drawRiver(occsAll){
+  const canvas=document.getElementById("river"), wrap=canvas.parentElement, dpr=window.devicePixelRatio||1, w=wrap.clientWidth,h=wrap.clientHeight;
+  canvas.width=w*dpr; canvas.height=h*dpr; canvas.style.width=w+"px"; canvas.style.height=h+"px";
+  const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h); ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
+  const {bins,min,max}=riverBins(occsAll), keys=state.mode==="theory"?theoryNames:["metalinguistic","rule","obligation","command","contrast","technical","entitlement","report"];
+  const left=44,right=w-18,top=20,base=h-38,mid=(top+base)/2, amp=(base-top)/2-8;
+  ctx.strokeStyle="#e4dccd";ctx.lineWidth=1; for(let i=0;i<bins.length;i++){const x=left+(right-left)*(i/(bins.length-1||1));ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,base+16);ctx.stroke();ctx.fillStyle="#5c584f";ctx.font="9px system-ui";ctx.fillText(String(bins[i].a),x-12,base+28)}
+  const vals=bins.map(b=>{const v={}; keys.forEach(k=>v[k]=0); b.items.forEach(o=>{if(state.mode==="theory")keys.forEach(k=>v[k]+=o.scores[k]); else v[o.register]=(v[o.register]||0)+1}); const sum=Object.values(v).reduce((a,b)=>a+b,0)||1; keys.forEach(k=>v[k]/=sum); return v});
+  let lower=Array(bins.length).fill(0);
+  keys.forEach(k=>{
+    const upper=lower.map((v,i)=>v+(vals[i][k]||0));
+    ctx.beginPath();
+    upper.forEach((v,i)=>{const x=left+(right-left)*(i/(bins.length-1||1)), y=mid-(v-.5)*amp*2; i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+    for(let i=lower.length-1;i>=0;i--){const x=left+(right-left)*(i/(bins.length-1||1)), y=mid-(lower[i]-.5)*amp*2; ctx.lineTo(x,y)}
+    ctx.closePath(); ctx.fillStyle=(state.mode==="theory"?theoryColor[k]:registerColor[k])||"#999"; ctx.globalAlpha=.72; ctx.fill(); ctx.globalAlpha=1; ctx.strokeStyle="#fff"; ctx.stroke();
+    lower=upper;
+  });
+  bins.forEach((b,i)=>{const x=left+(right-left)*(i/(bins.length-1||1)); b.items.forEach((o,j)=>{ctx.fillStyle=palette[o.d.genre]||"#227271";ctx.fillRect(x-3+j*2,base+5,3,5)})});
+  if(state.yearMin!=null){const x1=left+(right-left)*((state.yearMin-min)/(max-min||1)), x2=left+(right-left)*((state.yearMax-min)/(max-min||1)); ctx.fillStyle="rgba(23,21,18,.08)";ctx.fillRect(Math.min(x1,x2),top,Math.abs(x2-x1)||2,base-top+16);ctx.strokeStyle="#171512";ctx.strokeRect(Math.min(x1,x2),top,Math.abs(x2-x1)||2,base-top+16)}
+  const sel=state.lastOccs[state.selected]; if(sel){const x=left+(right-left)*((sel.d.year-min)/(max-min||1));ctx.strokeStyle="#171512";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,top-3);ctx.lineTo(x,base+18);ctx.stroke()}
+  ctx.fillStyle="#171512";ctx.font="800 10px system-ui";ctx.fillText(state.mode==="theory"?"theory evidence share":"register evidence share",8,12);
+}
+function yearFromEvent(e){
+  const canvas=document.getElementById("river"), r=canvas.getBoundingClientRect(), years=allYears(), min=Math.min(...years), max=Math.max(...years), left=44,right=r.width-18;
+  const t=Math.max(0,Math.min(1,(e.clientX-r.left-left)/(right-left)));
+  return Math.round(min+t*(max-min));
+}
+function init(){
+  const presets=["meaning","sign","right","model","sense","proof","rule","language","interpretant","contrast","shall","means","value"];
+  document.getElementById("preset").innerHTML=presets.map(p=>`<option>${p}</option>`).join("");
+  const genres=["all"].concat([...new Set(corpus.map(d=>d.genre))].sort());
+  document.getElementById("genre").innerHTML=genres.map(g=>`<option>${g}</option>`).join("");
+  document.getElementById("targets").innerHTML=presets.map(p=>`<button class="chip" data-target="${p}"><strong>${p}</strong></button>`).join("");
+  document.querySelectorAll("input,select,textarea").forEach(el=>{if(el.id!=="notes"&&el.id!=="custom")el.addEventListener("input",()=>{if(["target","genre","window","preset"].includes(el.id)){state.rival=null;state.selected=0}render()})});
+  document.getElementById("preset").addEventListener("change",e=>{document.getElementById("target").value=e.target.value;state.rival=null;state.selected=0;render()});
+  document.getElementById("custom").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.value.trim()){const m=e.target.value.match(/\b(1[5-9]\d\d|20\d\d)\b/);added.push({source:"Operator line "+(added.length+1),genre:"note",year:m?+m[1]:2026,text:e.target.value.trim(),roles:["report"]});e.target.value="";render()}});
+  document.getElementById("targets").addEventListener("click",e=>{const b=e.target.closest("[data-target]"); if(b){document.getElementById("target").value=b.dataset.target;document.getElementById("preset").value=b.dataset.target;state.rival=null;state.selected=0;render()}});
+  document.getElementById("tabs").addEventListener("click",e=>{if(e.target.dataset.tab){state.tab=e.target.dataset.tab;document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));render()}});
+  document.getElementById("loom").addEventListener("click",e=>{const occs=state.lastOccs, r=e.currentTarget.getBoundingClientRect(), x=e.clientX-r.left,y=e.clientY-r.top;let best=0,bd=1e9;occs.forEach((o,i)=>{const d=Math.hypot((o._x||0)-x,(o._y||0)-y);if(d<bd){bd=d;best=i}});if(bd<28){state.selected=best;render()}});
+  const river=document.getElementById("river");
+  river.addEventListener("mousedown",e=>{state.drag=yearFromEvent(e);state.yearMin=state.drag;state.yearMax=state.drag;render()});
+  window.addEventListener("mousemove",e=>{if(state.drag!=null){const y=yearFromEvent(e);state.yearMin=Math.min(state.drag,y);state.yearMax=Math.max(state.drag,y);render()}});
+  window.addEventListener("mouseup",()=>{state.drag=null});
+  document.getElementById("clearTime").addEventListener("click",()=>{state.yearMin=null;state.yearMax=null;render()});
+  document.getElementById("focusSel").addEventListener("click",()=>{const o=state.lastOccs[state.selected];if(o){state.yearMin=o.d.year-5;state.yearMax=o.d.year+5;render()}});
+  window.addEventListener("resize",render);
+  render();
+}
+init();
+</script>
+</body>
+</html>

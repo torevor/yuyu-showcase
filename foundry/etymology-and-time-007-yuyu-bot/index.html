@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chronosemantic Ledger</title>
+<style>
+:root{
+  --paper:#fbfaf4; --ink:#191816; --muted:#68645c; --rule:#c9c1ad; --hair:#e6dfcf;
+  --red:#a53b2b; --blue:#2c5f86; --green:#557a3a; --gold:#9b711f; --violet:#6b527d;
+  --panel:#fffdf7; --wash:#f0eadc; --active:#222; --shadow:rgba(42,35,20,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{font-size:13px;line-height:1.25}
+button,input,select{font:inherit}
+.app{height:100vh;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{display:grid;grid-template-columns:280px 1fr auto;gap:10px;align-items:end;padding:8px 10px 7px;border-bottom:2px solid var(--ink);background:#f8f4ea}
+h1{font-family:Georgia,serif;font-size:22px;line-height:1;margin:0;letter-spacing:0;font-weight:700}
+.dek{font-size:11px;color:var(--muted);max-width:760px}
+.stamp{border:1px solid var(--ink);padding:4px 7px;text-transform:uppercase;font-size:10px;letter-spacing:.08em;background:#fff}
+main{display:grid;grid-template-columns:244px minmax(560px,1fr) 390px;min-height:0}
+aside,.right{overflow:auto;background:var(--panel)}
+aside{border-right:1px solid var(--ink)}
+.right{border-left:1px solid var(--ink)}
+.center{overflow:hidden;display:grid;grid-template-rows:148px 1fr 248px;background:var(--paper)}
+.block{border-bottom:1px solid var(--rule);padding:8px}
+.block:last-child{border-bottom:0}
+.label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:5px}
+.wordlist{display:grid;grid-template-columns:1fr;gap:3px}
+.wordbtn{width:100%;text-align:left;border:1px solid var(--rule);background:#fffdf8;padding:6px;display:grid;grid-template-columns:1fr auto;gap:6px;cursor:pointer}
+.wordbtn.active{background:#1f1d19;color:#fff;border-color:#1f1d19}
+.wordbtn small{color:inherit;opacity:.72}
+.search{width:100%;border:1px solid var(--ink);padding:6px;background:#fff;margin-bottom:6px}
+.meter{display:grid;grid-template-columns:1fr auto;gap:4px;align-items:center;margin-top:6px}
+.bar{height:8px;border:1px solid var(--ink);background:#fff;position:relative}
+.bar i{display:block;height:100%;background:var(--red);width:0}
+.topgrid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:8px;height:100%}
+.card{border:1px solid var(--ink);background:#fffdf7;box-shadow:0 1px 0 var(--shadow);padding:7px;min-width:0}
+.entry-title{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:4px;margin-bottom:5px}
+.lemma{font-family:Georgia,serif;font-size:28px;line-height:1}
+.meta{font-size:11px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:80px 1fr;gap:3px 7px;font-size:12px}
+.kv b{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.datebar{display:grid;grid-template-columns:64px 1fr 70px;gap:8px;align-items:center;margin-top:7px}
+.datebar input{width:100%}
+.yearbox{border:1px solid var(--ink);background:#fff;padding:4px 6px;text-align:center;font-variant-numeric:tabular-nums}
+.lensgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.lens{border:1px solid var(--rule);padding:5px;background:#fff;min-height:88px}
+.lens b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.lens span{font-size:11px;color:#34312d}
+.stage{position:relative;min-height:0;border-top:1px solid var(--rule);border-bottom:1px solid var(--ink)}
+#loom{width:100%;height:100%;display:block;background:linear-gradient(180deg,#fcfaf2,#f5efdf)}
+.axisLabel{position:absolute;font-size:10px;color:var(--muted);background:rgba(251,250,244,.86);padding:1px 3px;border:1px solid var(--hair)}
+.axisLeft{left:8px;top:7px}.axisRight{right:8px;top:7px}.axisBottom{left:8px;bottom:7px}
+.hover{position:absolute;pointer-events:none;border:1px solid var(--ink);background:#fffdf7;padding:6px;max-width:290px;box-shadow:2px 2px 0 rgba(0,0,0,.12);display:none;font-size:11px}
+.bottom{display:grid;grid-template-columns:1fr 1.45fr;gap:8px;padding:8px;min-height:0;overflow:hidden}
+.tablewrap{overflow:auto;border:1px solid var(--ink);background:#fff}
+table{border-collapse:collapse;width:100%;font-size:11px}
+th,td{border-bottom:1px solid var(--hair);border-right:1px solid var(--hair);padding:4px 5px;vertical-align:top}
+th{position:sticky;top:0;background:#eee6d5;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;z-index:2}
+tr.live{background:#edf4e7} tr.future{background:#f7e8e4} tr.ghost{background:#f4f0e7;color:#70695e}
+.tag{display:inline-block;border:1px solid currentColor;padding:0 3px;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+.tag.live{color:var(--green)} .tag.future{color:var(--red)} .tag.ghost{color:var(--gold)} .tag.ambig{color:var(--blue)}
+.claimbox{display:grid;grid-template-rows:auto auto 1fr;min-height:0}
+textarea{width:100%;height:100%;resize:none;border:1px solid var(--ink);padding:6px;background:#fffdf8;color:var(--ink)}
+.claimResult{border:1px solid var(--ink);border-top:0;background:#fff;padding:6px;font-size:11px;min-height:42px}
+.scanHead{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+.scanStats{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--ink);border-bottom:0;background:#fff}
+.scanStats div{border-right:1px solid var(--hair);padding:3px 5px;font-size:10px}
+.scanStats div:last-child{border-right:0}.scanStats b{display:block;font-family:Georgia,serif;font-size:16px;line-height:1;color:#1b1915}
+.scanPane{border:1px solid var(--ink);background:#fff;min-height:0;overflow:auto;padding:7px;font-family:Georgia,serif;font-size:14px;line-height:1.45}
+.scanTok{cursor:pointer;border-bottom:2px solid currentColor;padding:0 1px;position:relative}.scanTok.live{color:var(--green);background:#edf4e7}.scanTok.future{color:var(--red);background:#f7e8e4}.scanTok.ghost{color:var(--gold);background:#f7f0df}.scanTok.ambig{color:var(--blue);background:repeating-linear-gradient(135deg,#eef4f7,#eef4f7 4px,#fff 4px,#fff 8px)}
+.scanTok:hover{outline:1px solid var(--ink);outline-offset:1px}
+.scanResult{border:1px solid var(--ink);border-top:0;background:#fff;padding:5px;font-size:11px;min-height:48px;max-height:70px;overflow:auto}
+.hitlist{display:grid;grid-template-columns:1fr;gap:3px;max-height:245px;overflow:auto}
+.hit{border:1px solid var(--rule);background:#fff;padding:5px;cursor:pointer}.hit:hover{border-color:var(--ink)}.hit b{font-family:Georgia,serif;font-size:14px}.hit small{color:var(--muted);display:block}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:5px}
+.legend span{border:1px solid currentColor;padding:2px 3px;font-size:10px;text-align:center;background:#fff}
+.pressure{display:grid;grid-template-columns:78px 1fr;gap:8px;align-items:center}
+.dial{width:72px;height:72px;border:1px solid var(--ink);border-radius:50%;position:relative;background:conic-gradient(var(--red) 0deg,var(--gold) 110deg,var(--green) 220deg,#d7d0bf 360deg)}
+.needle{position:absolute;width:2px;height:30px;background:#111;left:34px;top:7px;transform-origin:1px 29px;transform:rotate(-80deg)}
+.dial:after{content:"";position:absolute;inset:20px;background:#fffdf7;border:1px solid var(--ink);border-radius:50%}
+.pressure b{font-family:Georgia,serif;font-size:24px;line-height:1;display:block}
+.ticks{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--rule);background:#fff;margin-top:5px}
+.ticks button{border:0;border-right:1px solid var(--rule);background:#fff;padding:4px 1px;font-size:10px;cursor:pointer}
+.ticks button:last-child{border-right:0}
+.ticks button.on{background:#1f1d19;color:#fff}
+.cognates{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.cog{border:1px solid var(--rule);background:#fff;padding:4px;min-height:42px}
+.cog b{font-size:12px}.cog small{display:block;color:var(--muted)}
+.mini{font-size:11px;color:var(--muted)}
+.matrix{display:grid;grid-template-columns:74px repeat(4,1fr);border-left:1px solid var(--rule);border-top:1px solid var(--rule)}
+.matrix div{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:4px;background:#fff;min-height:30px;font-size:10px}
+.matrix .head{background:#eee6d5;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.phase{height:10px;border:1px solid var(--ink);background:#fff;margin-top:4px;display:grid}
+.phase i{display:block;height:100%;border-right:1px solid rgba(0,0,0,.25)}
+.note{font-size:11px;color:#39352f;border-left:3px solid var(--blue);padding-left:6px;margin-top:6px}
+@media(max-width:1000px){
+  .app{height:auto;overflow:visible}
+  main{grid-template-columns:1fr}
+  aside,.right,.center{border:0;border-bottom:1px solid var(--ink)}
+  .center{grid-template-rows:auto 460px auto;overflow:visible}
+  header{grid-template-columns:1fr}
+  .topgrid,.bottom{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Chronosemantic Ledger</h1>
+    <div class="dek">A dense offline workbench for treating words as dated material: form, sense, reference, metaphor, language-game, and anachronism pressure.</div>
+    <div class="stamp">seed / no network</div>
+  </header>
+  <main>
+    <aside>
+      <div class="block">
+        <div class="label">Lexical dossier</div>
+        <input id="search" class="search" placeholder="filter words, roots, domains">
+        <div id="wordlist" class="wordlist"></div>
+      </div>
+      <div class="block">
+        <div class="label">Anachronism pressure</div>
+        <div class="pressure">
+          <div class="dial"><div id="needle" class="needle"></div></div>
+          <div><b id="pressureScore">0</b><span id="pressureText" class="mini">Move the date cursor.</span></div>
+        </div>
+        <div class="meter"><span class="mini">semantic impossibility</span><span id="badCount" class="mini">0</span></div>
+        <div class="bar"><i id="badBar"></i></div>
+      </div>
+      <div class="block">
+        <div class="label">Period presets</div>
+        <div id="ticks" class="ticks"></div>
+      </div>
+      <div class="block">
+        <div class="label">Use-case</div>
+        <div class="note">Ask: could this word mean this at this date? The answer is split across attestable form, semantic layer, referential target, and rule-governed use. Seed dates are compact scholarly approximations, meant to be replaced by cited attestations.</div>
+      </div>
+    </aside>
+
+    <section class="center">
+      <div class="block">
+        <div class="topgrid">
+          <div class="card">
+            <div class="entry-title"><div id="lemma" class="lemma"></div><div id="lang" class="meta"></div></div>
+            <div id="kv" class="kv"></div>
+            <div class="datebar">
+              <span class="label" style="margin:0">date</span>
+              <input id="year" type="range" min="-1000" max="2025" step="1" value="1500">
+              <div id="yearbox" class="yearbox"></div>
+            </div>
+            <div id="phase" class="phase"></div>
+          </div>
+          <div class="card">
+            <div class="label">Four interpretive lenses</div>
+            <div id="lenses" class="lensgrid"></div>
+          </div>
+          <div class="card">
+            <div class="label">Cognate / neighbor pressure</div>
+            <div id="cognates" class="cognates"></div>
+          </div>
+        </div>
+      </div>
+      <div class="stage">
+        <canvas id="loom"></canvas>
+        <div class="axisLabel axisLeft">sediment: older senses below, later games above</div>
+        <div class="axisLabel axisRight">red = unavailable at cursor; green = live</div>
+        <div class="axisLabel axisBottom">time runs left to right; thickness = domain pressure</div>
+        <div id="hover" class="hover"></div>
+      </div>
+      <div class="bottom">
+        <div class="tablewrap"><table id="senseTable"></table></div>
+        <div class="claimbox">
+          <div>
+            <div class="scanHead"><div class="label">Manuscript X-Ray</div><div class="mini" id="scanLexicon"></div></div>
+            <textarea id="claim" spellcheck="false"></textarea>
+          </div>
+          <div id="scanStats" class="scanStats"></div>
+          <div id="claimResult" class="scanPane"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="block">
+        <div class="label">Event ledger</div>
+        <div class="tablewrap" style="max-height:260px"><table id="events"></table></div>
+      </div>
+      <div class="block">
+        <div class="label">Sign-function matrix</div>
+        <div id="matrix" class="matrix"></div>
+      </div>
+      <div class="block">
+        <div class="label">Forensic reading</div>
+        <div id="forensic" class="mini"></div>
+      </div>
+      <div class="block">
+        <div class="label">Passage evidence</div>
+        <div id="scanDetail" class="scanResult"></div>
+        <div id="hitlist" class="hitlist"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+const DATA = [
+ {id:"text", lemma:"text", lang:"English", root:"Latin texere 'to weave'", family:"Indo-European", span:[-200,2025], domain:"material/scriptural/digital", note:"A model case where material weaving becomes verbal fabric, authority, document, then machine-readable sequence.",
+  lenses:{Frege:"Reference migrates from woven thing to written object; sense keeps a fabric metaphor.",Saussure:"The signifier gains value against scripture, document, corpus, and code.",Peirce:"Iconic texture becomes symbolic inscription; indexes institutions that authorize reading.",Wittgenstein:"New games: exegesis, citation, editing, computation."},
+  senses:[
+   {from:-200,to:700,label:"woven fabric / texture",domain:"material",weight:.62,gloss:"Latin textile field: thing woven, web, structure.",status:"residue",claim:["woven","fabric","texture"]},
+   {from:1300,to:2025,label:"scriptural passage",domain:"sacred",weight:.82,gloss:"A passage of authoritative writing used for exposition.",status:"live",claim:["scripture","passage","sermon"]},
+   {from:1450,to:2025,label:"written or printed work",domain:"document",weight:.92,gloss:"Words of a book or document, distinct from commentary or apparatus.",status:"live",claim:["book","document","words","written"]},
+   {from:1960,to:2025,label:"machine-readable string",domain:"digital",weight:.88,gloss:"Encoded linguistic data handled by software.",status:"live",claim:["digital","computer","string","data"]}],
+  events:[[-200,"Latin","texere forms the material field: weave, construct, fabricate."],[1300,"Middle English","text enters learned religious use through Old French/Latin."],[1450,"print","Text separates from gloss, image, layout, and apparatus."],[1960,"computing","Text becomes manipulable encoded sequence."]],
+  cognates:[["texture","English","same Latin field; material residue"],["textile","English","material branch remains explicit"],["tissue","English/French","woven structure, later biological"],["context","English","that which is woven together"]]},
+ {id:"computer", lemma:"computer", lang:"English", root:"Latin computare 'reckon together'", family:"Indo-European", span:[1600,2025], domain:"office/machine", note:"Useful because the form long predates the modern referent.",
+  lenses:{Frege:"Same signifier, different referent class: person, then machine.",Saussure:"Value changes as calculator, clerk, tabulator, and electronic machine compete.",Peirce:"Index of labor bureaucracy before symbol of automation.",Wittgenstein:"Rules shift from occupation naming to device naming."},
+  senses:[
+   {from:1610,to:1950,label:"person who computes",domain:"labor",weight:.8,gloss:"A human calculator, often in astronomy, navigation, insurance, or offices.",status:"archaic",claim:["person","clerk","human","calculator"]},
+   {from:1890,to:1970,label:"mechanical calculating apparatus",domain:"machine",weight:.6,gloss:"Applied to calculating machines and tabulators before electronic generality.",status:"transitional",claim:["machine","tabulator","calculator"]},
+   {from:1945,to:2025,label:"electronic programmable machine",domain:"digital",weight:1,gloss:"Programmable electronic device for stored procedures and symbolic manipulation.",status:"live",claim:["electronic","program","software","digital","device"]}],
+  events:[[1610,"occupation","Agent noun: one who reckons."],[1890,"bureaucracy","Calculating machines enter office language."],[1945,"war/lab","Electronic stored-program sense becomes possible."],[1980,"domestic","Personal computer stabilizes everyday reference."]],
+  cognates:[["compute","English","verb source"],["count","English/French","same reckoning neighborhood"],["compter","French","count/reckon"],["computation","English","abstract process"]]},
+ {id:"broadcast", lemma:"broadcast", lang:"English", root:"broad + cast", family:"Germanic", span:[1700,2025], domain:"agriculture/media", note:"The metaphor is not decorative: media inherits the gesture of scattering seed.",
+  lenses:{Frege:"Referent changes from seed-distribution action to signal-distribution event.",Saussure:"Compound value depends on agricultural contrast before media contrast.",Peirce:"Iconic scattering becomes technical index of transmission range.",Wittgenstein:"Farm procedure becomes institutional speech act: to broadcast."},
+  senses:[
+   {from:1760,to:2025,label:"scatter seed widely",domain:"agriculture",weight:.78,gloss:"Sowing by casting seed over a broad area.",status:"residue",claim:["seed","sow","field","scatter"]},
+   {from:1920,to:2025,label:"transmit by radio/television",domain:"media",weight:1,gloss:"Distribute signal or program to many receivers.",status:"live",claim:["radio","television","signal","program"]},
+   {from:1990,to:2025,label:"send widely online",domain:"network",weight:.74,gloss:"One-to-many distribution across digital networks.",status:"live",claim:["online","network","message","internet"]}],
+  events:[[1760,"agriculture","Adverb/adjective for broad sowing."],[1920,"radio","Broadcasting institutionalizes one-to-many signal distribution."],[1990,"network","Metaphor extends to packet and platform speech."]],
+  cognates:[["cast","English","throw, calculate, assign"],["broad","English","wide"],["播送","Chinese","semantic parallel: sow/send"],["diffuse","Latin/French","pour/scatter abroad"]]},
+ {id:"cloud", lemma:"cloud", lang:"English", root:"Old English clud 'mass of rock, hill'", family:"Germanic", span:[800,2025], domain:"weather/abstraction/computing", note:"A visible mass becomes vapor, obscurity, then remote infrastructure made deliberately vague.",
+  lenses:{Frege:"Reference passes rock mass to vapor mass to networked infrastructure.",Saussure:"Value depends on opposition to clear sky, local machine, visible server.",Peirce:"Index of weather, icon of vagueness, symbol for managed remoteness.",Wittgenstein:"The computing game licenses not knowing where the machine is."},
+  senses:[
+   {from:800,to:1300,label:"rock mass / hill",domain:"landscape",weight:.38,gloss:"Old English source sense before modern meteorological dominance.",status:"archaic",claim:["rock","hill","mass"]},
+   {from:1300,to:2025,label:"visible vapor mass",domain:"weather",weight:.94,gloss:"Condensed vapor suspended in the sky.",status:"live",claim:["sky","vapor","weather"]},
+   {from:1550,to:2025,label:"obscurity or threat",domain:"metaphor",weight:.65,gloss:"A cloud over judgment, reputation, or future.",status:"live",claim:["obscure","threat","doubt"]},
+   {from:2006,to:2025,label:"remote network infrastructure",domain:"digital",weight:.9,gloss:"Abstracted storage/compute services reached through networks.",status:"live",claim:["server","storage","network","compute","remote"]}],
+  events:[[800,"Old English","clud denotes rock or hill mass."],[1300,"weather","Vapor sense dominates."],[1550,"metaphor","Mental/social obscurity layer develops."],[2006,"computing","Cloud computing stabilizes as commercial term."]],
+  cognates:[["clod","English","lump of earth"],["cloudy","English","weather and judgment"],["cluster","English","mass-neighbor"],["Nimbus","Latin","weather prestige borrowing"]]},
+ {id:"virus", lemma:"virus", lang:"English/Latin", root:"Latin virus 'poison, slime'", family:"Italic", span:[-100,2025], domain:"poison/biology/computing", note:"A term whose referent repeatedly shrinks into invisibility while its agency expands.",
+  lenses:{Frege:"Reference moves from substance to pathogen class to executable pattern.",Saussure:"Value changes against poison, bacterium, gene, malware.",Peirce:"Indexical illness becomes symbolic code that acts.",Wittgenstein:"Medical diagnosis and security response are distinct rule systems."},
+  senses:[
+   {from:-100,to:1880,label:"poison / noxious substance",domain:"substance",weight:.55,gloss:"Latin and early learned use for venomous or harmful matter.",status:"residue",claim:["poison","venom","slime"]},
+   {from:1892,to:2025,label:"filterable infectious agent",domain:"biology",weight:1,gloss:"Pathogen smaller than bacteria, later understood through molecular biology.",status:"live",claim:["infection","pathogen","biology","disease"]},
+   {from:1972,to:2025,label:"self-replicating malicious code",domain:"digital",weight:.82,gloss:"Program that replicates by inserting itself into other code or systems.",status:"live",claim:["malware","program","computer","code"]}],
+  events:[[-100,"Latin","Noxious fluid or poison."],[1892,"biology","Ivanovsky-style filterable agent sense becomes available."],[1930,"virology","Virus as biological category stabilizes."],[1972,"computing","Self-replicating program metaphor becomes thinkable."]],
+  cognates:[["virulent","English","poisonous, hostile"],["viral","English","biological then media spread"],["venom","Latin-neighbor","poison neighborhood"],["malware","English","later technical contrast"]]},
+ {id:"salary", lemma:"salary", lang:"English", root:"Latin salarium, linked to sal 'salt'", family:"Indo-European", span:[1300,2025], domain:"payment/labor", note:"A payment word carrying a material commodity ghost.",
+  lenses:{Frege:"Reference stabilizes as regular pay; sense preserves ration/payment history.",Saussure:"Value opposed to wage, fee, stipend, honorarium.",Peirce:"Index of institutional labor relation, not merely money.",Wittgenstein:"Belongs to contract/payroll games rather than barter games."},
+  senses:[
+   {from:0,to:1500,label:"allowance/payment associated with salt or provisions",domain:"ration",weight:.48,gloss:"The salt link is debated in detail but the Latin salarium field ties payment to provisions.",status:"residue",claim:["salt","ration","allowance"]},
+   {from:1350,to:2025,label:"fixed regular payment for service",domain:"labor",weight:1,gloss:"Regular compensation, especially annual or periodic.",status:"live",claim:["pay","job","regular","income"]},
+   {from:1900,to:2025,label:"white-collar compensation class",domain:"institution",weight:.64,gloss:"Contrasted with hourly wage in labor administration.",status:"live",claim:["white-collar","payroll","annual"]}],
+  events:[[0,"Latin","Salarium in provision/payment field."],[1350,"English","Salary enters service-payment vocabulary."],[1900,"bureaucracy","Salary/wage distinction hardens in labor administration."]],
+  cognates:[["salt","English","material root"],["salarium","Latin","source form"],["salad","Romance","salted preparation, same root"],["soldier","Latin-neighbor","pay/service relation via solidus, not same root"]]},
+ {id:"algorithm", lemma:"algorithm", lang:"English", root:"al-Khwarizmi -> algorismus", family:"Arabic name via Latin", span:[820,2025], domain:"calculation/procedure/governance", note:"A personal name becomes a rule-form, then a civic anxiety.",
+  lenses:{Frege:"Reference shifts from arithmetic method to any effective procedure.",Saussure:"Form is reshaped by folk proximity to arithmetic and logarithm.",Peirce:"Symbolic rule whose interpretant is a repeatable operation.",Wittgenstein:"From classroom calculation game to platform governance game."},
+  senses:[
+   {from:825,to:1500,label:"Hindu-Arabic numeral calculation",domain:"arithmetic",weight:.62,gloss:"Algorism: reckoning with Arabic numerals.",status:"residue",claim:["numerals","arithmetic","reckoning"]},
+   {from:1650,to:2025,label:"stepwise computational procedure",domain:"logic",weight:1,gloss:"Finite procedure for calculation or problem-solving.",status:"live",claim:["procedure","steps","calculation","recipe"]},
+   {from:2005,to:2025,label:"platformic ranking/decision system",domain:"governance",weight:.76,gloss:"Opaque automated system that orders attention, credit, risk, or visibility.",status:"live",claim:["platform","ranking","recommendation","feed","AI"]}],
+  events:[[825,"Baghdad","Al-Khwarizmi's name enters mathematical transmission."],[1200,"Latin schools","Algorismus denotes Arabic-numeral calculation."],[1650,"formalization","Algorithm generalizes toward procedure."],[2005,"platforms","Public discourse makes algorithm a social actor."]],
+  cognates:[["algorism","English","older arithmetic term"],["algebra","Arabic","same scholar's title field, different word"],["recipe","Latin","procedural neighbor"],["protocol","Greek","rule-order neighbor"]]},
+ {id:"person", lemma:"person", lang:"English", root:"Latin persona 'mask, role, character'", family:"Italic", span:[1200,2025], domain:"mask/law/self", note:"A theatrical mask becomes a legal and metaphysical unit.",
+  lenses:{Frege:"Reference can be human, legal subject, grammatical role, theological relation.",Saussure:"Value changes against man, soul, citizen, individual, body.",Peirce:"Mask icon becomes institutional symbol of accountable agency.",Wittgenstein:"Different games: theater, law, grammar, metaphysics."},
+  senses:[
+   {from:0,to:1400,label:"mask / theatrical role",domain:"theater",weight:.45,gloss:"Latin persona as role or mask in performance.",status:"residue",claim:["mask","role","theater"]},
+   {from:1200,to:2025,label:"human individual",domain:"social",weight:.92,gloss:"A human being considered as an individual.",status:"live",claim:["human","individual","someone"]},
+   {from:1300,to:2025,label:"legal or moral subject",domain:"law",weight:.78,gloss:"An entity recognized as bearer of rights or duties.",status:"live",claim:["legal","rights","duties","corporation"]},
+   {from:1450,to:2025,label:"grammatical person",domain:"grammar",weight:.56,gloss:"Speaker/addressee/other relation encoded in grammar.",status:"live",claim:["grammar","first","second","third"]}],
+  events:[[0,"Latin theater","Persona: mask, character, role."],[1200,"English","Human individual sense enters."],[1300,"law/theology","Person becomes technical subject category."],[1450,"grammar","Person names deictic roles in language."]],
+  cognates:[["persona","Latin/English","role identity"],["parson","English","ecclesiastical person via Anglo-French"],["impersonal","English","without personal subject"],["personhood","English","status abstraction"]]}
+	];
+
+const SCAN_ROWS = [
+ ["car","transport",[[1300,2025,"wheeled vehicle","transport","Cart or wheeled conveyance, before motor dominance.","car cars carriage cart vehicle"],[1895,2025,"motor automobile","machine","Self-propelled road vehicle; sharply anachronistic in most pre-1890 prose.","car cars automobile auto motorcar sedan"]]],
+ ["train","transport",[[1400,2025,"retinue or trailing sequence","social","A following company, procession, or connected series.","train trains retinue procession sequence"],[1825,2025,"railway vehicle system","machine","Locomotive-drawn railway conveyance after early public railways.","train trains railway railroad locomotive"]]],
+ ["phone","communication",[[1880,2025,"telephone apparatus or call","media","Voice communication by telephone; common clipped form is later.","phone phones telephone telephones call calls"],[2007,2025,"smartphone computing device","digital","Pocket networked computer with telephony as one function.","phone phones smartphone smartphones mobile cellphone app apps"]]],
+ ["telegram","communication",[[1850,2025,"telegraph message","media","Written message transmitted electrically by telegraph network.","telegram telegrams telegraph telegraphed wire wired"]]],
+ ["photograph","media",[[1839,2025,"camera-made image","media","Image fixed by photographic process after public announcement of photography.","photograph photographs photo photos camera snapshot picture"]]],
+ ["film","media",[[1000,2025,"thin membrane or coating","material","A thin skin, membrane, or layer.","film films membrane coating"],[1890,2025,"motion-picture medium","media","Photographic strip and moving-picture work.","film films movie movies cinema cinematic"]]],
+ ["screen","display",[[1400,2025,"partition or shield","material","A protective or concealing barrier.","screen screens shield partition"],[1910,2025,"projection/display surface","media","Surface for projected images; later electronic display.","screen screens display monitor television tv"]]],
+ ["robot","machine",[[1920,2025,"artificial worker or automaton","machine","From Capek's R.U.R.; not available for medieval or early modern automata.","robot robots robotic android automaton"]]],
+ ["drone","machine",[[1000,2025,"humming sound or idle person","sound","Old sound/social senses before aircraft.","drone drones humming idler"],[1946,2025,"uncrewed aircraft","machine","Remotely piloted or autonomous aircraft.","drone drones uav quadcopter unmanned"]]],
+ ["vaccine","medicine",[[1798,2025,"cowpox-derived inoculation","biology","Jennerian vaccination, later generalized to immunizing preparation.","vaccine vaccines vaccination vaccinated inoculation"]]],
+ ["quarantine","medicine",[[1400,2025,"forty-day isolation","institution","Venetian-style isolation period for ships or persons.","quarantine quarantined isolation plague lazaretto"],[2020,2025,"public-health lockdown shorthand","institution","Broad pandemic-era household or civic restriction usage.","quarantine lockdown distancing pandemic"]]],
+ ["antibiotic","medicine",[[1942,2025,"antimicrobial drug","biology","Drug inhibiting or killing bacteria; not available for plague-era scenes.","antibiotic antibiotics penicillin antimicrobial"]]],
+ ["gene","biology",[[1909,2025,"unit of heredity","biology","Johannsen's term for inherited factor; molecular sense comes later.","gene genes genetic genetics heredity"],[1970,2025,"sequence-level molecular unit","biology","DNA sequence treated as manipulable informational unit.","gene genes genome dna genomic"]]],
+ ["clone","biology",[[1903,2025,"asexually derived organism or cell line","biology","Biological population from one ancestor.","clone clones cloned cloning"],[1980,2025,"software/hardware copy","digital","Exact or near-exact technical copy.","clone cloned repo repository copy duplicate"]]],
+ ["network","network",[[1550,2025,"net-like arrangement","material","Interlaced structure or reticulation.","network networks net mesh web"],[1940,2025,"broadcast or communication system","media","Linked stations or communications infrastructure.","network networks broadcast radio television"],[1969,2025,"computer interconnection","digital","Linked computers exchanging data.","network networks internet online packet server"]]],
+ ["internet","digital",[[1974,2025,"inter-networked computer system","digital","TCP/IP internetworking term; public web usage later.","internet online webpage website web email"]]],
+ ["website","digital",[[1991,2025,"web location or pages","digital","World Wide Web site; impossible in pre-web settings.","website websites webpage webpages homepage url browser"]]],
+ ["email","digital",[[1971,2025,"electronic mail","digital","Networked electronic message.","email emails e-mail emailed inbox"]]],
+ ["app","digital",[[1985,2025,"software application","digital","Short application/software program; mobile-app sense later.","app apps application software program"],[2008,2025,"mobile platform application","digital","Phone/tablet platform software distributed through stores.","app apps iphone android mobile"]]],
+ ["platform","governance",[[1550,2025,"raised flat surface or declaration plank","material","Physical platform, plan, or party program.","platform platforms stage plank"],[2005,2025,"digital intermediary system","governance","Software marketplace or attention/governance intermediary.","platform platforms feed algorithm creator"]]],
+ ["database","digital",[[1962,2025,"structured machine-readable data store","digital","Organized computerized data collection.","database databases data sql records"]]],
+ ["dashboard","digital",[[1840,2025,"vehicle splash-board/control panel","machine","Board protecting driver or carrying gauges.","dashboard dashboards panel gauge"],[1990,2025,"software status interface","digital","Screen summarizing operational metrics.","dashboard dashboards metrics analytics chart"]]],
+ ["broadcast","media",[[1760,2025,"scatter seed widely","agriculture","Sowing seed by broad casting.","broadcast broadcasted broadcasting seed sow field"],[1920,2025,"radio/television transmission","media","One-to-many electronic signal distribution.","broadcast broadcasts broadcasting radio television signal"],[1990,2025,"online distribution","network","One-to-many network/platform sending.","broadcast broadcasting livestream stream online"]]],
+ ["cloud","digital",[[1300,2025,"visible vapor mass","weather","Condensed vapor in the sky.","cloud clouds cloudy sky weather"],[2006,2025,"remote computing infrastructure","digital","Networked storage/compute abstracted from local machines.","cloud server storage aws compute remote"]]],
+ ["virus","biology",[[0,1880,"poison or noxious substance","substance","Latin/learned noxious matter.","virus poison venom"],[1892,2025,"infectious agent","biology","Filterable infectious agent, later molecular biology.","virus viruses viral infection pathogen"],[1972,2025,"malicious self-replicating code","digital","Program that replicates through systems.","virus viruses malware computer code"]]],
+ ["text","document",[[1300,2025,"scriptural passage","sacred","Authoritative passage for exposition.","text texts scripture sermon"],[1450,2025,"written or printed words","document","Words of a document or book.","text texts book document written"],[1960,2025,"machine-readable string","digital","Encoded character data.","text texting string data digital"]]],
+ ["computer","digital",[[1610,1950,"person who computes","labor","Human calculator or reckoner.","computer computers calculator"],[1945,2025,"electronic programmable machine","digital","Stored-program electronic device.","computer computers software program digital laptop"]]],
+ ["algorithm","logic",[[825,1500,"Arabic-numeral reckoning","arithmetic","Algorism with Hindu-Arabic numerals.","algorithm algorism numerals reckoning"],[1650,2025,"stepwise procedure","logic","Finite effective procedure.","algorithm algorithms algorithmic procedure steps calculation"],[2005,2025,"platform ranking system","governance","Opaque automated ordering or decision system.","algorithm algorithms algorithmic feed ranking recommendation ai"]]],
+ ["salary","labor",[[1350,2025,"regular payment for service","labor","Periodic compensation.","salary salaries paid payroll income"],[1900,2025,"white-collar compensation class","institution","Pay class contrasted with hourly wage.","salary salaried white-collar payroll"]]],
+ ["person","law",[[1200,2025,"human individual","social","Human being considered individually.","person persons people human individual"],[1300,2025,"legal subject","law","Rights/duties-bearing entity.","person persons corporation legal rights"],[1450,2025,"grammatical role","grammar","Speaker/addressee/other grammatical category.","person first-person second-person third-person grammar"]]],
+ ["police","law",[[1530,2025,"civil administration/order","institution","Governance of city or polity before modern force sense.","police policy order administration"],[1800,2025,"organized law-enforcement body","law","Modern professional police force.","police officer constable detective"]]],
+ ["passport","law",[[1500,2025,"safe-conduct document","law","Authorization to pass through territory.","passport passports papers pass"],[1920,2025,"standard national travel identity document","institution","Modern passport regime after twentieth-century border formalization.","passport passports visa border immigration"]]],
+ ["capital","economy",[[1200,2025,"head/chief/principal","metaphor","Chief or principal thing, from caput.","capital chief principal head"],[1610,2025,"wealth used productively","economy","Stock, wealth, or assets used in production.","capital investment investor finance"],[1780,2025,"uppercase letter","grammar","Capital letter distinction in print/orthography.","capital uppercase letter"]]],
+ ["stock","economy",[[900,2025,"trunk, store, lineage","material","Stem, store, ancestry, or supply.","stock stocks store supply lineage"],[1520,2025,"financial share or fund","economy","Capital or ownership share.","stock stocks shares market investor"],[1920,2025,"standardized inventory item","institution","Inventory unit in commerce.","stock stocked inventory sku"]]],
+ ["credit","economy",[[1500,2025,"belief, trust, reputation","social","Trust or credibility.","credit credible trust reputation"],[1540,2025,"financial trust or loan account","economy","Ability to obtain goods/money before payment.","credit loan debt account"],[1950,2025,"academic unit","institution","Unit toward a degree.","credit credits course degree"]]],
+ ["cell","biology",[[1100,2025,"small room or compartment","material","Monastic or enclosed small space.","cell cells chamber room"],[1665,2025,"biological structural unit","biology","Hooke's cell; later living unit of organisms.","cell cells biology tissue"],[1970,2025,"mobile network area/device shorthand","network","Cellular radio area or phone shorthand.","cell cellular cellphone mobile"]]],
+ ["mouse","digital",[[900,2025,"small rodent","animal","Ordinary animal sense.","mouse mice rodent"],[1965,2025,"computer pointing device","digital","Hand-controlled cursor device.","mouse mice cursor click pointer"]]],
+ ["window","digital",[[1200,2025,"opening admitting light","material","Architectural opening.","window windows glass"],[1970,2025,"graphical interface region","digital","Rectangular GUI display region.","window windows gui desktop screen"]]],
+ ["tablet","digital",[[1300,2025,"flat writing slab or medicine dose","material","Writing slab or compressed dose.","tablet tablets slab pill"],[2010,2025,"touchscreen portable computer","digital","Flat touchscreen computing device.","tablet tablets ipad touchscreen"]]],
+ ["folder","digital",[[1500,2025,"folding holder","material","Physical holder for papers.","folder folders file papers"],[1980,2025,"filesystem directory metaphor","digital","Graphical/structural container for files.","folder folders directory file files"]]],
+ ["file","document",[[1500,2025,"thread or collection of papers","document","Set of documents arranged together.","file files dossier record"],[1950,2025,"computer data object","digital","Named machine-readable data object.","file files download upload folder"]]],
+ ["stream","network",[[900,2025,"flowing water","weather","Current of water.","stream streams river flow"],[1995,2025,"continuous digital media/data flow","network","Data delivered continuously over a network.","stream streaming livestream video audio"]]],
+ ["profile","digital",[[1650,2025,"side-view outline","material","Outline or biographical sketch.","profile profiles portrait outline"],[1995,2025,"online identity record","digital","User account/self-description in a system.","profile profiles account bio avatar"]]],
+ ["avatar","digital",[[1784,2025,"divine descent/incarnation","sacred","Sanskrit avatara in religious/philosophical use.","avatar avatars incarnation"],[1985,2025,"graphical user representation","digital","On-screen persona or game/social identity.","avatar avatars character gamer profile"]]],
+ ["meme","culture",[[1976,2025,"unit of cultural transmission","culture","Dawkins's cultural replicator term.","meme memes memetic culture"],[1995,2025,"internet joke-template or shareable item","digital","Networked image/text joke or format.","meme memes viral internet image"]]],
+ ["interface","digital",[[1880,2025,"shared boundary surface","material","Surface between two bodies/systems.","interface interfaces boundary surface"],[1960,2025,"human-machine or software contact layer","digital","Point of interaction between systems or user and machine.","interface interfaces ui api screen"]]],
+ ["feedback","systems",[[1920,2025,"returned signal in control system","machine","Signal fed back into a system; also audio loop.","feedback loop amplifier control"],[1940,2025,"evaluative response","social","Information returned to modify behavior or work.","feedback review comments response"]]],
+ ["signal","media",[[1400,2025,"sign or indication","semiotic","A sign, token, or indication.","signal signals sign indication"],[1850,2025,"electrical/wireless transmission","media","Encoded electrical or radio transmission.","signal signals radio wire wireless"]]],
+ ["data","digital",[[1640,2025,"given facts for reasoning","logic","Plural of datum: things given in argument or observation.","data datum facts observations"],[1946,2025,"machine-processable information","digital","Information handled by computers.","data dataset database analytics digital"]]],
+ ["model","logic",[[1570,2025,"pattern or small representation","material","Example, design, or representation.","model models pattern design"],[1950,2025,"formal/statistical/computational representation","logic","Abstract system used for inference or prediction.","model models statistical ai simulation"]]],
+ ["AI","digital",[[1956,2025,"artificial intelligence field/system","digital","Machine intelligence research and systems after Dartmouth-era naming.","ai artificial-intelligence chatbot model neural"]]],
+ ["chatbot","digital",[[1994,2025,"automated conversational agent","digital","Software agent that exchanges text or speech conversationally.","chatbot chatbots bot bots conversational"]]],
+ ["satellite","space",[[1540,2025,"attendant or follower","social","A follower, attendant, or dependent state.","satellite satellites attendant follower"],[1957,2025,"artificial orbiting object","machine","Human-made object in orbit after Sputnik.","satellite satellites orbit gps space"]]],
+ ["radar","machine",[[1940,2025,"radio detection system","machine","Detection/ranging by radio waves.","radar radio detection"]]],
+ ["laser","machine",[[1960,2025,"coherent light device","machine","Light amplification by stimulated emission of radiation.","laser lasers beam"]]],
+ ["nuclear","science",[[1840,2025,"relating to a nucleus","biology","Cellular/central nucleus relation.","nuclear nucleus"],[1945,2025,"atomic energy/weapons sense","science","Atomic nucleus energy, bomb, power discourse.","nuclear atomic reactor bomb"]]],
+ ["plastic","material",[[1600,2025,"moldable/formative","material","Capable of being shaped.","plastic pliable moldable"],[1909,2025,"synthetic polymer material","material","Modern synthetic plastics after Bakelite era.","plastic plastics polymer bakelite"]]],
+ ["electric","science",[[1600,2025,"amber-like attractive property","science","Early electricity from amber phenomena.","electric electricity"],[1880,2025,"powered by electrical supply","machine","Domestic/industrial electrical devices.","electric electrical powered battery"]]]
+];
+
+const COLORS = {material:"#8b6f47",sacred:"#7a4c82",document:"#2c5f86",digital:"#3e7c73",labor:"#6b6b37",machine:"#93612f",agriculture:"#557a3a",media:"#a53b2b",network:"#4f6f9f",landscape:"#75664d",weather:"#4d7f98",metaphor:"#9b711f",substance:"#786052",biology:"#477b3f",ration:"#8c7830",institution:"#5d6688",arithmetic:"#876a2b",logic:"#315f7a",governance:"#8c3d36",theater:"#7b5583",social:"#596f42",law:"#385d86",grammar:"#8a5737",transport:"#665f3b",display:"#5e6b7f",communication:"#9a4f38",medicine:"#4b7b60",economy:"#7a6426",culture:"#7b5583",semiotic:"#315f7a",systems:"#646f3c",space:"#536b84",science:"#496f76",sound:"#7b6a4b"};
+const PRESETS = [-200, 1300, 1450, 1760, 1920, 1960, 2006, 2025];
+let state = {word:DATA[0], year:1500, hover:null, scanHits:[], selectedHit:null};
+let SCAN_INDEX = new Map(), SCAN_LEXICON = [];
+const STOP_FORMS = new Set("a an and are as at be by for from he her his in into is it its of on or she the their then they this to was were with about after before checked watched adjusted saved papers paper king captain field stage plank pass order sign thing body system surface boundary room flow copy facts observations response comments review".split(" "));
+const $ = id => document.getElementById(id);
+function fmtYear(y){ return y < 0 ? Math.abs(y)+" BCE" : y+" CE"; }
+function liveState(s,y){ if(y < s.from) return "future"; if(s.to && y > s.to) return "ghost"; return "live"; }
+function esc(s){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
+function normToken(s){ return String(s).toLowerCase().replace(/^[^a-z0-9]+|[^a-z0-9-]+$/g,""); }
+function buildScannerIndex(){
+  const deep = DATA.map(w=>({id:w.id,lemma:w.lemma,domain:w.domain,deep:true,senses:w.senses.map(s=>({...s,forms:[w.lemma]}))}));
+  const thin = SCAN_ROWS.map(r=>({id:r[0],lemma:r[0],domain:r[1],deep:!!DATA.find(w=>w.id===r[0]),senses:r[2].map(s=>({from:s[0],to:s[1],label:s[2],domain:s[3],gloss:s[4],forms:s[5].split(/\s+/),claim:s[5].split(/\s+/)}))}));
+  const merged = new Map();
+  [...thin,...deep].forEach(w=>{
+    if(!merged.has(w.id)) merged.set(w.id,w);
+    else {
+      const prior=merged.get(w.id);
+      prior.deep=prior.deep||w.deep;
+      prior.senses=[...prior.senses,...w.senses];
+    }
+  });
+  SCAN_LEXICON=[...merged.values()].sort((a,b)=>a.lemma.localeCompare(b.lemma));
+  SCAN_INDEX=new Map();
+  SCAN_LEXICON.forEach(w=>w.senses.forEach((s,idx)=>{
+    [...new Set([w.lemma,...(s.forms||[]),(w.lemma+"s")].map(normToken).filter(tok=>tok && tok.length>2 && !STOP_FORMS.has(tok)))].forEach(tok=>{
+      if(!SCAN_INDEX.has(tok)) SCAN_INDEX.set(tok,[]);
+      SCAN_INDEX.get(tok).push({word:w,sense:s,senseIndex:idx});
+    });
+  }));
+}
+function init(){
+  buildScannerIndex();
+  $("search").addEventListener("input", renderWordList);
+  $("year").addEventListener("input", e=>{state.year=+e.target.value; render();});
+  $("claim").addEventListener("input", renderManuscript);
+  $("claimResult").addEventListener("click", e=>{
+    const el=e.target.closest(".scanTok"); if(!el) return;
+    const hit=state.scanHits[+el.dataset.hit]; if(hit) selectScanHit(hit);
+  });
+  const ticks=$("ticks"); ticks.innerHTML=PRESETS.map(y=>`<button data-y="${y}">${fmtYear(y)}</button>`).join("");
+  ticks.addEventListener("click",e=>{ if(e.target.dataset.y){ state.year=+e.target.dataset.y; $("year").value=state.year; render(); }});
+  const canvas=$("loom");
+  canvas.addEventListener("mousemove", loomMove);
+  canvas.addEventListener("mouseleave",()=>{$("hover").style.display="none"; state.hover=null;});
+  window.addEventListener("resize", drawLoom);
+  $("claim").value = "In 1460 the clerk filed the king's papers, then checked the website on his phone, emailed the captain, watched a broadcast about a virus, adjusted the algorithmic feed, and saved the text to the cloud database.";
+  $("scanLexicon").textContent=SCAN_LEXICON.length+" dated lexical records";
+  renderWordList(); render();
+}
+function renderWordList(){
+  const q=$("search").value.toLowerCase();
+  const list=DATA.filter(w=>(w.lemma+" "+w.root+" "+w.domain+" "+w.note).toLowerCase().includes(q));
+  $("wordlist").innerHTML=list.map(w=>`<button class="wordbtn ${w.id===state.word.id?"active":""}" data-id="${w.id}"><span>${esc(w.lemma)}</span><small>${esc(w.domain)}</small></button>`).join("");
+  document.querySelectorAll(".wordbtn").forEach(b=>b.onclick=()=>{state.word=DATA.find(w=>w.id===b.dataset.id); clampYear(); renderWordList(); render();});
+}
+function clampYear(){
+  state.year=Math.max(-1000,Math.min(2025,state.year)); $("year").min=-1000; $("year").max=2025; $("year").value=state.year;
+}
+function render(){
+  clampYear();
+  const w=state.word,y=state.year;
+  $("lemma").textContent=w.lemma; $("lang").textContent=w.lang; $("yearbox").textContent=fmtYear(y);
+  $("kv").innerHTML=`<b>root</b><span>${esc(w.root)}</span><b>family</b><span>${esc(w.family)}</span><b>domain</b><span>${esc(w.domain)}</span><b>span</b><span>${fmtYear(w.span[0])} - ${fmtYear(w.span[1])}</span>`;
+  $("lenses").innerHTML=Object.entries(w.lenses).map(([k,v])=>`<div class="lens"><b>${k}</b><span>${esc(v)}</span></div>`).join("");
+  $("cognates").innerHTML=w.cognates.map(c=>`<div class="cog"><b>${esc(c[0])}</b><small>${esc(c[1])}</small><span class="mini">${esc(c[2])}</span></div>`).join("");
+  const len=w.span[1]-w.span[0];
+  $("phase").style.gridTemplateColumns=w.senses.map(s=>Math.max(4,(Math.min(s.to,w.span[1])-Math.max(s.from,w.span[0]))/len*100)+"fr").join(" ");
+  $("phase").innerHTML=w.senses.map(s=>`<i style="background:${COLORS[s.domain]||"#777"}" title="${esc(s.label)}"></i>`).join("");
+  renderSenses(); renderEvents(); renderMatrix(); renderPressure(); renderForensic(); renderManuscript(); drawLoom();
+  document.querySelectorAll("#ticks button").forEach(b=>b.classList.toggle("on",+b.dataset.y===y));
+}
+function renderSenses(){
+  const w=state.word,y=state.year;
+  $("senseTable").innerHTML=`<thead><tr><th>state</th><th>dated layer</th><th>domain</th><th>gloss</th></tr></thead><tbody>`+
+    w.senses.map(s=>{const st=liveState(s,y); return `<tr class="${st}"><td><span class="tag ${st}">${st}</span></td><td>${fmtYear(s.from)} - ${fmtYear(s.to)}<br><b>${esc(s.label)}</b></td><td>${esc(s.domain)}</td><td>${esc(s.gloss)}</td></tr>`}).join("")+"</tbody>";
+}
+function renderEvents(){
+  const y=state.year;
+  $("events").innerHTML=`<thead><tr><th>date</th><th>register</th><th>event</th></tr></thead><tbody>`+
+    state.word.events.map(e=>`<tr class="${e[0] > y ? "future":"live"}"><td>${fmtYear(e[0])}</td><td>${esc(e[1])}</td><td>${esc(e[2])}</td></tr>`).join("")+"</tbody>";
+}
+function renderMatrix(){
+  const y=state.year, live=state.word.senses.filter(s=>liveState(s,y)==="live");
+  const top=live[live.length-1] || state.word.senses[0];
+  const cells=[
+    ["", "Sense", "Form", "Object", "Use"],
+    ["Frege", top.label, state.word.lemma, top.domain, "truth conditions depend on date"],
+    ["Saussure", "value by contrast", state.word.root.split(" ")[0], "system slot", "oppositions shift"],
+    ["Peirce", top.domain==="digital"?"symbol/code":"index/icon mix", "mark/sound", "interpretant chain", "habit of reading"],
+    ["Wittgenstein", "rule in practice", "utterance", "language-game", "criteria for correctness"]
+  ];
+  $("matrix").innerHTML=cells.map((c,i)=>c.map(x=>`<div class="${i===0?"head":""}">${esc(x)}</div>`).join("")).join("");
+}
+function renderPressure(){
+  const y=state.year, senses=state.word.senses;
+  const future=senses.filter(s=>y<s.from).length, ghost=senses.filter(s=>s.to && y>s.to).length;
+  const score=Math.round((future/senses.length)*100);
+  $("pressureScore").textContent=score;
+  $("pressureText").textContent=score>60?"most later meanings are impossible":score>20?"some attractive meanings are premature":"available meanings mostly fit";
+  $("badCount").textContent=future+" future / "+ghost+" archaic";
+  $("badBar").style.width=score+"%";
+  $("needle").style.transform=`rotate(${-80 + score*1.6}deg)`;
+}
+function renderForensic(){
+  const w=state.word,y=state.year;
+  const live=w.senses.filter(s=>liveState(s,y)==="live").map(s=>s.label);
+  const future=w.senses.filter(s=>liveState(s,y)==="future").map(s=>`${s.label} (${fmtYear(s.from)})`);
+  $("forensic").innerHTML=`<b>${esc(w.lemma)} at ${fmtYear(y)}</b><br>${esc(w.note)}<br><br><b>Available:</b> ${live.length?esc(live.join("; ")):"no listed sense yet"}.<br><b>Premature:</b> ${future.length?esc(future.join("; ")):"none in this dossier"}.`;
+}
+function scanText(text){
+  const parts=text.split(/([A-Za-z0-9][A-Za-z0-9-]*|[^A-Za-z0-9]+)/g).filter(Boolean);
+  const hits=[];
+  const html=parts.map(part=>{
+    const tok=normToken(part), entries=SCAN_INDEX.get(tok);
+    if(!entries || !/[A-Za-z0-9]/.test(part)) return esc(part);
+    const scored=entries.map(e=>({...e,state:liveState(e.sense,state.year)}));
+    const chosen=scored.find(e=>e.state==="future") || scored.find(e=>e.state==="ghost") || scored[0];
+    const states=[...new Set(scored.map(e=>e.state))];
+    const cls=states.length>1 ? "ambig" : chosen.state;
+    const hit={token:part,entries:scored,chosen,state:chosen.state,cls};
+    const n=hits.push(hit)-1;
+    return `<span class="scanTok ${cls}" data-hit="${n}" title="${esc(chosen.word.lemma)}: ${esc(chosen.sense.label)}">${esc(part)}</span>`;
+  }).join("");
+  return {html,hits};
+}
+function renderManuscript(){
+  const y=state.year, out=scanText($("claim").value);
+  state.scanHits=out.hits;
+  $("claimResult").innerHTML=out.html || "<span class='mini'>Paste a passage to scan every dated lexical record at once.</span>";
+  const counts={live:0,future:0,ghost:0,ambig:0};
+  out.hits.forEach(h=>{ counts[h.cls==="ambig"?"ambig":h.state]++; });
+  const density=out.hits.length?Math.min(100,Math.round(((counts.future*1.4+counts.ambig*.7+counts.ghost*.35)/out.hits.length)*100)):0;
+  $("scanStats").innerHTML=[
+    ["hits",out.hits.length],["future",counts.future],["ambig",counts.ambig],["ghost",counts.ghost],["density",density]
+  ].map(x=>`<div><b>${x[1]}</b>${x[0]}</div>`).join("");
+  const ranked=[...out.hits].sort((a,b)=>{
+    const rank={future:0,ambig:1,ghost:2,live:3};
+    return (rank[a.cls==="ambig"?"ambig":a.state]-rank[b.cls==="ambig"?"ambig":b.state]) || a.chosen.sense.from-b.chosen.sense.from;
+  }).slice(0,24);
+  $("hitlist").innerHTML=ranked.map((h,i)=>{
+    const st=h.cls==="ambig"?"ambig":h.state, e=h.chosen, when=st==="future"?"first "+fmtYear(e.sense.from):st==="ghost"?"ended "+fmtYear(e.sense.to):"live at "+fmtYear(y);
+    return `<div class="hit" data-rank="${i}"><span class="tag ${st}">${st}</span> <b>${esc(h.token)}</b><small>${esc(e.word.lemma)} / ${esc(e.sense.label)} / ${when}</small>${esc(e.sense.gloss)}</div>`;
+  }).join("");
+  document.querySelectorAll(".hit").forEach((el,i)=>el.onclick=()=>selectScanHit(ranked[i]));
+  if(!state.selectedHit || !out.hits.includes(state.selectedHit)) {
+    const first=ranked[0];
+    $("scanDetail").innerHTML=first ? describeHit(first) : "No indexed tokens in this passage yet.";
+  }
+}
+function describeHit(hit){
+  const st=hit.cls==="ambig"?"ambig":hit.state, e=hit.chosen;
+  const alts=hit.entries.length>1 ? "<br><b>Alternates:</b> "+hit.entries.map(x=>`${esc(x.sense.label)} (${x.state})`).join("; ") : "";
+  return `<span class="tag ${st}">${st}</span> <b>${esc(hit.token)}</b> at ${fmtYear(state.year)}<br>${esc(e.word.lemma)}: ${esc(e.sense.label)}; ${fmtYear(e.sense.from)} - ${fmtYear(e.sense.to)}.<br>${esc(e.sense.gloss)}${alts}`;
+}
+function selectScanHit(hit){
+  state.selectedHit=hit;
+  $("scanDetail").innerHTML=describeHit(hit);
+  const dossier=DATA.find(w=>w.id===hit.chosen.word.id);
+  if(dossier){ state.word=dossier; renderWordList(); render(); }
+}
+function drawLoom(){
+  const c=$("loom"), rect=c.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  c.width=Math.max(300,Math.floor(rect.width*dpr)); c.height=Math.max(240,Math.floor(rect.height*dpr));
+  const ctx=c.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  const W=rect.width,H=rect.height,w=state.word,y=state.year,pad=42, plotStart=Math.min(w.span[0],y), plotEnd=Math.max(w.span[1],y), plotLen=plotEnd-plotStart||1;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle="#d4ccb9"; ctx.lineWidth=1;
+  for(let i=0;i<9;i++){let x=pad+i*(W-pad*2)/8; ctx.beginPath(); ctx.moveTo(x,24); ctx.lineTo(x,H-28); ctx.stroke(); let yr=Math.round(plotStart+i*plotLen/8); ctx.fillStyle="#6d675c"; ctx.font="10px system-ui"; ctx.fillText(fmtYear(yr),x-18,H-12);}
+  const xYear=pad+(y-plotStart)/plotLen*(W-pad*2);
+  ctx.strokeStyle="#171614"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(xYear,20); ctx.lineTo(xYear,H-24); ctx.stroke();
+  state.paths=[];
+  w.senses.forEach((s,i)=>{
+    const x1=pad+(s.from-plotStart)/plotLen*(W-pad*2), x2=pad+(Math.min(s.to,plotEnd)-plotStart)/plotLen*(W-pad*2);
+    const midY=H-54-i*((H-96)/Math.max(1,w.senses.length-1));
+    const amp=18+s.weight*24, color=COLORS[s.domain]||"#777", st=liveState(s,y);
+    ctx.globalAlpha=st==="future"?.28:st==="ghost"?.45:.92;
+    ctx.fillStyle=color; ctx.strokeStyle="#2b2822"; ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(x1,midY);
+    ctx.bezierCurveTo(x1+(x2-x1)*.25,midY-amp,x1+(x2-x1)*.72,midY+amp,x2,midY);
+    ctx.bezierCurveTo(x1+(x2-x1)*.72,midY+amp*.45,x1+(x2-x1)*.25,midY-amp*.45,x1,midY);
+    ctx.closePath(); ctx.fill(); ctx.globalAlpha=1; ctx.stroke();
+    ctx.fillStyle="#1b1915"; ctx.font="12px Georgia"; ctx.fillText(s.label,Math.max(48,Math.min(W-210,x1+5)),midY-4);
+    ctx.fillStyle="#fffdf7"; ctx.strokeStyle="#1b1915"; ctx.beginPath(); ctx.arc(x1,midY,4,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    state.paths.push({x1,x2,y:midY,amp,s});
+  });
+}
+function loomMove(e){
+  const rect=$("loom").getBoundingClientRect(), x=e.clientX-rect.left, y=e.clientY-rect.top;
+  const hit=(state.paths||[]).find(p=>x>=p.x1&&x<=p.x2&&Math.abs(y-p.y)<p.amp+10);
+  const h=$("hover");
+  if(!hit){h.style.display="none";return;}
+  h.style.display="block"; h.style.left=Math.min(rect.width-310,x+14)+"px"; h.style.top=Math.max(10,y-10)+"px";
+  const st=liveState(hit.s,state.year);
+  h.innerHTML=`<span class="tag ${st}">${st}</span> <b>${esc(hit.s.label)}</b><br>${fmtYear(hit.s.from)} - ${fmtYear(hit.s.to)} / ${esc(hit.s.domain)}<br>${esc(hit.s.gloss)}`;
+}
+init();
+</script>
+</body>
+</html>

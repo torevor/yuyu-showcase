@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interpretant Atlas</title>
+<style>
+  :root{
+    --ink:#161713; --muted:#5b5d55; --faint:#8b8d84; --paper:#f7f5ec; --panel:#fffdf5;
+    --line:#c9c3ae; --hard:#817860; --red:#b7332e; --blue:#255e86; --green:#4d6d35;
+    --gold:#9a6a13; --violet:#6d4e7c; --tag:#ede7d4; --focus:#fff3b7;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+    font-size:13px; line-height:1.28; letter-spacing:0;
+  }
+  button,select,input{font:inherit}
+  .app{height:100vh; display:grid; grid-template-rows:42px 1fr 23px; overflow:hidden}
+  header{
+    display:grid; grid-template-columns:244px 1fr 460px; align-items:center;
+    border-bottom:2px solid var(--ink); background:#fbfaf2;
+  }
+  h1{font-size:18px; margin:0; padding:0 10px; letter-spacing:.2px; font-weight:800}
+  .subtitle{border-left:1px solid var(--line); height:100%; display:flex; align-items:center; padding:0 10px; color:var(--muted)}
+  .topbar{display:grid; grid-template-columns:1fr 1fr 1fr 1fr; height:100%; border-left:1px solid var(--ink)}
+  .meter{padding:4px 8px; border-left:1px solid var(--line)}
+  .meter b{display:block; font-size:15px; line-height:16px}
+  .meter span{font-size:10px; text-transform:uppercase; color:var(--muted); letter-spacing:.5px}
+  main{min-height:0; display:grid; grid-template-columns:270px 1fr 390px; overflow:hidden}
+  aside,.center,.right{min-height:0; overflow:auto}
+  aside{border-right:2px solid var(--ink); background:#f1eee1}
+  .right{border-left:2px solid var(--ink); background:#f3f0e5}
+  .block{border-bottom:1px solid var(--line); padding:8px}
+  .block h2,.panel h2{margin:0 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.7px}
+  .controls{display:grid; gap:6px}
+  label{display:grid; gap:2px; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.4px}
+  select,input[type=range]{width:100%}
+  select{background:var(--panel); border:1px solid var(--hard); padding:3px 5px; color:var(--ink)}
+  .doctrines{display:grid; grid-template-columns:1fr 1fr; gap:4px}
+  .doctrines button,.tinybtn{
+    border:1px solid var(--hard); background:var(--panel); color:var(--ink); padding:5px 4px;
+    min-height:28px; cursor:pointer; text-align:left;
+  }
+  .doctrines button.active{background:var(--ink); color:#fff}
+  .tinybtn.active{background:var(--focus)}
+  .legend{display:grid; grid-template-columns:1fr 1fr; gap:4px; font-size:11px}
+  .key{display:flex; align-items:center; gap:5px; min-width:0}
+  .sw{width:13px;height:13px;border:1px solid var(--ink); flex:0 0 auto}
+  .sw.ref{background:var(--blue)} .sw.use{background:var(--green)} .sw.diff{background:var(--gold)}
+  .sw.triad{background:var(--violet)} .sw.resid{background:var(--red)} .sw.stable{background:#222}
+  .corpusItem{border-top:1px solid var(--line); padding:7px 8px; cursor:pointer; background:#f8f6eb}
+  .corpusItem.active{background:#fff6c8; box-shadow:inset 4px 0 0 var(--ink)}
+  .corpusItem b{display:block; font-size:12px}
+  .corpusItem span{display:block; color:var(--muted); font-size:11px; margin-top:2px}
+  .center{display:grid; grid-template-rows:minmax(210px,34vh) minmax(220px,1fr) 190px; background:var(--paper)}
+  .canvasWrap{border-bottom:2px solid var(--ink); padding:8px; min-height:0; display:grid; grid-template-rows:18px 1fr}
+  .canvasTitle{display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.5px}
+  canvas{width:100%; height:100%; display:block; background:#fffdf7; border:1px solid var(--hard)}
+  .reading{padding:8px; min-height:0; overflow:auto; border-bottom:1px solid var(--line)}
+  .passageMeta{display:grid; grid-template-columns:1fr 160px 160px; gap:6px; margin-bottom:6px}
+  .metaBox{border:1px solid var(--line); background:#fbf8ec; padding:5px}
+  .metaBox b{font-size:11px; text-transform:uppercase}
+  .text{
+    background:#fffdf7; border:1px solid var(--hard); padding:8px; font-family: ui-serif, Georgia, Cambria, serif;
+    font-size:18px; line-height:1.55;
+  }
+  .tok{padding:1px 2px; border-radius:2px; border-bottom:2px solid transparent; cursor:pointer}
+  .tok:hover,.tok.sel{background:var(--focus)}
+  .tok.ref{border-color:var(--blue)} .tok.use{border-color:var(--green)} .tok.diff{border-color:var(--gold)}
+  .tok.triad{border-color:var(--violet)} .tok.resid{background:#f6d8d1; border-color:var(--red)}
+  .tok.ghost{opacity:.35}
+  .tokenTable{overflow:auto; padding:8px}
+  table{width:100%; border-collapse:collapse; background:#fffdf7}
+  th,td{border:1px solid var(--line); padding:4px 5px; vertical-align:top}
+  th{font-size:10px; text-transform:uppercase; letter-spacing:.5px; background:#e7e0cb; text-align:left}
+  td{font-size:12px}
+  tr.hot{background:#fff2b8}
+  .right .panel{border-bottom:1px solid var(--line); padding:8px}
+  .thesis{font-family:ui-serif, Georgia, serif; font-size:16px; line-height:1.32; background:#fffdf7; border:1px solid var(--hard); padding:7px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+  .stat{border:1px solid var(--line); background:#fffdf7; padding:6px; min-height:52px}
+  .stat b{font-size:19px; display:block}
+  .stat span{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.45px}
+  .stack{display:grid; gap:5px}
+  .claim{border:1px solid var(--line); background:#fffdf7; padding:6px}
+  .claim b{display:block; color:var(--ink); margin-bottom:2px}
+  .claim small{display:block; color:var(--muted)}
+  .micro{font-size:11px; color:var(--muted)}
+  footer{border-top:1px solid var(--ink); display:flex; align-items:center; justify-content:space-between; padding:0 8px; color:var(--muted); background:#fbfaf2; font-size:11px}
+  .pill{display:inline-block; border:1px solid var(--line); background:var(--tag); padding:1px 4px; margin:1px; font-size:10px; color:var(--ink)}
+  @media(max-width:980px){
+    .app{height:auto; min-height:100vh; overflow:auto; grid-template-rows:auto 1fr auto}
+    header{grid-template-columns:1fr}
+    .subtitle,.topbar{border-left:0; border-top:1px solid var(--line)}
+    main{grid-template-columns:1fr}
+    aside,.right{border:0; border-bottom:2px solid var(--ink)}
+    .center{grid-template-rows:280px auto auto}
+    .passageMeta{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Interpretant Atlas</h1>
+    <div class="subtitle">text as sign-process: sense, use, value, interpretant</div>
+    <div class="topbar" id="topMeters"></div>
+  </header>
+  <main>
+    <aside>
+      <div class="block">
+        <h2>Instrument</h2>
+        <div class="controls">
+          <label>Passage<select id="passageSelect"></select></label>
+          <label>Doctrine Bias
+            <div class="doctrines" id="doctrineButtons"></div>
+          </label>
+          <label>Residual Gain <input id="gain" type="range" min="0" max="100" value="70"></label>
+          <label>Token Filter<select id="filter"><option value="all">All marked tokens</option><option value="ref">Reference / entity</option><option value="use">Use / practice</option><option value="diff">Differential value</option><option value="triad">Peircean triad</option><option value="resid">High residue</option></select></label>
+        </div>
+      </div>
+      <div class="block">
+        <h2>Legend</h2>
+        <div class="legend">
+          <div class="key"><i class="sw ref"></i>reference</div><div class="key"><i class="sw use"></i>use</div>
+          <div class="key"><i class="sw diff"></i>difference</div><div class="key"><i class="sw triad"></i>triad</div>
+          <div class="key"><i class="sw resid"></i>residue</div><div class="key"><i class="sw stable"></i>stable</div>
+        </div>
+      </div>
+      <div class="block">
+        <h2>Corpus</h2>
+        <div id="corpusList"></div>
+      </div>
+    </aside>
+    <section class="center">
+      <div class="canvasWrap">
+        <div class="canvasTitle"><span>Interpretant Interferometer</span><span id="beamCaption">four beams / one passage</span></div>
+        <canvas id="scope" width="1200" height="330"></canvas>
+      </div>
+      <div class="reading">
+        <div class="passageMeta" id="passageMeta"></div>
+        <div class="text" id="text"></div>
+      </div>
+      <div class="tokenTable">
+        <table>
+          <thead><tr><th>Token</th><th>Tags</th><th>Frege</th><th>Wittgenstein</th><th>Saussure</th><th>Peirce</th><th>Residue</th></tr></thead>
+          <tbody id="tokenRows"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="right">
+      <div class="panel">
+        <h2>Current Reading</h2>
+        <div class="thesis" id="thesis"></div>
+      </div>
+      <div class="panel">
+        <h2>Diagnostic Scores</h2>
+        <div class="grid2" id="stats"></div>
+      </div>
+      <div class="panel">
+        <h2>Commitments</h2>
+        <div class="stack" id="commitments"></div>
+      </div>
+      <div class="panel">
+        <h2>Selected Sign</h2>
+        <div class="stack" id="selected"></div>
+      </div>
+      <div class="panel">
+        <h2>Next Annotation Needs</h2>
+        <div class="stack" id="needs"></div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <span>Offline seed. Inline corpus and renderer. No network, no external assets.</span>
+    <span id="foot"></span>
+  </footer>
+</div>
+<script>
+const doctrines = {
+  frege:{name:"Frege", color:"#255e86", thesis:"Sense is the route by which reference is presented. Watch for identical objects under unlike descriptions, and for terms whose reference is demanded but not secured."},
+  witt:{name:"Wittgenstein", color:"#4d6d35", thesis:"Meaning is use inside a practice. Ask what activity gives the utterance its force: ordering, promising, excluding, measuring, confessing, advertising."},
+  saus:{name:"Saussure", color:"#9a6a13", thesis:"Value is differential. A sign gains shape by not being neighboring signs; oppositions and substitutions matter more than private intention."},
+  peirce:{name:"Peirce", color:"#6d4e7c", thesis:"The sign mediates object and interpretant. Meaning continues as a chain of effects in later readers, procedures, and actions."}
+};
+const corpus = [
+  {
+    id:"platform", title:"Platform policy clause", source:"synthetic institutional text", register:"policy / governance",
+    text:"Users may appeal an automated decision when the decision materially affects access to essential services.",
+    why:"A clean sentence whose reference depends on institutional machinery hidden behind ordinary words.",
+    tokens:[
+      ["Users",["ref","triad"],"class of account-holders, not humans simpliciter","role in a complaint procedure","opposes moderators, platforms, guests","sign-object split: person/account","medium"],
+      ["may",["use"],"modal sense: permission not prediction","license inside rule-game","not must, can, shall","interpretant is entitlement","high"],
+      ["appeal",["use","triad"],"procedure named by a sense","move in a legal-bureaucratic game","opposes request, dispute, complain","sign points to institutionally valid act","high"],
+      ["an automated decision",["ref","resid"],"reference requires individuation of decision event","used as accountable object","opposes human judgment","object may be model output, workflow, or denial","very high"],
+      ["when",["use"],"condition of applicability","rule boundary marker","opposes always / never","interpretant waits for threshold","medium"],
+      ["materially affects",["diff","resid"],"mode of presentation hides threshold","standard applied by practice","opposes trivially touches","interpretant must quantify harm","very high"],
+      ["access",["ref","use"],"relation to service, not ownership","gatekeeping practice","opposes usage, eligibility, possession","object is practical ability","high"],
+      ["essential services",["ref","diff","resid"],"reference class contested","public/private value opposition","opposes optional conveniences","interpretant imports politics of necessity","very high"]
+    ],
+    commitments:[
+      ["Presupposition","There exist automated decisions separable enough to be appealed."],
+      ["Institution","An appeal procedure is already recognized by the speaker's rule system."],
+      ["Threshold","Material effect and essential service require external standards."],
+      ["Risk","The sentence sounds protective while delegating its force to undefined classifications."]
+    ],
+    needs:["operational definition of automated decision","jurisdiction-specific essential-service taxonomy","evidence standard for material effect","identity model for user/account/person"]
+  },
+  {
+    id:"archive", title:"Archive letter", source:"invented 1919 letter fragment", register:"epistolary / historical",
+    text:"I sent the key to the committee, though everyone knew the door had never been locked.",
+    why:"The literal object is simple, but the social act is loaded with symbolic compliance.",
+    tokens:[
+      ["I",["ref"],"speaker reference depends on document provenance","position in confession/report game","opposes committee/everyone","sign of accountable sender","medium"],
+      ["sent",["use"],"completed act with evidential force","move of compliance or theater","opposes kept, returned, destroyed","interpretant treats transfer as proof","high"],
+      ["the key",["ref","triad","resid"],"object presented as instrument of access","ritual token in practice","opposes lock, door, permission","sign-object gap: key may be symbol","very high"],
+      ["to the committee",["ref","use"],"collective recipient as institution","reporting to authority game","opposes individual keeper","interpretant distributes agency","high"],
+      ["though",["diff"],"contrast operator","invites repair of apparent contradiction","opposes because, and","interpretant searches hidden point","high"],
+      ["everyone knew",["ref","use"],"universal quantifier over community","shared-background claim","opposes private suspicion","interpretant may challenge scope","medium"],
+      ["the door",["ref","triad"],"object or office boundary","access ritual target","opposes key, room, threshold","object anchors sign chain","medium"],
+      ["had never been locked",["use","resid"],"state negates instrumental need","turns action symbolic","opposes secured, opened","interpretant creates political reading","very high"]
+    ],
+    commitments:[
+      ["Reference","The key and door are materially ordinary but pragmatically excessive."],
+      ["Use","Sending the key performs compliance even if no access problem exists."],
+      ["Opposition","Key/door/lock form a system whose broken relation produces meaning."],
+      ["Interpretant","Later readers infer irony, coercion, or bureaucratic theater."]
+    ],
+    needs:["archive provenance","committee function","material culture of keys/locks in setting","surrounding correspondence"]
+  },
+  {
+    id:"medical", title:"Consent statement", source:"synthetic clinical form", register:"medical / legal",
+    text:"By continuing, you acknowledge that the recommendation is informational and not a diagnosis.",
+    why:"A common interface sentence that relocates responsibility by classifying an utterance.",
+    tokens:[
+      ["By continuing",["use","triad"],"gesture becomes sign of assent","interface action in consent game","opposes signing, refusing, reading","interpretant converts click to agreement","very high"],
+      ["you",["ref"],"deictic addressee","patient/user role","opposes clinician/system","object is session participant","medium"],
+      ["acknowledge",["use","resid"],"factive verb pressures acceptance","legal speech act","opposes understand, agree, consent","interpretant records knowledge","very high"],
+      ["the recommendation",["ref","triad"],"utterance classified as advice","object is generated output","opposes order, finding, diagnosis","sign aims at future conduct","high"],
+      ["informational",["diff","resid"],"category softens practical force","liability-management label","opposes clinical, actionable","interpretant may not match use","very high"],
+      ["and not",["diff"],"explicit opposition operator","boundary drawing game","opposes both/also","interpretant narrows class","high"],
+      ["a diagnosis",["ref","use"],"institutional medical act","licensed practice category","opposes suggestion, triage","object requires authority","high"]
+    ],
+    commitments:[
+      ["Speech Act","The interface treats continued use as acknowledgment."],
+      ["Classification","The same content may function as recommendation while denied diagnostic status."],
+      ["Responsibility","The form shifts interpretive burden to the reader."],
+      ["Danger","A practical user may rely on what the legal classification disowns."]
+    ],
+    needs:["actual UI sequence","clinical risk category","regulatory definitions of diagnosis","user comprehension evidence"]
+  }
+];
+let state = {passage:0, doctrine:"peirce", selected:0, filter:"all", gain:70};
+const $ = id => document.getElementById(id);
+function init(){
+  $("passageSelect").innerHTML = corpus.map((p,i)=>`<option value="${i}">${p.title}</option>`).join("");
+  $("doctrineButtons").innerHTML = Object.entries(doctrines).map(([k,d])=>`<button data-doc="${k}" title="${d.thesis}">${d.name}</button>`).join("");
+  $("passageSelect").onchange = e => {state.passage=+e.target.value; state.selected=0; render();};
+  $("filter").onchange = e => {state.filter=e.target.value; render();};
+  $("gain").oninput = e => {state.gain=+e.target.value; draw(); renderStats();};
+  $("doctrineButtons").onclick = e => {if(e.target.dataset.doc){state.doctrine=e.target.dataset.doc; render();}};
+  window.addEventListener("resize", draw);
+  render();
+}
+function residueValue(word){
+  return ({medium:2, high:3, "very high":4}[word] || 1);
+}
+function tokenClass(t){
+  const tags=t[1]; const r=residueValue(t[6]);
+  if(r>3 && state.gain>35) return "resid";
+  if(tags.includes("ref")) return "ref";
+  if(tags.includes("use")) return "use";
+  if(tags.includes("diff")) return "diff";
+  if(tags.includes("triad")) return "triad";
+  return "";
+}
+function visibleToken(t){
+  if(state.filter==="all") return true;
+  if(state.filter==="resid") return residueValue(t[6])>3;
+  return t[1].includes(state.filter);
+}
+function render(){
+  const p=corpus[state.passage], d=doctrines[state.doctrine];
+  $("passageSelect").value = state.passage;
+  document.querySelectorAll("[data-doc]").forEach(b=>b.classList.toggle("active", b.dataset.doc===state.doctrine));
+  $("corpusList").innerHTML = corpus.map((c,i)=>`<div class="corpusItem ${i===state.passage?"active":""}" data-p="${i}"><b>${c.title}</b><span>${c.register}<br>${c.why}</span></div>`).join("");
+  $("corpusList").onclick = e => {const item=e.target.closest("[data-p]"); if(item){state.passage=+item.dataset.p; state.selected=0; render();}};
+  $("passageMeta").innerHTML = `<div class="metaBox"><b>Source</b><br>${p.source}</div><div class="metaBox"><b>Register</b><br>${p.register}</div><div class="metaBox"><b>Problem</b><br>${p.why}</div>`;
+  let html = p.text;
+  p.tokens.forEach((t,i)=>{
+    const cls = tokenClass(t) + (visibleToken(t)?"":" ghost") + (i===state.selected?" sel":"");
+    html = html.replace(t[0], `<span class="tok ${cls}" data-t="${i}" title="${t[6]} residue">${t[0]}</span>`);
+  });
+  $("text").innerHTML = html;
+  $("text").onclick = e => {if(e.target.dataset.t){state.selected=+e.target.dataset.t; render();}};
+  $("tokenRows").innerHTML = p.tokens.map((t,i)=>`<tr class="${i===state.selected?"hot":""}" data-r="${i}">
+    <td><b>${t[0]}</b></td><td>${t[1].map(x=>`<span class="pill">${x}</span>`).join("")}</td>
+    <td>${t[2]}</td><td>${t[3]}</td><td>${t[4]}</td><td>${t[5]}</td><td>${t[6]}</td></tr>`).join("");
+  $("tokenRows").onclick = e => {const tr=e.target.closest("[data-r]"); if(tr){state.selected=+tr.dataset.r; render();}};
+  $("thesis").innerHTML = `<b style="color:${d.color}">${d.name} lens.</b> ${d.thesis}`;
+  $("commitments").innerHTML = p.commitments.map(c=>`<div class="claim"><b>${c[0]}</b>${c[1]}</div>`).join("");
+  const t=p.tokens[state.selected];
+  $("selected").innerHTML = `<div class="claim"><b>${t[0]}</b><small>${t[1].join(" / ")} · residue ${t[6]}</small></div>
+    <div class="claim"><b>Frege</b>${t[2]}</div><div class="claim"><b>Wittgenstein</b>${t[3]}</div>
+    <div class="claim"><b>Saussure</b>${t[4]}</div><div class="claim"><b>Peirce</b>${t[5]}</div>`;
+  $("needs").innerHTML = p.needs.map(n=>`<div class="claim">${n}</div>`).join("");
+  renderStats(); draw();
+}
+function renderStats(){
+  const p=corpus[state.passage];
+  const residues=p.tokens.map(t=>residueValue(t[6]));
+  const high=residues.filter(x=>x>3).length;
+  const tagged = type => p.tokens.filter(t=>t[1].includes(type)).length;
+  const mean=(residues.reduce((a,b)=>a+b,0)/residues.length*25*state.gain/70).toFixed(0);
+  $("stats").innerHTML = [
+    [`${mean}%`,"interpretive residue"],
+    [tagged("ref"),"reference anchors"],
+    [tagged("use"),"practice-dependent terms"],
+    [high,"undefined thresholds"]
+  ].map(s=>`<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
+  $("topMeters").innerHTML = [
+    [`${p.tokens.length}`,"marked spans"], [`${p.commitments.length}`,"commitments"],
+    [`${high}`,"red residuals"], [`${doctrines[state.doctrine].name}`,"active lens"]
+  ].map(s=>`<div class="meter"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
+  $("foot").textContent = `gain ${state.gain} · ${new Date().getFullYear()} local rendering`;
+}
+function draw(){
+  const canvas=$("scope"), rect=canvas.getBoundingClientRect();
+  if(rect.width<10 || rect.height<10) return;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=Math.floor(rect.width*dpr); canvas.height=Math.floor(rect.height*dpr);
+  const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w=rect.width,h=rect.height,p=corpus[state.passage], gain=state.gain/100;
+  ctx.clearRect(0,0,w,h); ctx.fillStyle="#fffdf7"; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#ded6bf"; ctx.lineWidth=1;
+  for(let x=30;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,20);ctx.lineTo(x,h-26);ctx.stroke();}
+  for(let y=42;y<h-28;y+=34){ctx.beginPath();ctx.moveTo(14,y);ctx.lineTo(w-14,y);ctx.stroke();}
+  const lanes=[["frege",52],["witt",105],["saus",158],["peirce",211]];
+  ctx.font="11px ui-sans-serif,system-ui"; ctx.textBaseline="middle";
+  lanes.forEach(([k,y])=>{ctx.fillStyle=doctrines[k].color; ctx.fillText(doctrines[k].name,12,y);});
+  const n=p.tokens.length, start=92, step=(w-130)/Math.max(1,n-1);
+  p.tokens.forEach((t,i)=>{
+    const x=start+i*step, rv=residueValue(t[6]), amp=rv*gain*8, hot=i===state.selected;
+    lanes.forEach(([k,y],li)=>{
+      const color=doctrines[k].color;
+      ctx.beginPath();
+      ctx.moveTo(x-step*.36,y);
+      const bend = (k===state.doctrine? amp*1.3: amp*.55) * Math.sin((i+1)*(li+1));
+      ctx.quadraticCurveTo(x,y+bend,x+step*.36,y);
+      ctx.strokeStyle=hot? "#111" : color;
+      ctx.globalAlpha=hot?1:.72; ctx.lineWidth=hot?2.4:1.2; ctx.stroke(); ctx.globalAlpha=1;
+    });
+    const cls=tokenClass(t);
+    ctx.fillStyle = cls==="resid" ? "#b7332e" : (t[1].includes("ref")?"#255e86":t[1].includes("use")?"#4d6d35":t[1].includes("diff")?"#9a6a13":"#6d4e7c");
+    ctx.beginPath(); ctx.arc(x, h-55, hot?6:4, 0, Math.PI*2); ctx.fill();
+    ctx.save(); ctx.translate(x,h-39); ctx.rotate(-.55); ctx.fillStyle="#2a2924"; ctx.font=hot?"700 11px ui-sans-serif":"10px ui-sans-serif"; ctx.fillText(t[0].slice(0,22),0,0); ctx.restore();
+    if(rv>3){
+      ctx.strokeStyle="#b7332e"; ctx.lineWidth=1+gain*2; ctx.beginPath();
+      ctx.moveTo(x,38); ctx.lineTo(x+Math.sin(i+2)*amp,h-64); ctx.stroke();
+    }
+  });
+  ctx.fillStyle="#5b5d55"; ctx.font="11px ui-sans-serif";
+  ctx.fillText("bent beams mark doctrine-sensitive role; red verticals mark unresolved interpretive residue", 12, h-14);
+}
+init();
+</script>
+</body>
+</html>

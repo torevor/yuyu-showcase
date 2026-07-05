@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounding Atlas</title>
+<style>
+:root{--ink:#18211f;--muted:#63706b;--rule:#c4cec8;--paper:#fbfbf4;--panel:#eef2ea;--white:#fffef8;--red:#af332b;--blue:#185a78;--green:#396b48;--gold:#9b691b;--violet:#685180;--cyan:#32727b;--cut:#f7ded6;--kernel:#ffe5c7;--prim:#e7f0dc;--risk:#f4b7a4;--fail:#ece7df}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font:12px/1.32 Arial,Helvetica,sans-serif}body{overflow:hidden}button,input,select{font:inherit}button{height:25px;border:1px solid #7e8a84;background:#fffdf4;padding:2px 7px;cursor:pointer}button:hover{background:#fff}button.active{background:#202b28;color:white}input,select{height:25px;border:1px solid #9da8a2;background:white;padding:2px 6px}.app{height:100vh;display:grid;grid-template-rows:39px 1fr 23px}header{display:grid;grid-template-columns:254px 1fr 560px;align-items:center;border-bottom:1px solid var(--ink);background:#f6f7f0}h1{margin:0;padding:0 10px;font-size:17px;font-weight:800}.sub{border-left:1px solid var(--rule);padding-left:9px;color:#4f5c57}.controls{display:flex;align-items:center;justify-content:flex-end;gap:5px;padding-right:7px}.controls input{width:160px}main{display:grid;grid-template-columns:254px minmax(520px,1fr) 430px;min-height:0}aside,.right{min-height:0;overflow:auto;background:var(--panel)}aside{border-right:1px solid var(--ink)}.right{border-left:1px solid var(--ink)}.stage{position:relative;min-height:0;background:var(--white)}svg{display:block;width:100%;height:100%}.section{border-bottom:1px solid var(--rule);padding:7px}.section h2{margin:0 0 5px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#37413e}.micro{font-size:11px;color:var(--muted)}.wordlist{display:grid;grid-template-columns:1fr 38px 38px;gap:1px;max-height:46vh;overflow:auto}.wordrow{display:contents}.wordrow button{height:22px;text-align:left;border-color:transparent;background:transparent;padding:2px 5px}.wordrow button.sel,.wordrow button:hover{background:white;border-color:#aeb8b2}.badge{height:22px;display:flex;align-items:center;justify-content:center;color:#5f6a66;font-size:10px}.toolbar{position:absolute;left:7px;top:7px;right:7px;display:flex;gap:5px;align-items:center;background:rgba(255,254,248,.95);border:1px solid var(--rule);padding:5px;z-index:2}.toolbar .grow{flex:1}.edge{stroke:#858f8a;stroke-width:1;fill:none;marker-end:url(#arrow)}.edge.hot{stroke:var(--red);stroke-width:1.9}.edge.dim{opacity:.22}.node rect{fill:var(--white);stroke:#34413d;stroke-width:1}.node text{font-size:10px;fill:var(--ink);font-weight:700;pointer-events:none}.node .tiny{font-size:8.5px;fill:var(--muted);font-weight:400}.node.root rect{stroke:var(--blue);stroke-width:2.1}.node.kernel rect{fill:var(--kernel);stroke:var(--red);stroke-width:1.8}.node.cut rect{fill:var(--cut);stroke:#9d463e;stroke-dasharray:4 2}.node.primitive rect{fill:var(--prim);stroke:var(--green)}.basin{fill:#fde9da;stroke:#d89570;stroke-width:1;opacity:.62}.ground{stroke:#426b47;stroke-width:2}.gridline{stroke:#dce2dd;stroke-width:1}.label{fill:#58645f;font-size:9px}.metricgrid{display:grid;grid-template-columns:repeat(5,1fr);border-left:1px solid var(--rule);border-top:1px solid var(--rule);background:white}.metric{padding:5px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}.metric b{display:block;font-size:17px}.metric span{font-size:9px;text-transform:uppercase;color:var(--muted)}.def{font:14px/1.27 Georgia,"Times New Roman",serif;background:white;border:1px solid var(--rule);padding:7px}.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.chip{display:inline-flex;align-items:center;gap:3px;border:1px solid #aab5af;background:white;padding:2px 5px;font-size:10.5px;min-height:20px}.chip.kernel{border-color:var(--red);color:var(--red);font-weight:700}.chip.cut{background:var(--cut)}.chip.prim{background:var(--prim);border-color:var(--green)}table{width:100%;border-collapse:collapse;background:white}th,td{border:1px solid var(--rule);padding:4px 5px;vertical-align:top;text-align:left}th{font-size:9px;text-transform:uppercase;background:#e9eee7;color:#46514d}td{font-size:11px}.solutionbar{display:flex;align-items:center;gap:5px;margin-bottom:5px}.solutionbar button{width:24px;padding:0}.lensgrid{display:grid;grid-template-columns:84px 1fr 34px;gap:1px}.lensgrid div{background:white;border:1px solid var(--rule);padding:3px 5px;min-height:21px}.bar{height:7px;background:#d8dfda;margin-top:2px}.bar span{display:block;height:100%;background:var(--blue)}.note{font-size:11.5px;color:#303936}.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}.key{display:flex;align-items:center;gap:4px;font-size:10px}.sw{width:11px;height:11px;border:1px solid #222;background:white}.sw.k{background:var(--kernel);border-color:var(--red)}.sw.c{background:var(--cut);border-style:dashed}.sw.p{background:var(--prim);border-color:var(--green)}.sw.b{background:#fde9da;border-color:#d89570}footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--ink);background:#f6f7f0;padding:0 8px;color:#56615d;font-size:10.5px}
+header{grid-template-columns:254px 1fr 660px}.controls input{width:148px}.wordlist{max-height:36vh}.readerbar{display:flex;flex-wrap:wrap;gap:4px}.readerbar button{height:23px;padding:1px 6px}.readerbar button.active{background:#202b28;color:white}.terrainstrip{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}.mini{height:58px;background:white;border:1px solid var(--rule);position:relative}.mini svg{height:43px}.mini b{display:block;padding:1px 3px 0;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.node.fail rect{fill:var(--fail)}.chip.risk{background:var(--risk);border-color:#a94e3e}.verdict td:first-child{font-weight:700}.ok{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--gold)}.legend{grid-template-columns:repeat(5,1fr)}.sw.r{background:var(--risk);border-color:#a94e3e}
+.passage{display:none;position:absolute;inset:0;padding:43px 8px 8px;background:var(--white);overflow:auto}.passage.active{display:grid;grid-template-rows:82px 1fr 96px;gap:6px}.passage textarea{width:100%;height:82px;resize:none;border:1px solid var(--ink);background:#fffef8;padding:6px;font:12px/1.28 Arial,Helvetica,sans-serif}.passagegrid{display:grid;grid-template-columns:1.45fr .9fr;gap:6px;min-height:0}.prose{border:1px solid var(--rule);background:white;padding:8px;overflow:auto;font:16px/1.55 Georgia,"Times New Roman",serif}.tok{border:0;background:transparent;padding:0 1px;height:auto;font:inherit;color:inherit;text-align:left;text-decoration-line:underline;text-underline-offset:3px;text-decoration-thickness:var(--u,2px);text-decoration-color:var(--c,#87928c)}.tok:hover,.tok.sel{background:#fff1cf;outline:1px solid #b68a35}.tok.unmatched{color:#707b76;text-decoration-style:dotted;text-decoration-thickness:1px}.passagematrix{border:1px solid var(--rule);background:#f9faf5;overflow:auto}.passagematrix table{font-size:10.5px}.passagematrix td:first-child{font-weight:700}.stripbars{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.strip{border:1px solid var(--rule);background:white;padding:4px;min-height:92px}.strip b{display:block;font-size:9px;text-transform:uppercase;color:#46514d}.strip i{display:block;height:7px;background:#dce2dd;margin:3px 0}.strip i span{display:block;height:100%;background:var(--blue)}.strip small{font-size:10px;color:var(--muted)}#passageBtn.active{background:#202b28;color:white}
+.workbench{display:none;position:absolute;inset:0;padding:43px 8px 8px;background:var(--white);overflow:auto}.workbench.active{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(310px,1fr) 150px;gap:6px}.wbpanel{border:1px solid var(--rule);background:#fff;min-height:0;overflow:auto}.wbpanel h3{margin:0;padding:5px 6px;border-bottom:1px solid var(--rule);background:#e9eee7;font-size:10px;text-transform:uppercase;color:#3b4642}.wbbody{padding:6px}.wbgrid{display:grid;grid-template-columns:92px 1fr;gap:5px;align-items:start}.wbgrid label{font-size:10px;text-transform:uppercase;color:var(--muted);padding-top:6px}.wbgrid input,.wbgrid select{width:100%}.wbgrid textarea{width:100%;height:82px;resize:vertical;border:1px solid #9da8a2;padding:5px;font:12px/1.28 Arial,Helvetica,sans-serif}.depick{display:grid;grid-template-columns:1fr 56px;gap:4px}.draftchip{border-style:dashed;background:#f8fbff}.node.draft rect{stroke-dasharray:5 2;stroke:#185a78;fill:#eef7ff}.variantlist{display:grid;grid-template-columns:1fr 54px 44px;gap:2px}.variantlist button{height:23px;text-align:left;overflow:hidden;text-overflow:ellipsis}.variantlist .active{background:#202b28;color:white}.delta{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.delta .metric b{font-size:14px}.comparegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(184px,1fr));gap:5px}.candidate{border:1px solid var(--rule);background:#fffdf8;padding:5px}.candidate b{display:block;font-size:11px}.candidate .minirow{display:grid;grid-template-columns:58px 1fr 34px;gap:3px;font-size:10px;margin-top:3px}.diffadd{color:var(--green);font-weight:700}.diffloss{color:var(--red);font-weight:700}.workbench table{font-size:10.5px}#workbenchBtn.active{background:#202b28;color:white}
+@media(max-width:980px){body{overflow:auto}.app{height:auto;min-height:100vh;grid-template-rows:auto 62vh auto}header{grid-template-columns:1fr}.sub{border-left:0;padding:0 10px 5px}.controls{justify-content:flex-start;flex-wrap:wrap;padding:0 7px 7px}main{grid-template-columns:1fr}.stage{height:62vh}aside,.right{border:0;border-bottom:1px solid var(--ink);max-height:none}.wordlist{max-height:260px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Grounding Atlas</h1>
+    <div class="sub">multi-sense definition terrain · exact grounding kernels · theory pressure ledger</div>
+    <div class="controls">
+      <input id="query" list="senses" aria-label="sense" value="meaning#general">
+      <datalist id="senses"></datalist>
+      <select id="view"><option value="atlas">atlas map</option><option value="focus">focused graph</option><option value="passage">passage mode</option><option value="workbench">workbench</option></select>
+      <select id="domainLens" title="domain insider lens"></select>
+      <select id="depth"><option value="2">depth 2</option><option value="3" selected>depth 3</option><option value="4">depth 4</option><option value="9">all reachable</option></select>
+      <button id="analyze">Analyze</button><button id="cutMode">Cut</button><button id="reset">Reset</button>
+    </div>
+  </header>
+  <main>
+    <aside>
+      <div class="section"><h2>Reader Profiles</h2><div id="readerbar" class="readerbar"></div></div>
+      <div class="section"><h2>Reader Terrains</h2><div id="terrainStrip" class="terrainstrip"></div></div>
+      <div class="section"><h2>Sense Lexicon</h2><div class="micro" id="lexcount"></div><div id="wordlist" class="wordlist"></div></div>
+      <div class="section"><h2>Theory Tags</h2><table id="tagtable"></table></div>
+      <div class="section"><h2>Primitive Floor</h2><div id="primitiveList" class="chips"></div></div>
+      <div class="section"><h2>Draft Hypotheses</h2><div id="draftList" class="variantlist"></div></div>
+    </aside>
+    <section class="stage">
+      <div class="toolbar"><b id="modeLabel"></b><span class="grow" id="graphlabel"></span><button id="atlasBtn">Atlas</button><button id="focusBtn">Focus</button><button id="passageBtn">Passage</button><button id="workbenchBtn">Workbench</button></div>
+      <svg id="graph" role="img" aria-label="definition grounding graph"></svg>
+      <div id="passagePane" class="passage">
+        <textarea id="passageInput" aria-label="passage">The report claims the warning sign shows evidence of risk, but the reader's interpretation depends on context and purpose.</textarea>
+        <div class="passagegrid"><div id="passageText" class="prose"></div><div id="passageMatrix" class="passagematrix"></div></div>
+        <div id="passageStrips" class="stripbars"></div>
+      </div>
+      <div id="workbenchPane" class="workbench">
+        <div class="wbpanel"><h3>Definition Authoring Surface</h3><div class="wbbody">
+          <div class="wbgrid">
+            <label for="draftId">term id</label><input id="draftId" list="senses" value="meaning#general">
+            <label for="draftLabel">candidate</label><input id="draftLabel" value="Wittgenstein repair">
+            <label for="draftDef">gloss</label><textarea id="draftDef">Meaning as the public role a sign has inside a practice, tested by use, rule, context, and uptake.</textarea>
+            <label for="lensSeed">start lens</label><select id="lensSeed"></select>
+            <label for="depSearch">dependency</label><div class="depick"><input id="depSearch" list="senses" placeholder="sense id"><button id="addDep">Add</button></div>
+            <label>picked</label><div id="draftDeps" class="chips"></div>
+            <label>actions</label><div class="readerbar"><button id="saveDraft">Save/Run</button><button id="cloneDraft">Clone</button><button id="clearDrafts">Clear Drafts</button></div>
+          </div>
+        </div></div>
+        <div class="wbpanel"><h3>Live Hypothesis Delta</h3><div id="workbenchDelta" class="wbbody"></div></div>
+        <div class="wbpanel" style="grid-column:1 / span 2"><h3>Candidate Comparison</h3><div id="candidateCompare" class="wbbody comparegrid"></div></div>
+      </div>
+    </section>
+    <section class="right">
+      <div class="section"><h2>Definition Under Test</h2><div id="definition" class="def"></div><div id="deps" class="chips"></div></div>
+      <div class="section"><h2>Graph Facts</h2><div id="metrics" class="metricgrid"></div></div>
+      <div class="section"><h2>Reader Verdicts</h2><table id="verdicts" class="verdict"></table></div>
+      <div class="section"><h2>Passage Report</h2><div id="passageReport" class="note"></div></div>
+      <div class="section"><h2>Workbench Report</h2><div id="workbenchReport" class="note"></div></div>
+      <div class="section"><h2>Exact Grounding Kernel</h2><div id="kernel"></div></div>
+      <div class="section"><h2>Shortest Grounding Path</h2><table id="pathTable"></table></div>
+      <div class="section"><h2>Cycle Ledger</h2><table id="cycles"></table></div>
+      <div class="section"><h2>Theory Pressure</h2><div id="lens" class="lensgrid"></div></div>
+      <div class="section"><h2>Interpretive Note</h2><div id="note" class="note"></div></div>
+      <div class="section"><h2>Legend</h2><div class="legend"><div class="key"><span class="sw p"></span>primitive</div><div class="key"><span class="sw k"></span>kernel</div><div class="key"><span class="sw c"></span>cut</div><div class="key"><span class="sw b"></span>SCC basin</div><div class="key"><span class="sw r"></span>divergence</div></div></div>
+    </section>
+  </main>
+  <footer><span>Self-contained offline build: inline data, SVG, exact graph routines, no CDN/network.</span><span>Mechanical graph facts remain separate from interpretive notes.</span></footer>
+</div>
+<script>
+const TAGS={
+  Frege:"sense/reference, concept/object, co-reference",
+  Wittgenstein:"use, practice, public criteria, language game",
+  Saussure:"sign, value, contrast, signifier/signified",
+  Peirce:"sign/object/interpretant, icon/index/symbol",
+  Austin:"speech act, force, felicity, uptake",
+  Harnad:"symbol grounding, sensorimotor category floor",
+  Quine:"translation, web of belief, indeterminacy",
+  Yuyu:"determinism wall, reader model, downstream risk"
+};
+const PRIMS=[
+ ["color#hue","A visible quality discriminated as hue before lexical naming.",["Harnad"]],
+ ["light#brightness","A perceived intensity contrast in visual experience.",["Harnad"]],
+ ["dark#absence","A low-light perceptual condition recognized by contrast.",["Harnad"]],
+ ["sound#tone","An audible quality discriminated as pitch, timbre, or loudness.",["Harnad"]],
+ ["touch#contact","A felt contact between body and surface.",["Harnad"]],
+ ["edge#boundary","A perceptual boundary where one region ends and another begins.",["Harnad"]],
+ ["surface#plane","A felt or seen exterior face of a thing.",["Harnad"]],
+ ["motion#change","A perceived displacement through time.",["Harnad"]],
+ ["near#distance","A basic spatial relation of closeness.",["Harnad"]],
+ ["far#distance","A basic spatial relation of remoteness.",["Harnad"]],
+ ["one#count","A minimal countable unit.",["Harnad"]],
+ ["many#count","A perceived plurality greater than one.",["Harnad"]],
+ ["same#match","A recognized match between presentations.",["Harnad"]],
+ ["different#contrast","A recognized non-match between presentations.",["Harnad","Saussure"]],
+ ["before#time","An ordered temporal relation earlier than another.",["Harnad"]],
+ ["after#time","An ordered temporal relation later than another.",["Harnad"]],
+ ["body#agent","The acting and sensing organism.",["Harnad"]],
+ ["hand#grasp","A bodily part used for grasping and pointing.",["Harnad"]],
+ ["mouth#voice","A bodily source for speech sounds.",["Harnad"]],
+ ["eye#vision","A bodily organ for seeing.",["Harnad"]],
+ ["ear#hearing","A bodily organ for hearing.",["Harnad"]],
+ ["pleasure#valence","A positive felt valence.",["Harnad"]],
+ ["pain#valence","A negative felt valence.",["Harnad"]],
+ ["stop#limit","A recognized halt or boundary in action.",["Harnad"]],
+ ["go#action","A basic continuation or movement action.",["Harnad"]]
+];
+const CORE=[
+ ["meaning#general","The use, sense, reference, and effect by which a sign counts as saying something for a reader in context.",["use#practice","sense#mode","reference#relation","sign#semiotic","reader#model","context#situation","interpretation#act"],["Frege","Wittgenstein","Yuyu"],"Meaning is the central knot: every tradition offers a grounding route, and each route imports its own dependencies."],
+ ["meaning#use","Meaning treated as the role a sign has inside a repeatable practice.",["use#practice","practice#social","sign#semiotic","language#system","rule#criterion"],["Wittgenstein"],"This route can be practical without being simple; practice still depends on public criteria and repeated uptake."],
+ ["sign#semiotic","A perceivable mark, word, event, or pattern taken as standing for an object or concept to an interpretant.",["mark#material","word#unit","event#occurrence","object#intentional","concept#category","interpretant#effect"],["Peirce","Saussure"],"Signhood is not just a material surface; it is a relation among surface, object, and interpretive effect."],
+ ["sign#symptom","An event read as evidence for another condition without relying on convention alone.",["event#occurrence","evidence#trace","condition#state","inference#act"],["Peirce","Yuyu"],"A symptom is grounded partly by causal expectation, not only by linguistic convention."],
+ ["symbol#conventional","A sign whose link to its object depends on convention, language, and learned use.",["sign#semiotic","object#intentional","convention#social","language#system","use#practice"],["Peirce","Harnad"],"Symbolic links make the grounding problem sharp because the relation is learned rather than perceptually forced."],
+ ["reference#relation","The relation by which an expression points beyond itself to an object, event, entity, or state of affairs.",["expression#linguistic","object#intentional","event#occurrence","entity#identity","state#affairs","relation#formal"],["Frege"],"Reference is modeled as a relation, not a magical arrow to reality."],
+ ["sense#mode","The mode of presentation through which a reader grasps or distinguishes a reference.",["presentation#mode","reader#model","reference#relation","expression#linguistic","same#match","different#contrast"],["Frege"],"Sense explains why equivalent reference can still matter differently to a reader."],
+ ["use#practice","The situated practice in which a word or sign gets its role from what speakers do with it.",["practice#social","word#unit","sign#semiotic","context#situation","language#system","action#doing"],["Wittgenstein"],"Use can stop a scholastic regress, but only by moving the burden into social practice."],
+ ["context#situation","The relevant situation, domain, history, and reader model that constrain how a text is interpreted.",["situation#scene","domain#field","history#record","reader#model","text#artifact","interpretation#act"],["Wittgenstein","Yuyu"],"Context is not a bag of background facts; it selects which dependencies matter."],
+ ["word#unit","A conventional unit of language used as a sign in speech, writing, or thought.",["convention#social","language#system","sign#semiotic","use#practice","sound#tone","mark#material"],["Saussure","Wittgenstein"],"The word is both material token and system-bound unit."],
+ ["language#system","A system of signs and practices by which a community forms expressions, contrasts values, and coordinates interpretation.",["system#network","sign#semiotic","practice#social","community#public","expression#linguistic","interpretation#act","value#differential"],["Saussure","Wittgenstein"],"Language is the app's major structural SCC: it defines signs while signs compose it."],
+ ["definition#text","A text that explains a word by selecting other words as its dependency surface.",["text#artifact","word#unit","explanation#account","dependency#edge"],["Yuyu"],"Every definition is a graph-producing act."],
+ ["interpretation#act","The act or result of assigning sense, reference, force, or consequence to a text or sign.",["sense#mode","reference#relation","force#illocution","consequence#pragmatic","text#artifact","sign#semiotic","reader#model"],["Yuyu","Frege","Austin"],"Interpretation sits beyond the deterministic graph facts while depending on them."],
+ ["interpretant#effect","The effect or further sign produced when a sign is taken as standing for an object.",["effect#result","sign#semiotic","object#intentional","interpretation#act"],["Peirce"],"The interpretant makes semiosis recursive rather than a one-step lookup."],
+ ["object#intentional","What a sign, expression, or claim is about, whether concrete, abstract, fictional, or disputed.",["sign#semiotic","expression#linguistic","claim#asserted","entity#identity","attention#focus"],["Peirce","Frege"],"Object does not mean merely physical thing; this prevents false grounding in concreteness."],
+ ["concept#category","A general idea or category used to classify objects, events, or relations.",["idea#mental","category#class","object#intentional","event#occurrence","relation#formal"],["Frege","Quine"],"Concepts appear primitive until classification and relation dependencies are made explicit."],
+ ["ground#method","A term or fact treated as stable enough to stop further definition for a purpose.",["term#lexical","fact#asserted","definition#text","purpose#use"],["Yuyu","Harnad"],"Grounding is operational here: a stop rule for an analysis, not metaphysical victory."],
+ ["circularity#graph","A dependency pattern in which explanation eventually requires the term or its companions again.",["dependency#edge","term#lexical","explanation#account","definition#text","pattern#form"],["Yuyu"],"Circularity is a graph fact first; material harm depends on the downstream use."],
+ ["reader#model","A person or model that can take a text as meaningful under assumptions and purposes.",["person#agent","model#formal","text#artifact","meaning#general","assumption#premise","purpose#use"],["Yuyu"],"Reader modeling is where the same graph can produce different risks."],
+ ["text#artifact","A bounded material arrangement of signs offered for reading, quoting, storage, or analysis.",["material#substrate","sign#semiotic","reading#act","analysis#procedure","edge#boundary"],["Saussure","Yuyu"],"Text-as-material keeps language from dissolving into intention."],
+ ["claim#asserted","A text-fragment presented as saying that some state of affairs holds.",["text#artifact","state#affairs","presentation#mode","assertion#speechact"],["Yuyu","Austin"],"Claims are where lexical grounding becomes reportable interpretive risk."],
+ ["expression#linguistic","A word, phrase, mark, or construction that can bear sense, force, or reference.",["word#unit","mark#material","construction#syntax","sense#mode","force#illocution","reference#relation"],["Frege","Austin"],"Expression connects surface form to semantic and pragmatic assignment."],
+ ["value#differential","The role of a sign produced by contrasts with other signs inside a language system.",["role#function","sign#semiotic","contrast#difference","language#system","system#network","different#contrast"],["Saussure"],"Value is differential; it routes meaning through neighbors, not isolated essence."],
+ ["convention#social","A socially stabilized practice that lets signs be used and recognized in similar ways.",["practice#social","sign#semiotic","use#practice","community#public","rule#criterion"],["Wittgenstein","Peirce"],"Convention is a stabilizer, but not a primitive."],
+ ["dependency#edge","A directed need: one term is used to explain, identify, or stabilize another.",["term#lexical","explanation#account","relation#formal"],["Yuyu"],"Dependencies are the deterministic substrate of the atlas."],
+ ["relation#formal","A structured connection between objects, terms, events, claims, or values.",["connection#link","object#intentional","term#lexical","event#occurrence","claim#asserted"],["Frege","Yuyu"],"Formal relation is broad by design; later corpora would type edge kinds."],
+ ["event#occurrence","An occurrence represented as something that happens, changes, or is reported.",["change#process","report#textual","before#time","after#time","motion#change"],["Yuyu"],"Events become important when the graph leaves dictionaries and enters discourse."],
+ ["entity#identity","Something represented as having identity across mentions, descriptions, or contexts.",["identity#persistence","mention#reference","description#account","context#situation","same#match"],["Yuyu","Quine"],"Entity identity inherits ambiguity from reference and description."],
+ ["practice#social","A repeated, socially legible way of doing something with signs, words, or tools.",["repetition#pattern","community#public","sign#semiotic","word#unit","use#practice","action#doing"],["Wittgenstein"],"Practice is public and repeated; that is its strength and its circularity."],
+ ["community#public","A group whose shared practices stabilize conventions and interpretations.",["group#plural","practice#social","convention#social","interpretation#act","many#count"],["Wittgenstein"],"Community moves grounding away from private ostension toward public criteria."],
+ ["mark#material","A visible, audible, or tactile material difference that can be taken as a sign.",["material#substrate","difference#contrast","sign#semiotic","color#hue","sound#tone","touch#contact"],["Saussure","Peirce","Harnad"],"Mark is where symbolic analysis touches perceptual surface."],
+ ["material#substrate","The physical or digital substrate on which marks and texts persist.",["surface#plane","touch#contact","mark#material","text#artifact"],["Yuyu","Harnad"],"Material is firmer than most semantic terms but still interacts with mark and text."],
+ ["assumption#premise","A premise carried by a reader or analysis without being directly asserted in the text.",["premise#logical","reader#model","analysis#procedure","text#artifact"],["Yuyu"],"Assumptions explain reader divergence without blaming the text alone."],
+ ["purpose#use","The downstream use for which a definition, reading, or claim must be good enough.",["use#practice","definition#text","reading#act","claim#asserted","consequence#pragmatic"],["Yuyu"],"Purpose is the stop rule against infinite analysis."],
+ ["force#illocution","What an expression does in use: assert, ask, command, imply, permit, warn, or frame.",["expression#linguistic","use#practice","assertion#speechact","question#speechact","command#speechact","implication#logical"],["Austin","Wittgenstein"],"Many interpretive failures are pragmatic, not referential."],
+ ["assertion#speechact","A speech act presenting a claim as held or offered as true.",["claim#asserted","force#illocution","truth#norm","speaker#agent","uptake#response"],["Austin"],"Assertion adds public commitment to propositional content."],
+ ["question#speechact","A speech act requesting information or selection from an addressee.",["force#illocution","information#content","addressee#agent","response#act"],["Austin"],"Questions organize possible answers rather than asserting directly."],
+ ["command#speechact","A speech act attempting to direct another agent's action.",["force#illocution","agent#actor","action#doing","authority#social"],["Austin"],"Command force depends on role, uptake, and context."],
+ ["promise#speechact","A speech act that commits a speaker to a future action.",["force#illocution","speaker#agent","future#time","commitment#norm","action#doing"],["Austin"],"Promise is a compact example of language creating a norm."],
+ ["warning#speechact","A speech act presenting possible harm so an addressee can adjust action.",["force#illocution","risk#pragmatic","harm#outcome","addressee#agent","future#time"],["Austin","Yuyu"],"Warning connects lexical meaning to downstream risk."],
+ ["implication#logical","A relation in which accepting one claim gives reason to accept another.",["claim#asserted","reason#support","inference#act","relation#formal"],["Frege","Quine"],"Implication is a formal pressure line, not merely a conversational hint."],
+ ["inference#act","The act of moving from premises or evidence to a conclusion.",["premise#logical","evidence#trace","conclusion#claim","reason#support"],["Frege","Yuyu"],"Inference is the bridge from detected fact to interpreted risk."],
+ ["negation#logical","An operation marking a claim, predicate, or possibility as not holding.",["claim#asserted","operation#formal","truth#norm","contrast#difference"],["Frege"],"Negation depends on the very claim structure it reverses."],
+ ["truth#norm","A norm under which claims are evaluated as holding or failing to hold.",["claim#asserted","evaluation#judgment","fact#asserted","world#model"],["Frege","Quine"],"The atlas does not judge truth, but claims invoke truth norms."],
+ ["evidence#trace","A mark, event, record, or pattern used to support an inference or claim.",["mark#material","event#occurrence","record#trace","pattern#form","support#relation"],["Yuyu","Peirce"],"Evidence is a sign under evidential discipline."],
+ ["risk#pragmatic","A plausible divergent reading that could matter for downstream use.",["reading#act","reader#model","context#situation","purpose#use","consequence#pragmatic"],["Yuyu"],"Risk is not error; it is material divergence under a reader model."],
+ ["model#formal","A simplified representation used to make a reader, world, or system inspectable.",["representation#mapping","system#network","analysis#procedure","world#model"],["Yuyu","Quine"],"Models enable determinism but can also hide assumptions."],
+ ["analysis#procedure","A controlled procedure that turns material into inspectable findings.",["procedure#method","material#substrate","finding#record","evidence#trace"],["Yuyu"],"Analysis is the disciplined layer between text and judgment."],
+ ["finding#record","A recorded output of analysis with a span, rule, evidence, or interpretation.",["record#trace","analysis#procedure","evidence#trace","interpretation#act"],["Yuyu"],"Findings must preserve whether they are mechanical or interpretive."],
+ ["determinism#wall","A boundary that prevents mechanical detector facts from being stored as interpretive judgments.",["finding#record","analysis#procedure","interpretation#act","rule#criterion","boundary#limit"],["Yuyu"],"This is yuyu's engineering doctrine encoded as a lexical node."],
+ ["translation#mapping","A mapping from expressions in one language or scheme into another.",["expression#linguistic","language#system","mapping#relation","meaning#general","indeterminacy#problem"],["Quine"],"Translation exposes meaning holism because many mappings can fit the evidence."],
+ ["indeterminacy#problem","The possibility that evidence underdetermines a unique translation or ontology.",["evidence#trace","translation#mapping","ontology#schema","choice#selection"],["Quine"],"Indeterminacy gives the atlas a reason to show multiple minimal kernels."],
+ ["ontology#schema","A structured inventory of entity, relation, and category types.",["entity#identity","relation#formal","category#class","system#network"],["Quine","Yuyu"],"Ontology is a chosen scaffold, not a neutral mirror."],
+ ["speaker#agent","An agent producing an utterance, mark, or claim.",["agent#actor","utterance#event","mouth#voice","claim#asserted"],["Austin"],"Speaker identity matters when force and commitment matter."],
+ ["addressee#agent","An agent to whom an utterance or sign is directed.",["agent#actor","reader#model","attention#focus","response#act"],["Austin"],"The addressee is the reader under interaction."],
+ ["utterance#event","A situated event of producing speech, writing, or sign use.",["event#occurrence","speaker#agent","sound#tone","mark#material","context#situation"],["Austin","Wittgenstein"],"Utterance ties expression to time, body, and context."],
+ ["uptake#response","The recognition by an addressee that a speech act has a certain force.",["response#act","addressee#agent","force#illocution","interpretation#act"],["Austin"],"Without uptake, force may fail even when words are present."],
+ ["category#class","A grouping criterion under which things are treated as same for a purpose.",["criterion#rule","same#match","different#contrast","purpose#use"],["Frege","Harnad"],"Categories are the meeting point between perception and language."],
+ ["boundary#limit","A line or stopping condition that separates one region, term, or procedure from another.",["edge#boundary","stop#limit","difference#contrast"],["Harnad","Yuyu"],"Boundary is one of the clearest perceptual-to-conceptual bridges."],
+ ["attention#focus","Selection of one object, mark, or relation as salient for action or reading.",["body#agent","eye#vision","object#intentional","purpose#use"],["Harnad","Yuyu"],"Attention decides which part of the graph is operationally live."],
+ ["action#doing","A bodily or social doing that changes a situation.",["body#agent","motion#change","go#action","situation#scene"],["Wittgenstein","Harnad"],"Action helps ground use without reducing use to words."],
+ ["state#affairs","A represented condition of objects, relations, or events as holding.",["object#intentional","relation#formal","event#occurrence","truth#norm"],["Frege"],"State of affairs is where reference and truth-pressure meet."],
+ ["system#network","A set of connected parts whose roles depend on relations among them.",["relation#formal","pattern#form","many#count","connection#link"],["Saussure","Yuyu"],"Systems explain local value by global arrangement."],
+ ["rule#criterion","A public criterion for correct continuation, classification, or use.",["criterion#rule","practice#social","community#public","same#match"],["Wittgenstein"],"Rules require application; application requires practice."],
+ ["criterion#rule","A standard used to decide whether an application, match, or inference counts.",["rule#criterion","decision#choice","same#match","purpose#use"],["Wittgenstein","Yuyu"],"Criterion and rule are intentionally cross-linked to show public norm circularity."],
+ ["world#model","A representation of what objects, events, and relations are taken to hold.",["model#formal","object#intentional","event#occurrence","relation#formal"],["Quine"],"The world enters the app as modeled, not directly possessed."],
+ ["surface#signifier","The perceptible side of a sign, such as sound-shape or written mark.",["surface#plane","mark#material","sound#tone","sign#semiotic"],["Saussure","Harnad"],"Signifier is the lexical bridge to perceptual substrate."],
+ ["signified#concept","The concept-side correlated with a signifier inside a sign system.",["concept#category","sign#semiotic","value#differential","language#system"],["Saussure"],"Signified is not free-standing meaning; it is system-bound."],
+ ["icon#likeness","A sign related to its object by resemblance.",["sign#semiotic","object#intentional","same#match","surface#plane"],["Peirce"],"Iconicity is a partial grounding route through perceived likeness."],
+ ["index#trace","A sign connected to its object by contiguity, causation, or trace.",["sign#semiotic","object#intentional","evidence#trace","near#distance"],["Peirce"],"Indexicality grounds through contact, trace, or pointing."],
+ ["token#instance","A particular occurrence of a type in text, speech, or perception.",["type#pattern","event#occurrence","mark#material","one#count"],["Peirce","Yuyu"],"Token/type separation matters for counting evidence."],
+ ["type#pattern","A repeatable pattern under which tokens are grouped.",["pattern#form","same#match","category#class","many#count"],["Peirce","Harnad"],"Types emerge from repeated token recognition."],
+ ["sentence#construction","A construction conventionally usable to express a claim, question, command, or other force.",["construction#syntax","expression#linguistic","force#illocution","language#system"],["Austin","Frege"],"Sentence form does not uniquely determine force."],
+ ["construction#syntax","A patterned arrangement of words or marks with a grammatical role.",["pattern#form","word#unit","relation#formal","language#system"],["Saussure"],"Syntax adds dependency beyond word lists."],
+ ["description#account","A text or expression that identifies by properties, relations, or context.",["text#artifact","expression#linguistic","property#quality","relation#formal","context#situation"],["Frege","Yuyu"],"Descriptions often substitute for direct reference."],
+ ["property#quality","A quality attributed to an object, event, or category.",["object#intentional","event#occurrence","category#class","color#hue","light#brightness"],["Frege","Harnad"],"Some properties touch perceptual floor; others are inferential."],
+ ["report#textual","A text or utterance presenting an event, finding, or claim as recorded.",["text#artifact","utterance#event","event#occurrence","finding#record"],["Yuyu"],"Reports transmit risk because they mix evidence and framing."],
+ ["record#trace","A persistent mark or stored state used as evidence of an event or analysis.",["mark#material","storage#medium","evidence#trace","before#time"],["Yuyu"],"Record is material memory."],
+ ["storage#medium","A material or digital substrate that preserves records.",["material#substrate","record#trace","surface#plane"],["Yuyu"],"Storage grounds reportability in persistence."],
+ ["choice#selection","A selection among alternatives by rule, preference, or purpose.",["decision#choice","purpose#use","criterion#rule","different#contrast"],["Yuyu"],"Choice appears in disambiguation and kernel alternatives."],
+ ["decision#choice","An act or procedure of selecting one option over another.",["action#doing","criterion#rule","choice#selection"],["Yuyu"],"Decision is where analysis becomes operational."],
+ ["future#time","A time relation later than the current or referenced event.",["after#time","event#occurrence","promise#speechact"],["Austin","Harnad"],"Speech acts often project obligations into future time."],
+ ["harm#outcome","A negative consequence for a body, interest, plan, or reader.",["pain#valence","consequence#pragmatic","risk#pragmatic"],["Yuyu","Harnad"],"Harm gives risk its practical bite."],
+ ["group#plural","More than one agent treated as a unit for a purpose.",["many#count","agent#actor","purpose#use"],["Wittgenstein","Harnad"],"Groups are counted and then socially interpreted."],
+ ["person#agent","A human agent treated as capable of action, speech, and interpretation.",["body#agent","agent#actor","interpretation#act","action#doing"],["Yuyu"],"Personhood is operationally richer than body alone."],
+ ["agent#actor","A body or system capable of action within a situation.",["body#agent","action#doing","situation#scene"],["Austin","Harnad"],"Agency links embodiment to pragmatic force."],
+ ["situation#scene","A bounded scene of objects, agents, events, and relations.",["object#intentional","agent#actor","event#occurrence","near#distance","before#time"],["Wittgenstein","Harnad"],"Situation is context with perceptual and temporal structure."],
+ ["domain#field","A field of practice that selects relevant terms, criteria, and purposes.",["practice#social","term#lexical","criterion#rule","purpose#use"],["Yuyu"],"Domain determines which grounding floor is good enough."],
+ ["history#record","A record of prior events, uses, or interpretations relevant to context.",["record#trace","event#occurrence","use#practice","interpretation#act","before#time"],["Yuyu"],"History makes context temporally deep."],
+ ["term#lexical","A lexical item considered as a node in an analysis.",["word#unit","definition#text","analysis#procedure"],["Yuyu"],"Term is the app's unit of graph bookkeeping."],
+ ["explanation#account","An account that makes something intelligible by citing dependencies, causes, or reasons.",["account#text","dependency#edge","reason#support","cause#relation"],["Yuyu","Quine"],"Explanation is not neutral; it chooses what bears load."],
+ ["account#text","A text arranged to tell how or why something should be understood.",["text#artifact","explanation#account","reader#model"],["Yuyu"],"Account brings reader uptake into explanation."],
+ ["reason#support","A consideration offered as support for an inference, claim, or action.",["support#relation","inference#act","claim#asserted","purpose#use"],["Frege","Yuyu"],"Reasons are typed support relations, not just prose."],
+ ["support#relation","A relation in which one item increases warrant for another.",["relation#formal","evidence#trace","claim#asserted"],["Yuyu"],"Support is the evidential edge behind many judgments."],
+ ["cause#relation","A relation in which one event or condition brings about another.",["relation#formal","event#occurrence","condition#state","before#time"],["Peirce","Yuyu"],"Causation helps distinguish symptoms from arbitrary symbols."],
+ ["condition#state","A state or circumstance under which an event, sign, or rule applies.",["state#affairs","situation#scene","rule#criterion"],["Yuyu"],"Conditions scope claims and speech acts."],
+ ["pattern#form","A repeatable arrangement recognized across tokens or events.",["same#match","different#contrast","many#count","type#pattern"],["Saussure","Harnad"],"Pattern recognition is a bridge from perception to type."],
+ ["connection#link","A perceived or modeled link between two items.",["relation#formal","near#distance","same#match"],["Yuyu","Harnad"],"Connection is intentionally weak: later typing does the real work."],
+ ["effect#result","A result produced by an event, action, sign, or cause.",["event#occurrence","action#doing","cause#relation","after#time"],["Peirce","Austin"],"Effects include physical changes and interpretants."],
+ ["consequence#pragmatic","A result of an interpretation, claim, or action for some purpose.",["effect#result","purpose#use","risk#pragmatic","future#time"],["Austin","Yuyu"],"Consequence converts semantics into stakes."],
+ ["response#act","An action or interpretation following a sign, utterance, or event.",["action#doing","interpretation#act","after#time","addressee#agent"],["Austin"],"Response operationalizes uptake."],
+ ["information#content","A selected difference that can reduce uncertainty for a reader or system.",["difference#contrast","reader#model","system#network","claim#asserted"],["Yuyu"],"Information is difference under a use."],
+ ["representation#mapping","A structure that stands in for another object, event, system, or relation.",["mapping#relation","object#intentional","system#network","sign#semiotic"],["Peirce","Yuyu"],"Representation is signhood at model scale."],
+ ["mapping#relation","A relation pairing items in one scheme with items in another.",["relation#formal","translation#mapping","same#match","different#contrast"],["Quine","Yuyu"],"Mappings are where equivalence claims become inspectable."],
+ ["operation#formal","A rule-governed transformation on signs, claims, or representations.",["rule#criterion","transformation#change","sign#semiotic"],["Frege"],"Formal operations make inference repeatable."],
+ ["transformation#change","A change from one state, form, or representation to another.",["change#process","before#time","after#time"],["Yuyu","Harnad"],"Transformation grounds abstract operation in change."],
+ ["change#process","A perceived or represented difference across time.",["before#time","after#time","different#contrast","motion#change"],["Harnad"],"Change is close to perceptual floor."],
+ ["identity#persistence","Sameness of an entity across time, mentions, or descriptions.",["same#match","before#time","after#time","entity#identity"],["Frege","Quine"],"Identity turns repeated presentations into one object of talk."],
+ ["mention#reference","An occurrence of an expression used to pick out or discuss an entity or term.",["expression#linguistic","reference#relation","token#instance"],["Frege","Yuyu"],"Mention is the local hook for entity tracking."],
+ ["reading#act","A reader's act of taking a text or sign as meaningful.",["reader#model","text#artifact","interpretation#act","meaning#general"],["Yuyu"],"Reading is the live traversal of the graph."],
+ ["presentation#mode","A way an object, reference, or claim is given to a reader.",["sense#mode","reader#model","description#account","surface#signifier"],["Frege"],"Presentation is how the same object can arrive differently."],
+ ["premise#logical","A claim or assumption used as a starting point in inference.",["claim#asserted","assumption#premise","inference#act"],["Frege"],"Premises are chosen starts, not guaranteed grounds."],
+ ["conclusion#claim","A claim reached from premises, evidence, or inference.",["claim#asserted","inference#act","reason#support"],["Frege"],"Conclusion closes an inferential path provisionally."],
+ ["evaluation#judgment","An assessment of a claim, action, or interpretation against a norm.",["judgment#act","claim#asserted","criterion#rule","truth#norm"],["Yuyu"],"Evaluation belongs above the determinism wall."],
+ ["judgment#act","An act of classifying, accepting, rejecting, or ranking something.",["action#doing","category#class","criterion#rule"],["Yuyu"],"Judgment is not a detector fact."]
+];
+const EXTRA=[
+ ["detector#semantic","A procedure that marks spans or terms as candidates for semantic risk without deciding their interpretation.",["analysis#procedure","finding#record","text#artifact","risk#pragmatic","determinism#wall"],["Yuyu"],"Detector entries let passage mode talk about tools without crossing the determinism wall."],
+ ["span#textual","A bounded region of text selected for analysis, quotation, or evidence.",["text#artifact","boundary#limit","mark#material","analysis#procedure"],["Yuyu"],"Span is the material unit passage mode exposes."],
+ ["token#word","A word-like segment produced by a mechanical tokenizer.",["token#instance","word#unit","span#textual","analysis#procedure"],["Yuyu","Peirce"],"Tokens are detector facts before they are meanings."],
+ ["sentence#claim","A sentence treated as carrying one or more claims under a reader model.",["sentence#construction","claim#asserted","reader#model","context#situation"],["Austin","Yuyu"],"Passage mode treats sentence-level risk as inherited from token-level grounding."],
+ ["paragraph#text","A bounded passage of sentences analyzed as one local context.",["text#artifact","sentence#construction","context#situation","many#count"],["Yuyu"],"Paragraphs supply local neighbors for deterministic sense selection."],
+ ["passage#text","A user-provided text region whose tokens are matched against the atlas lexicon.",["text#artifact","span#textual","token#word","analysis#procedure"],["Yuyu"],"The passage is the app's road test: real text entering the graph engine."],
+ ["coverage#measure","The fraction of passage tokens that can be matched to known lexical senses.",["measure#quantity","token#word","lexicon#inventory","analysis#procedure"],["Yuyu"],"Coverage is a mechanical absence-of-data report, not an interpretation."],
+ ["measure#quantity","A count or proportion used to compare findings.",["one#count","many#count","comparison#act","record#trace"],["Yuyu","Harnad"],"Measurement gives passage reports their compactness."],
+ ["comparison#act","An act or procedure of placing items against each other to find sameness or difference.",["same#match","different#contrast","criterion#rule","analysis#procedure"],["Yuyu","Harnad"],"Comparison is the primitive operation behind ranking and divergence."],
+ ["lexicon#inventory","A structured inventory of lexical entries and their dependencies.",["term#lexical","definition#text","system#network","record#trace"],["Yuyu","Saussure"],"The lexicon is the app's finite inspected world."],
+ ["ambiguity#sense","A condition in which one surface form has multiple possible senses.",["surface#signifier","sense#mode","choice#selection","context#situation"],["Frege","Yuyu"],"Ambiguity is visible in passage mode instead of being silently resolved."],
+ ["disambiguation#procedure","A deterministic selection among possible senses using local context and graph overlap.",["ambiguity#sense","choice#selection","context#situation","analysis#procedure"],["Yuyu","Quine"],"Disambiguation stays mechanical by exposing the score and runner-up."],
+ ["score#rank","A numeric ordering assigned by a visible rule.",["measure#quantity","criterion#rule","comparison#act","decision#choice"],["Yuyu"],"Scores are only as good as the rule they make inspectable."],
+ ["rank#order","An ordering that places more load-bearing or risky items before others.",["comparison#act","criterion#rule","before#time","after#time"],["Yuyu"],"Ranking turns many token facts into a usable worklist."],
+ ["load#explanatory","The amount of explanatory burden a term carries inside a passage or graph.",["explanation#account","dependency#edge","term#lexical","purpose#use"],["Yuyu"],"Load is operational: how much depends on this term holding for this reader."],
+ ["alert#finding","A recorded warning that a span may deserve reader-specific review.",["finding#record","warning#speechact","risk#pragmatic","span#textual"],["Austin","Yuyu"],"Alerts are detector outputs, not claims of error."],
+ ["review#procedure","A controlled human or model check of findings against purpose and context.",["analysis#procedure","evaluation#judgment","purpose#use","context#situation"],["Yuyu"],"Review is where mechanical findings can become judgments."],
+ ["quote#textual","A span repeated as material evidence or object of analysis.",["span#textual","text#artifact","evidence#trace","record#trace"],["Yuyu"],"Quoting preserves the text as material."],
+ ["source#record","A record or speaker from which a report, quote, or claim is taken.",["record#trace","speaker#agent","report#textual","evidence#trace"],["Yuyu"],"Sources matter because reports inherit their framing."],
+ ["document#artifact","A stored text containing passages, claims, and records.",["text#artifact","storage#medium","record#trace","paragraph#text"],["Yuyu"],"Document scale is deferred, but passage mode uses the same material logic."],
+ ["dataset#record","A collection of records used as evidence or input for analysis.",["record#trace","many#count","evidence#trace","analysis#procedure"],["Yuyu"],"Dataset talk is grounded as record aggregation."],
+ ["algorithm#procedure","A rule-governed procedure for transforming input into output.",["procedure#method","rule#criterion","operation#formal","transformation#change"],["Yuyu","Frege"],"Algorithms preserve determinism only when their rules are inspectable."],
+ ["input#material","Material supplied to an analysis procedure.",["material#substrate","analysis#procedure","text#artifact","before#time"],["Yuyu"],"Input fixes what the detector actually saw."],
+ ["output#record","A recorded result produced by a procedure.",["record#trace","effect#result","analysis#procedure","after#time"],["Yuyu"],"Output is reportable because it is recorded."],
+ ["error#failure","A mismatch or failed condition relative to a rule or purpose.",["different#contrast","criterion#rule","purpose#use","evaluation#judgment"],["Yuyu"],"The atlas distinguishes error from risk because risk can exist without failure."],
+ ["failure#condition","A condition under which a procedure, rule, or speech act does not hold as intended.",["condition#state","rule#criterion","purpose#use","effect#result"],["Austin","Yuyu"],"Failure covers mechanical and pragmatic breakdowns."],
+ ["certificate#path","An inspectable path or blocker offered as evidence for a grounding verdict.",["path#sequence","evidence#trace","ground#method","finding#record"],["Yuyu"],"Reader verdicts need certificates, not just labels."],
+ ["path#sequence","An ordered route through terms, events, or relations.",["before#time","after#time","connection#link","relation#formal"],["Yuyu"],"Paths make graph dependence readable."],
+ ["threshold#limit","A boundary value at which a finding changes status.",["boundary#limit","measure#quantity","criterion#rule","decision#choice"],["Yuyu"],"Thresholds keep detector behavior explicit."],
+ ["stable#settled","A term or reading treated as sufficiently settled for the active purpose.",["ground#method","purpose#use","criterion#rule","same#match"],["Yuyu"],"Stability is purpose-relative, not metaphysical."],
+ ["unstable#unsettled","A term or reading whose grounding changes materially across readers or contexts.",["risk#pragmatic","reader#model","context#situation","different#contrast"],["Yuyu"],"Instability is what passage mode ranks."],
+ ["insider#reader","A reader who grants a domain's tagged vocabulary as already understood.",["reader#model","domain#field","assumption#premise","community#public"],["Yuyu"],"Insider is a profile, not a universal expert."],
+ ["outsider#reader","A reader without domain-specific accepted vocabulary.",["reader#model","domain#field","assumption#premise","indeterminacy#problem"],["Yuyu","Quine"],"Outsider pressure exposes hidden glossary dependence."],
+ ["contextual#selection","A selection made from local neighboring signs or terms.",["context#situation","choice#selection","near#distance","sign#semiotic"],["Yuyu"],"The passage disambiguator is contextual in this narrow mechanical sense."],
+ ["neighbor#graph","A directly connected dependency or dependent in the lexical graph.",["connection#link","dependency#edge","near#distance","system#network"],["Yuyu"],"Neighbor overlap is the simple substitute for black-box language modeling."],
+ ["evidence#support","Evidence treated specifically as support for a claim.",["evidence#trace","support#relation","claim#asserted","reason#support"],["Yuyu","Peirce"],"This sense helps passage claims connect reports to warrant."]
+];
+const COLOR={Frege:"#185a78",Wittgenstein:"#396b48",Saussure:"#9b691b",Peirce:"#685180",Austin:"#9d3d55",Harnad:"#32727b",Quine:"#6c6532",Yuyu:"#af332b"};
+let LEXICON={};
+for(const [id,def,tags] of PRIMS) LEXICON[id]={id,head:id.split("#")[0],sense:id.split("#")[1],def,deps:[],tags,note:"Primitive floor node: treated as a real stopping point, distinct from temporary cuts.",primitive:true};
+for(const [id,def,deps,tags,note] of CORE) LEXICON[id]={id,head:id.split("#")[0],sense:id.split("#")[1],def,deps,tags,note,primitive:false};
+for(const [id,def,deps,tags,note] of EXTRA) LEXICON[id]={id,head:id.split("#")[0],sense:id.split("#")[1],def,deps,tags,note,primitive:false};
+const COMMON_KNOWN=["word#unit","use#practice","context#situation","sign#semiotic","text#artifact","definition#text","reader#model","object#intentional","concept#category","event#occurrence","entity#identity","relation#formal","practice#social","community#public","mark#material","term#lexical","explanation#account","pattern#form","connection#link","category#class","boundary#limit","action#doing","state#affairs","system#network","rule#criterion"].filter(id=>LEXICON[id]);
+const AUDIT_BLOCKED=new Set(["force#illocution","consequence#pragmatic","risk#pragmatic","harm#outcome","evaluation#judgment","judgment#act","promise#speechact","assertion#speechact","uptake#response"]);
+const READER_DEFS=[
+  {id:"naive",label:"Naive",patience:3,common:false,note:"Only the embodied primitive floor is granted in advance."},
+  {id:"speaker",label:"Speaker",patience:5,common:true,note:"Primitives plus ordinary dictionary competence are granted."},
+  {id:"quine",label:"Quinean",patience:99,common:false,note:"Unlimited patience, but no free vocabulary beyond primitives."},
+  {id:"auditor",label:"Auditor",patience:5,common:true,auditor:true,note:"Pragmatic and judgment-heavy targets cannot silently count as settled ground."},
+  {id:"insider",label:"Insider",patience:5,insider:true,note:"A domain reader grants the selected theory lens as already understood."}
+];
+const STOPWORDS=new Set("a an and are as at be been but by for from has have he her his i if in into is it its of on or our she that the their them they this to was we were who whose will with without you your".split(" "));
+const IRREGULAR={claims:"claim",claimed:"claim",claiming:"claim",meaning:"meaning",means:"meaning",meant:"meaning",signs:"sign",signed:"sign",saying:"claim",said:"claim",says:"claim",shows:"evidence",showed:"evidence",shown:"evidence",showing:"evidence",reports:"report",reported:"report",reporting:"report",warnings:"warning",warned:"warning",warns:"warning",evidences:"evidence",readers:"reader",texts:"text",words:"word",definitions:"definition",interprets:"interpretation",interpreted:"interpretation",interpreting:"interpretation",depends:"dependency",dependent:"dependency",risks:"risk",risky:"risk",contexts:"context",uses:"use",used:"use",using:"use",tokens:"token",spans:"span",sentences:"sentence",passages:"passage",detectors:"detector",alerts:"alert",sources:"source",documents:"document",outputs:"output",inputs:"input",errors:"error",fails:"failure",failed:"failure",unstable:"unstable",stable:"stable"};
+let root="meaning#general", view="atlas", maxDepth=3, cutMode=false, solutionIndex=0, activeReader="speaker", domainLens="Peirce", passageText="The report claims the warning sign shows evidence of risk, but the reader's interpretation depends on context and purpose.", passageTokens=[];
+let ACTIVE_LEXICON=null, activeDraftKey="";
+const cuts=new Set(), draftDeps=new Set(["use#practice","practice#social","language#system","rule#criterion","context#situation","uptake#response"].filter(id=>LEXICON[id])), $=id=>document.getElementById(id);
+const draftVariants=[
+  {key:"witt",label:"Wittgenstein repair",entry:{id:"meaning#general",head:"meaning",sense:"general",def:"Meaning as the public role a sign has inside a practice, tested by use, rule, context, and uptake.",deps:["use#practice","practice#social","language#system","rule#criterion","context#situation","uptake#response"].filter(id=>LEXICON[id]),tags:["Wittgenstein","Yuyu"],note:"Draft hypothesis: only the selected dependency surface is mechanically tested.",primitive:false,isDraft:true}},
+  {key:"frege",label:"Fregean repair",entry:{id:"meaning#general",head:"meaning",sense:"general",def:"Meaning as sense plus reference for an expression under a mode of presentation.",deps:["sense#mode","reference#relation","expression#linguistic","presentation#mode","object#intentional"].filter(id=>LEXICON[id]),tags:["Frege","Yuyu"],note:"Draft hypothesis: only the selected dependency surface is mechanically tested.",primitive:false,isDraft:true}}
+];
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+function init(){
+  refreshLexicalLists();
+  $("domainLens").innerHTML=Object.keys(TAGS).map(t=>`<option value="${t}">${t} insider</option>`).join("");
+  $("lensSeed").innerHTML=Object.keys(TAGS).map(t=>`<option value="${t}">${t}</option>`).join("");
+  $("lensSeed").value="Wittgenstein";
+  $("domainLens").value=domainLens;
+  $("domainLens").onchange=()=>{domainLens=$("domainLens").value; if(activeReader==="insider")analyze(); else renderReaderBar()};
+  $("readerbar").innerHTML=READER_DEFS.map(r=>`<button data-reader="${r.id}">${r.label}</button>`).join("");
+  $("readerbar").onclick=e=>{if(e.target.dataset.reader){activeReader=e.target.dataset.reader;analyze()}};
+  $("wordlist").onclick=e=>{if(e.target.dataset.id){root=e.target.dataset.id;$("query").value=root;view="focus";$("view").value=view;analyze()}};
+  $("tagtable").innerHTML="<tr><th>Tag</th><th>Operational meaning</th></tr>"+Object.entries(TAGS).map(([k,v])=>`<tr><td style="color:${COLOR[k]}"><b>${k}</b></td><td>${v}</td></tr>`).join("");
+  $("primitiveList").innerHTML=PRIMS.map(p=>`<button class="chip prim" data-id="${p[0]}">${p[0]}</button>`).join("");
+  $("primitiveList").onclick=e=>{if(e.target.dataset.id){root=e.target.dataset.id;$("query").value=root;view="focus";$("view").value=view;analyze()}};
+  $("analyze").onclick=()=>{if(view==="passage")passageText=$("passageInput").value;else if(view!=="workbench")root=($("query").value||root).trim();analyze()};
+  $("view").onchange=()=>{view=$("view").value;analyze()};
+  $("depth").onchange=()=>{maxDepth=Number($("depth").value);analyze()};
+  $("cutMode").onclick=()=>{cutMode=!cutMode;$("cutMode").classList.toggle("active",cutMode)};
+  $("reset").onclick=()=>{cuts.clear();solutionIndex=0;analyze()};
+  $("atlasBtn").onclick=()=>{view="atlas";$("view").value=view;analyze()};
+  $("focusBtn").onclick=()=>{view="focus";$("view").value=view;analyze()};
+  $("passageBtn").onclick=()=>{view="passage";$("view").value=view;passageText=$("passageInput").value;analyze()};
+  $("workbenchBtn").onclick=()=>{view="workbench";$("view").value=view;analyze()};
+  $("passageInput").oninput=()=>{passageText=$("passageInput").value; if(view==="passage")analyze()};
+  $("draftId").oninput=$("draftLabel").oninput=$("draftDef").oninput=()=>{if(view==="workbench")analyze()};
+  $("lensSeed").onchange=()=>{seedFromLens($("lensSeed").value);analyze()};
+  $("addDep").onclick=()=>{addDraftDep($("depSearch").value);$("depSearch").value="";analyze()};
+  $("depSearch").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();$("addDep").click()}};
+  $("saveDraft").onclick=()=>{saveDraft(false);analyze()};
+  $("cloneDraft").onclick=()=>{saveDraft(true);analyze()};
+  $("clearDrafts").onclick=()=>{draftVariants.splice(0);activeDraftKey="";analyze()};
+  window.addEventListener("resize",()=>analyze());
+  analyze();
+}
+function LX(){return ACTIVE_LEXICON||activeLexicon()}
+function withLexicon(map,fn){const old=ACTIVE_LEXICON;ACTIVE_LEXICON=map;try{return fn()}finally{ACTIVE_LEXICON=old}}
+function currentVariant(){return draftVariants.find(v=>v.key===activeDraftKey)}
+function draftEntryFromForm(){
+  const id=($("draftId")?.value||"meaning#general").trim();
+  if(!/^[a-z][a-z0-9-]*#[a-z][a-z0-9-]*$/i.test(id))return null;
+  const base=LEXICON[id], [head,sense]=id.split("#"), tags=[$("lensSeed")?.value||"Yuyu","Yuyu"].filter((x,i,a)=>a.indexOf(x)===i);
+  const known={...LEXICON}; draftVariants.forEach(v=>known[v.entry.id]=v.entry);
+  return {id,head,sense,def:($("draftDef")?.value||"Draft definition hypothesis.").trim(),deps:[...draftDeps].filter(d=>known[d]),tags,note:"Draft hypothesis: the gloss is displayed, but only dependency chips alter deterministic graph facts.",primitive:false,isDraft:true,base};
+}
+function activeLexicon(){
+  const map={...LEXICON};
+  const v=currentVariant(); if(v) map[v.entry.id]=v.entry;
+  if(view==="workbench"){const e=draftEntryFromForm(); if(e) map[e.id]=e}
+  return map;
+}
+function buildHeads(map=LX()){const h={};Object.keys(map).forEach(id=>(h[map[id].head]||=[]).push(id));return h}
+function refreshLexicalLists(){
+  const map=LX(), ids=Object.keys(map).sort();
+  $("lexcount").textContent=`${Object.keys(LEXICON).length} canonical senses, ${PRIMS.length} primitives, ${draftVariants.length} draft candidates.`;
+  $("senses").innerHTML=ids.map(id=>`<option value="${id}"></option>`).join("");
+  $("wordlist").innerHTML=ids.map(id=>`<div class="wordrow"><button data-id="${id}" class="${map[id].isDraft?"draftchip":""}">${id}</button><span class="badge">${map[id].deps.length}</span><span class="badge">${map[id].primitive?"P":map[id].isDraft?"D":map[id].tags[0][0]}</span></div>`).join("");
+}
+function allEdges(nodes=Object.keys(LX())){
+  const map=LX();
+  const set=new Set(nodes), edges=[];
+  for(const a of nodes) for(const b of (map[a]?.deps||[])) if(set.has(b)) edges.push([a,b]);
+  return edges;
+}
+function readerProfile(id=activeReader){
+  const map=LX();
+  const def=READER_DEFS.find(r=>r.id===id)||READER_DEFS[1], start=new Set(PRIMS.map(p=>p[0]));
+  if(def.common) COMMON_KNOWN.forEach(n=>start.add(n));
+  if(def.insider) Object.values(map).forEach(e=>{if((e.tags||[])[0]===domainLens)start.add(e.id)});
+  cuts.forEach(n=>start.add(n));
+  return {...def,label:def.insider?`${domainLens} Insider`:def.label,start,acceptsTarget:t=>!(def.auditor&&AUDIT_BLOCKED.has(t))};
+}
+function renderReaderBar(){
+  document.querySelectorAll("#readerbar button").forEach(b=>b.classList.toggle("active",b.dataset.reader===activeReader));
+}
+function groundingDepths(profile=readerProfile(), patienceOverride=null){
+  const map=LX(), ids=Object.keys(map), depth={}, path={}, patience=patienceOverride??profile.patience;
+  ids.forEach(id=>{depth[id]=Infinity;path[id]=[]});
+  ids.forEach(id=>{if(profile.start.has(id)){depth[id]=0;path[id]=[id]}});
+  for(let pass=0;pass<ids.length;pass++){
+    let changed=false;
+    for(const id of ids){
+      if(depth[id]===0)continue;
+      let best=Infinity,bp=[];
+      for(const d of map[id].deps){
+        if(!profile.acceptsTarget(d))continue;
+        const nd=depth[d]+1;
+        if(nd<best&&nd<=patience){best=nd;bp=[id,...path[d]]}
+      }
+      if(best<depth[id]){depth[id]=best;path[id]=bp;changed=true}
+    }
+    if(!changed)break;
+  }
+  return {depth,path,profile};
+}
+function allReaderResults(){
+  const out={};
+  READER_DEFS.forEach(r=>{
+    const p=readerProfile(r.id), capped=groundingDepths(p), raw=groundingDepths(p,99);
+    out[r.id]={profile:p,...capped,rawDepth:raw.depth,rawPath:raw.path};
+  });
+  return out;
+}
+function divergenceMap(results){
+  const out={};
+  Object.keys(LX()).forEach(id=>{
+    const ds=Object.values(results).map(r=>r.depth[id]).filter(Number.isFinite), fails=Object.values(results).length-ds.length;
+    out[id]={score:ds.length?Math.max(...ds)-Math.min(...ds):0,mixed:fails>0&&ds.length>0,fails,grounded:ds.length};
+  });
+  return out;
+}
+function readerStatus(id,res){
+  const map=LX();
+  if(Number.isFinite(res.depth[id]))return {status:"grounded",label:"grounded",cls:"ok",block:res.path[id].join(" → ")};
+  if(Number.isFinite(res.rawDepth[id])&&res.rawDepth[id]>res.profile.patience)return {status:"patience",label:"patience",cls:"warn",block:`needs depth ${res.rawDepth[id]}, patience ${res.profile.patience}`};
+  const dep=(map[id]?.deps||[]).find(d=>!res.profile.acceptsTarget(d));
+  if(dep)return {status:"filtered",label:"filtered",cls:"bad",block:`${id} → ${dep} rejected as load-bearing`};
+  return {status:"circular",label:"structural",cls:"bad",block:"no accepted path reaches this reader's floor"};
+}
+function reachable(start){
+  const map=LX();
+  const seen=new Map(), edges=[], q=[[start,0]];
+  while(q.length){
+    const [n,d]=q.shift();
+    if(!map[n] || (seen.has(n)&&seen.get(n)<=d)) continue;
+    seen.set(n,d);
+    if(d>=maxDepth || cuts.has(n) || map[n].primitive) continue;
+    for(const dep of map[n].deps){edges.push([n,dep]); if(map[dep]) q.push([dep,d+1])}
+  }
+  return {nodes:[...seen.keys()],edges:edges.filter(([a,b])=>seen.has(a)&&seen.has(b))};
+}
+function tarjan(nodes,edges){
+  const adj=Object.fromEntries(nodes.map(n=>[n,[]])); edges.forEach(([a,b])=>{if(adj[a]&&adj[b])adj[a].push(b)});
+  let ix=0; const st=[],on=new Set(),idx={},low={},out=[];
+  function go(v){idx[v]=low[v]=ix++;st.push(v);on.add(v);for(const w of adj[v]){if(idx[w]===undefined){go(w);low[v]=Math.min(low[v],low[w])}else if(on.has(w))low[v]=Math.min(low[v],idx[w])}if(low[v]===idx[v]){const c=[];let w;do{w=st.pop();on.delete(w);c.push(w)}while(w!==v);if(c.length>1||(adj[v]||[]).includes(v))out.push(c)}}
+  nodes.forEach(n=>{if(idx[n]===undefined)go(n)}); return out.sort((a,b)=>b.length-a.length);
+}
+function simpleCycles(nodes,edges,limit=80,maxLen=9){
+  const adj=Object.fromEntries(nodes.map(n=>[n,[]])); edges.forEach(([a,b])=>{if(adj[a]&&adj[b])adj[a].push(b)});
+  const out=[],seen=new Set();
+  function canon(c){const a=c.slice(0,-1);let best=null;for(let i=0;i<a.length;i++){const r=a.slice(i).concat(a.slice(0,i)).join(">");if(best===null||r<best)best=r}return best}
+  function dfs(start,cur,path){if(out.length>=limit)return;for(const nx of adj[cur]||[]){if(nx===start&&path.length>1){const c=[...path,start],k=canon(c);if(!seen.has(k)){seen.add(k);out.push(c)}}else if(!path.includes(nx)&&path.length<maxLen)dfs(start,nx,[...path,nx])}}
+  nodes.forEach(n=>dfs(n,n,[n])); return out;
+}
+function mfvsForComponent(comp,edges){
+  const nodes=[...comp].sort(), edgeIn=edges.filter(([a,b])=>nodes.includes(a)&&nodes.includes(b));
+  if(nodes.length>16){return {size:null,solutions:[nodes],exact:false}};
+  const cycles=simpleCycles(nodes,edgeIn,250,Math.min(10,nodes.length+1)).map(c=>c.slice(0,-1));
+  if(!cycles.length)return {size:0,solutions:[[]],exact:true};
+  let best=Infinity, sols=[];
+  function key(s){return [...s].sort().join("|")}
+  function search(chosen,remaining){
+    if(chosen.size>best)return;
+    const live=remaining.filter(c=>!c.some(n=>chosen.has(n)));
+    if(!live.length){const arr=[...chosen].sort(); if(arr.length<best){best=arr.length;sols=[]} if(arr.length===best&&!sols.some(s=>key(new Set(s))===key(chosen)))sols.push(arr); return}
+    const freq={}; live.forEach(c=>c.forEach(n=>freq[n]=(freq[n]||0)+1));
+    const branch=[...live.sort((a,b)=>a.length-b.length)[0]].sort((a,b)=>(freq[b]||0)-(freq[a]||0));
+    for(const n of branch){chosen.add(n);search(chosen,live);chosen.delete(n);if(sols.length>12&&chosen.size+1>=best)break}
+  }
+  search(new Set(),cycles);
+  return {size:best,solutions:sols.slice(0,8),exact:true,cycleCount:cycles.length};
+}
+function kernelReport(nodes,edges){
+  const comps=tarjan(nodes,edges), parts=comps.map(c=>({comp:c,...mfvsForComponent(c,edges)}));
+  const union=new Set(parts.flatMap(p=>p.solutions[solutionIndex%Math.max(1,p.solutions.length)]||[]));
+  return {comps,parts,union};
+}
+function focusLayout(nodes,edges){
+  const svg=$("graph"), box=svg.getBoundingClientRect(), w=Math.max(560,box.width), h=Math.max(430,box.height);
+  const layer={}; nodes.forEach(n=>layer[n]=99); layer[root]=0;
+  let ch=true; while(ch){ch=false; for(const [a,b] of edges) if(layer[a]+1<layer[b]){layer[b]=layer[a]+1;ch=true}}
+  const groups={}; nodes.forEach(n=>(groups[Math.min(layer[n],maxDepth)]||=[]).push(n));
+  const keys=Object.keys(groups).map(Number).sort((a,b)=>a-b), pos={};
+  keys.forEach((d,i)=>{const arr=groups[d].sort(),x=70+i*((w-140)/Math.max(1,keys.length-1));arr.forEach((n,j)=>pos[n]={x,y:58+(j+1)*((h-116)/(arr.length+1))})});
+  return {w,h,pos};
+}
+function atlasLayout(depth){
+  const svg=$("graph"), box=svg.getBoundingClientRect(), w=Math.max(720,box.width), h=Math.max(520,box.height);
+  const map=LX(), ids=Object.keys(map).sort(), maxD=Math.max(5,...ids.map(id=>isFinite(depth[id])?depth[id]:0)), pos={};
+  const buckets={}; ids.forEach(id=>{const d=isFinite(depth[id])?depth[id]:maxD+1;(buckets[d]||=[]).push(id)});
+  Object.entries(buckets).forEach(([d,arr])=>{arr.sort((a,b)=>(map[a].tags[0]||"").localeCompare(map[b].tags[0]||"")||a.localeCompare(b));arr.forEach((id,i)=>{const n=arr.length,margin=42,x=margin+(i+.5)*((w-margin*2)/n),y=h-45-Number(d)*((h-120)/(maxD+1));pos[id]={x,y,d:Number(d)}})});
+  return {w,h,pos,maxD};
+}
+function lemma(raw){
+  const heads=buildHeads();
+  let w=raw.toLowerCase().replace(/^['"]+|['"]+$/g,"").replace(/'s$/,"");
+  if(IRREGULAR[w])return IRREGULAR[w];
+  const tries=[w];
+  if(w.endsWith("ies")&&w.length>4)tries.push(w.slice(0,-3)+"y");
+  if(w.endsWith("ing")&&w.length>5)tries.push(w.slice(0,-3),w.slice(0,-3)+"e");
+  if(w.endsWith("ed")&&w.length>4)tries.push(w.slice(0,-2),w.slice(0,-1));
+  if(w.endsWith("ly")&&w.length>4)tries.push(w.slice(0,-2));
+  if(w.endsWith("s")&&w.length>3)tries.push(w.slice(0,-1));
+  return tries.find(x=>heads[x])||w;
+}
+function tokenizePassage(text){
+  const map=LX(), heads=buildHeads(map);
+  const re=/[A-Za-z][A-Za-z']*|[0-9]+|[^A-Za-z0-9]+/g, parts=[]; let m;
+  while((m=re.exec(text))){const raw=m[0], word=/^[A-Za-z]/.test(raw), lm=word?lemma(raw):""; parts.push({raw,word,lemma:lm,stop:word&&STOPWORDS.has(lm),ids:word&&heads[lm]?heads[lm]:[]})}
+  const contextIds=new Set(parts.flatMap(p=>p.ids));
+  parts.forEach((p,idx)=>{if(!p.ids.length)return; const scored=p.ids.map((id,ord)=>{const deps=new Set(map[id].deps||[]); let score=0; contextIds.forEach(o=>{if(o!==id&&deps.has(o))score++}); parts.forEach(q=>q.ids.forEach(o=>{if(o!==id&&(map[o]?.deps||[]).includes(id))score++})); return {id,score,ord}}).sort((a,b)=>b.score-a.score||a.ord-b.ord); p.id=scored[0].id; p.score=scored[0].score; p.runner=scored[1]||null; p.index=idx});
+  return parts;
+}
+function tokenSeverity(tok,results,div){
+  if(!tok.id)return {rank:0,color:"#9aa49f",weight:1,label:"unmatched"};
+  const rd=div[tok.id]||{score:0,mixed:false}, d=results[activeReader].depth[tok.id], fail=!Number.isFinite(d);
+  const rank=(rd.mixed?6:rd.score)+(fail?4:0)+(Number.isFinite(d)?Math.min(d,6)/2:2);
+  return {rank,color:riskFill(rd)||"#6b7772",weight:fail?4:Math.max(1,Math.min(5,1+d*.55)),label:rd.mixed?"split":rd.score?`spread ${rd.score}`:"stable"};
+}
+function passageSummary(tokens,results,div){
+  const matched=tokens.filter(t=>t.id), wordCount=tokens.filter(t=>t.word&&!t.stop).length, uniq=[...new Set(matched.map(t=>t.id))];
+  const ranked=uniq.map(id=>{const reps=matched.filter(t=>t.id===id), sev=Math.max(...reps.map(t=>tokenSeverity(t,results,div).rank)); return {id,sev,count:reps.length,rd:div[id]||{score:0,mixed:false}}}).sort((a,b)=>b.sev-a.sev||b.count-a.count||a.id.localeCompare(b.id));
+  const readerRows=READER_DEFS.map(r=>{const res=results[r.id], grounded=matched.filter(t=>Number.isFinite(res.depth[t.id])).length, first=matched.find(t=>readerStatus(t.id,res).status!=="grounded"); return {profile:res.profile,grounded,total:matched.length,first:first?`${first.raw}: ${readerStatus(first.id,res).block}`:"all matched terms ground within patience"}});
+  return {matched,wordCount,uniq,ranked,readerRows,coverage:wordCount?matched.length/wordCount:0};
+}
+function renderPassage(results,div){
+  passageTokens=tokenizePassage(passageText); const sum=passageSummary(passageTokens,results,div), activeIds=[...new Set(sum.matched.map(t=>t.id))];
+  $("graph").style.display="none"; $("workbenchPane").classList.remove("active"); $("passagePane").classList.add("active"); $("passageInput").value=passageText;
+  $("modeLabel").textContent="Passage Mode"; $("graphlabel").innerHTML=`${sum.matched.length}/${sum.wordCount} content tokens matched; ${sum.uniq.length} unique senses; click any underlined token to inspect its graph.`;
+  $("passageText").innerHTML=passageTokens.map(t=>{if(!t.word)return esc(t.raw); if(!t.id){return t.stop?esc(t.raw):`<span class="tok unmatched" title="outside current lexicon">${esc(t.raw)}</span>`} const sev=tokenSeverity(t,results,div), run=t.runner?`; runner-up ${t.runner.id} score ${t.runner.score}`:""; return `<button class="tok ${t.id===root?"sel":""}" data-id="${t.id}" style="--c:${sev.color};--u:${sev.weight}px" title="${esc(t.id)} score ${t.score}${run}; ${sev.label}">${esc(t.raw)}</button>`}).join("");
+  $("passageText").onclick=e=>{if(e.target.dataset.id){root=e.target.dataset.id;$("query").value=root;view="focus";$("view").value=view;analyze()}};
+  $("passageMatrix").innerHTML=`<table><tr><th>term</th><th>active</th><th>div</th><th>ambig</th></tr>${sum.ranked.slice(0,22).map(r=>{const d=results[activeReader].depth[r.id], ex=passageTokens.find(t=>t.id===r.id); return `<tr><td><button class="chip" data-id="${r.id}">${r.id}</button></td><td>${Number.isFinite(d)?d:"∞"}</td><td>${r.rd.mixed?"split":r.rd.score}</td><td>${ex.runner?`${ex.score}/${ex.runner.score}`:"-"}</td></tr>`}).join("")}</table>`;
+  $("passageMatrix").onclick=e=>{if(e.target.dataset.id){root=e.target.dataset.id;$("query").value=root;view="focus";$("view").value=view;analyze()}};
+  $("passageStrips").innerHTML=sum.readerRows.map(r=>{const pct=r.total?r.grounded/r.total:0; return `<div class="strip"><b>${esc(r.profile.label)}</b><i><span style="width:${(pct*100).toFixed(1)}%"></span></i><small>${r.grounded}/${r.total} grounded</small><small>${esc(r.first)}</small></div>`}).join("");
+}
+function renderGraphSet(nodes,edges,kr,cycles,depths,div){
+  if(view==="passage"||view==="workbench")return;
+  $("graph").style.display="block"; $("passagePane").classList.remove("active"); $("workbenchPane").classList.remove("active");
+  view==="atlas"?renderAtlas(kr,depths,div):renderFocus(nodes,edges,kr,cycles);
+}
+function drawDefs(svg,w,h){
+  svg.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  svg.innerHTML=`<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#66716d"/></marker></defs>`;
+}
+function nodeClass(id,kr,gd){const e=LX()[id];return ["node",id===root?"root":"",kr.union.has(id)?"kernel":"",cuts.has(id)?"cut":"",e?.primitive?"primitive":"",e?.isDraft?"draft":"",gd&&!Number.isFinite(gd.depth[id])?"fail":""].join(" ")}
+function riskFill(r){
+  if(!r)return null;
+  if(r.mixed)return "#f4b7a4";
+  if(r.score>=4)return "#f7c66a";
+  if(r.score>=2)return "#e8d9a0";
+  return null;
+}
+function drawNode(svg,id,p,kr,wide=false,gd=null,div=null){
+  const entry=LX()[id], label=id.length>(wide?20:15)?id.slice(0,wide?19:14)+".":id, tag=entry.primitive?"primitive":entry.isDraft?"draft":entry.tags.slice(0,2).join(" · ");
+  const g=document.createElementNS("http://www.w3.org/2000/svg","g"), bw=wide?124:96, bh=36;
+  g.setAttribute("class",nodeClass(id,kr,gd)); g.setAttribute("transform",`translate(${p.x-bw/2},${p.y-bh/2})`);
+  g.innerHTML=`<rect width="${bw}" height="${bh}" rx="2"></rect><text x="${bw/2}" y="15" text-anchor="middle">${esc(label)}</text><text class="tiny" x="${bw/2}" y="28" text-anchor="middle">${esc(tag)}</text>`;
+  const fill=riskFill(div&&div[id]); if(fill)g.querySelector("rect").style.fill=fill;
+  g.onclick=()=>{if(cutMode&&!entry.primitive&&id!==root){cuts.has(id)?cuts.delete(id):cuts.add(id);analyze()}else{root=id;$("query").value=id;view="focus";$("view").value=view;solutionIndex=0;analyze()}};
+  svg.appendChild(g);
+}
+function renderFocus(nodes,edges,kr,cycles){
+  const {w,h,pos}=focusLayout(nodes,edges), svg=$("graph"); drawDefs(svg,w,h);
+  const hot=new Set(); cycles.forEach(c=>{for(let i=0;i<c.length-1;i++)hot.add(c[i]+"→"+c[i+1])});
+  for(const [a,b] of edges){const p=pos[a],q=pos[b]; if(!p||!q)continue; const midx=(p.x+q.x)/2, bend=Math.abs(p.y-q.y)>60?(p.y<q.y?24:-24):0; svg.insertAdjacentHTML("beforeend",`<path class="edge ${hot.has(a+"→"+b)?"hot":""}" d="M ${p.x+48} ${p.y} Q ${midx} ${(p.y+q.y)/2+bend} ${q.x-48} ${q.y}"/>`)}
+  nodes.forEach(id=>drawNode(svg,id,pos[id],kr,false));
+  $("modeLabel").textContent="Focused Graph";
+  $("graphlabel").innerHTML=`${nodes.length} reachable senses at depth ${maxDepth===9?"all":maxDepth}; exact kernels shown for SCCs in this reachable subgraph.`;
+}
+function renderAtlas(kr,gd,div){
+  const map=LX(), ids=Object.keys(map), edges=allEdges(ids), {w,h,pos,maxD}=atlasLayout(gd.depth), svg=$("graph"); drawDefs(svg,w,h);
+  for(let d=0;d<=maxD+1;d++){const y=h-45-d*((h-120)/(maxD+1)); svg.insertAdjacentHTML("beforeend",`<path class="${d===0?"ground":"gridline"}" d="M 32 ${y} L ${w-22} ${y}"/><text class="label" x="35" y="${y-4}">${d===0?"primitive floor":"depth "+d}</text>`)}
+  kr.comps.filter(c=>c.length>1).slice(0,12).forEach(c=>{const pts=c.map(id=>pos[id]).filter(Boolean); if(pts.length<2)return; const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),x=Math.min(...xs)-40,y=Math.min(...ys)-25,bw=Math.max(...xs)-Math.min(...xs)+80,bh=Math.max(...ys)-Math.min(...ys)+50; svg.insertAdjacentHTML("beforeend",`<rect class="basin" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4"></rect>`)});
+  for(const [a,b] of edges){const p=pos[a],q=pos[b]; if(!p||!q)continue; const visible=(a===root||b===root||kr.union.has(a)||kr.union.has(b)||map[a].primitive||map[b].primitive||map[a].isDraft||map[b].isDraft); svg.insertAdjacentHTML("beforeend",`<path class="edge ${visible?"":"dim"}" d="M ${p.x} ${p.y-18} L ${q.x} ${q.y+18}"/>`)}
+  ids.forEach(id=>drawNode(svg,id,pos[id],kr,false,gd,div));
+  $("modeLabel").textContent="Atlas Map";
+  const un=ids.filter(id=>!isFinite(gd.depth[id])).length;
+  $("graphlabel").innerHTML=`${readerProfile().label} reader terrain: ${ids.length} senses by shortest accepted path; ${un} ungrounded or past patience.`;
+}
+function renderPanels(g,kr,cycles,gd,results,div){
+  const map=LX(), entry=map[root]||map["meaning#general"]; root=entry.id; $("query").value=root;
+  document.querySelectorAll(".wordrow button").forEach(b=>b.classList.toggle("sel",b.dataset.id===root));
+  $("definition").textContent=entry.def;
+  $("deps").innerHTML=(entry.deps.length?entry.deps:["(primitive stop)"]).map(d=>map[d]?`<button class="chip ${kr.union.has(d)?"kernel":""} ${cuts.has(d)?"cut":""} ${map[d].primitive?"prim":""} ${map[d].isDraft?"draftchip":""}" data-id="${d}">${d}</button>`:`<span class="chip">${d}</span>`).join("");
+  $("deps").onclick=e=>{if(e.target.dataset.id){root=e.target.dataset.id;view="focus";$("view").value=view;analyze()}};
+  const exact=kr.parts.filter(p=>p.exact).length, ksize=kr.parts.reduce((n,p)=>n+(p.size||0),0), inf=Object.values(gd.depth).filter(d=>!isFinite(d)).length, rd=div[root]||{score:0,mixed:false};
+  $("metrics").innerHTML=[["senses",Object.keys(map).length],["reachable",g.nodes.length],["SCC",kr.comps.length],["MFVS",ksize],["diverge",rd.mixed?"split":rd.score]].map(([k,v])=>`<div class="metric"><b>${v}</b><span>${k}</span></div>`).join("");
+  renderVerdicts(results,div);
+  renderPassageReport(results,div);
+  renderWorkbenchReport();
+  renderKernel(kr);
+  const path=gd.path[root]||[];
+  $("pathTable").innerHTML="<tr><th>depth</th><th>path to floor</th></tr>"+`<tr><td>${isFinite(gd.depth[root])?gd.depth[root]:"∞"}</td><td>${path.length?path.map(esc).join(" → "):"no primitive path found; circular or floating component"}</td></tr>`;
+  $("cycles").innerHTML="<tr><th>#</th><th>cycle</th><th>material point</th></tr>"+(cycles.length?cycles.slice(0,14).map((c,i)=>`<tr><td>${i+1}</td><td>${c.map(esc).join(" → ")}</td><td>${cycleNote(c)}</td></tr>`).join(""):`<tr><td colspan="3">No cycle found in the focused depth.</td></tr>`);
+  renderLens(g.nodes);
+  $("note").innerHTML=`<b>${esc(root)}</b> ${entry.primitive?"is part of the primitive floor.":"is analyzed through its definition dependencies."}<p>${esc(entry.note)}</p><p>Active reader: <b>${readerProfile().label}</b>. Divergence: ${rd.mixed?"at least one reader grounds it while another fails":rd.score+" depth spread across grounded readers"}. Active temporary cuts: ${cuts.size?[...cuts].sort().join(", "):"none"}.</p>`;
+}
+function renderPassageReport(results,div){
+  if(view!=="passage"){ $("passageReport").innerHTML='<span class="micro">Switch to Passage mode to analyze running text with the same reader certificates.</span>'; return }
+  const sum=passageSummary(passageTokens,results,div), top=sum.ranked[0], unstable=sum.ranked.filter(r=>r.rd.mixed||r.rd.score>=2).length;
+  const rows=sum.ranked.slice(0,7).map(r=>{const st=readerStatus(r.id,results[activeReader]); return `<tr><td><button class="chip ${r.rd.mixed?"risk":""}" data-id="${r.id}">${r.id}</button></td><td>${r.count}</td><td>${r.rd.mixed?"split":r.rd.score}</td><td class="${st.cls}">${st.label}</td></tr>`}).join("");
+  $("passageReport").innerHTML=`<div class="metricgrid"><div class="metric"><b>${Math.round(sum.coverage*100)}%</b><span>coverage</span></div><div class="metric"><b>${sum.uniq.length}</b><span>senses</span></div><div class="metric"><b>${unstable}</b><span>unstable</span></div><div class="metric"><b>${top?top.id.split("#")[0]:"-"}</b><span>top load</span></div><div class="metric"><b>${activeReader}</b><span>reader</span></div></div><table style="margin-top:6px"><tr><th>ranked term</th><th>hits</th><th>div</th><th>active verdict</th></tr>${rows||'<tr><td colspan="4">No matched lexical terms yet.</td></tr>'}</table><p>Interpretive line: the passage inherits most reader-relative pressure from <b>${top?esc(top.id):"no matched term"}</b>; this is a ranking of mechanical grounding pressure, not a truth judgment.</p>`;
+  $("passageReport").onclick=e=>{if(e.target.dataset.id){root=e.target.dataset.id;$("query").value=root;view="focus";$("view").value=view;analyze()}};
+}
+function renderVerdicts(results,div){
+  const rows=READER_DEFS.map(r=>{
+    const res=results[r.id], st=readerStatus(root,res), d=Number.isFinite(res.depth[root])?res.depth[root]:"∞", p=res.profile;
+    return `<tr><td>${esc(p.label)}</td><td class="${st.cls}">${st.label}</td><td>${d}/${p.patience}</td><td>${esc(st.block)}</td></tr>`;
+  }).join("");
+  const rd=div[root]||{score:0,mixed:false};
+  $("verdicts").innerHTML=`<tr><th>reader</th><th>verdict</th><th>depth</th><th>certificate / first blocker</th></tr>${rows}<tr><td colspan="4"><span class="chip risk">Risk Divergence: ${rd.mixed?"split verdict":rd.score+" depth spread"}</span></td></tr>`;
+}
+function renderKernel(kr){
+  if(!kr.parts.length){$("kernel").innerHTML='<p class="note">No non-trivial strongly connected component in the active graph.</p>';return}
+  const maxSol=Math.max(...kr.parts.map(p=>p.solutions.length||1)); solutionIndex=Math.min(solutionIndex,maxSol-1);
+  const rows=kr.parts.map((p,i)=>{const sol=p.solutions[solutionIndex%p.solutions.length]||[];return `<tr><td>${i+1}</td><td>${p.comp.length}</td><td>${p.exact?"exact":"capped"}</td><td>${p.size===null?"?":p.size}</td><td>${sol.map(x=>`<button class="chip kernel" data-id="${x}">${x}</button>`).join(" ")}</td></tr>`}).join("");
+  $("kernel").innerHTML=`<div class="solutionbar"><button id="prevSol">‹</button><b>minimum solution ${solutionIndex+1}</b><button id="nextSol">›</button><span class="micro">enumerates alternate minimum feedback vertex sets per SCC</span></div><table><tr><th>SCC</th><th>nodes</th><th>mode</th><th>min cut</th><th>selected solution</th></tr>${rows}</table>`;
+  $("prevSol").onclick=()=>{solutionIndex=Math.max(0,solutionIndex-1);analyze()};
+  $("nextSol").onclick=()=>{solutionIndex=solutionIndex+1;analyze()};
+  $("kernel").onclick=e=>{if(e.target.dataset.id){root=e.target.dataset.id;view="focus";$("view").value=view;analyze()}};
+}
+function renderLens(nodes){
+  const map=LX();
+  const counts={}; Object.keys(TAGS).forEach(t=>counts[t]=0);
+  nodes.forEach(id=>(map[id]?.tags||[]).forEach(t=>counts[t]++));
+  const max=Math.max(1,...Object.values(counts));
+  $("lens").innerHTML=Object.entries(counts).map(([t,c])=>`<div style="color:${COLOR[t]}"><b>${t}</b></div><div><div class="bar"><span style="width:${100*c/max}%;background:${COLOR[t]}"></span></div></div><div>${c}</div>`).join("");
+}
+function renderMiniTerrains(results){
+  const ids=Object.keys(LX()).sort(), maxD=Math.max(5,...Object.values(results).flatMap(r=>ids.map(id=>Number.isFinite(r.depth[id])?r.depth[id]:0)));
+  $("terrainStrip").innerHTML=READER_DEFS.map(r=>{
+    const res=results[r.id], pts=ids.map((id,i)=>{
+      const d=Number.isFinite(res.depth[id])?res.depth[id]:maxD+1, x=4+(i+.5)*(132/ids.length), y=39-d*(31/(maxD+1));
+      const hot=id===root, fail=!Number.isFinite(res.depth[id]);
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${hot?2.2:1.15}" fill="${hot?"#af332b":fail?"#c4b9af":"#185a78"}"/>`;
+    }).join("");
+    return `<button class="mini ${r.id===activeReader?"active":""}" data-reader="${r.id}"><b>${esc(readerProfile(r.id).label)}</b><svg viewBox="0 0 140 43"><path d="M 3 39 L 137 39" stroke="#426b47" stroke-width="1.2"/>${pts}</svg></button>`;
+  }).join("");
+  $("terrainStrip").onclick=e=>{const b=e.target.closest("[data-reader]"); if(b){activeReader=b.dataset.reader;analyze()}};
+}
+function cycleNote(c){
+  const s=new Set(c);
+  if(s.has("meaning#general")&&s.has("reader#model"))return"Meaning is routed through reader uptake, so grounding depends on a reader model.";
+  if(s.has("sign#semiotic")&&s.has("language#system"))return"The sign system defines its units while being composed from those units.";
+  if(s.has("reference#relation")&&s.has("expression#linguistic"))return"Reference and expression explain each other unless an object model is supplied.";
+  if(s.has("use#practice")&&s.has("practice#social"))return"Use grounds language through practice, while practice is described through use.";
+  if(s.has("rule#criterion")&&s.has("criterion#rule"))return"Public correctness is split between rule and criterion, but neither is independent.";
+  return"A definition in this path borrows explanatory force from another term in the same path.";
+}
+function addDraftDep(id){
+  id=(id||"").trim();
+  if(!id||(!LX()[id]&&!LEXICON[id]))return;
+  if(id!==($("draftId").value||"").trim())draftDeps.add(id);
+}
+function seedFromLens(tag){
+  const id=($("draftId").value||root).trim(), base=LEXICON[id]||LEXICON[root]||LEXICON["meaning#general"], scored={};
+  (base.deps||[]).forEach(d=>{const e=LEXICON[d]; if(e&&(e.tags||[]).includes(tag))scored[d]=(scored[d]||0)+4});
+  Object.values(LEXICON).forEach(e=>{
+    if((e.tags||[]).includes(tag)){
+      (e.deps||[]).forEach(d=>{if(LEXICON[d])scored[d]=(scored[d]||0)+1});
+      if((e.deps||[]).includes(id))scored[e.id]=(scored[e.id]||0)+2;
+    }
+  });
+  const picked=Object.entries(scored).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,7).map(x=>x[0]);
+  draftDeps.clear(); picked.forEach(x=>draftDeps.add(x));
+}
+function saveDraft(clone){
+  const e=draftEntryFromForm(); if(!e)return;
+  const label=($("draftLabel").value||`${e.tags[0]} candidate`).trim();
+  const key=clone||!activeDraftKey?`d${Date.now().toString(36)}`:activeDraftKey;
+  const found=draftVariants.find(v=>v.key===key);
+  if(found){found.label=label;found.entry=e}else draftVariants.push({key,label,entry:e});
+  activeDraftKey=key; root=e.id; $("query").value=root; refreshLexicalLists();
+}
+function renderDraftDeps(){
+  $("draftDeps").innerHTML=[...draftDeps].map(d=>`<button class="chip ${LEXICON[d]?.primitive?"prim":""}" data-id="${d}">${d} ×</button>`).join("")||'<span class="micro">No dependency edges selected; this draft grounds only if treated as a stop elsewhere.</span>';
+  $("draftDeps").onclick=e=>{if(e.target.dataset.id){draftDeps.delete(e.target.dataset.id);analyze()}};
+}
+function renderDraftList(){
+  $("draftList").innerHTML=draftVariants.map(v=>`<button class="${v.key===activeDraftKey?"active":""}" data-pick="${v.key}">${esc(v.label)}</button><button data-run="${v.key}">${esc(v.entry.id.split("#")[0])}</button><button data-del="${v.key}">del</button>`).join("");
+  $("draftList").onclick=e=>{
+    const k=e.target.dataset.pick||e.target.dataset.run||e.target.dataset.del; if(!k)return;
+    const i=draftVariants.findIndex(v=>v.key===k); if(i<0)return;
+    if(e.target.dataset.del){draftVariants.splice(i,1); if(activeDraftKey===k)activeDraftKey=""; analyze(); return}
+    const v=draftVariants[i]; activeDraftKey=k; $("draftId").value=v.entry.id; $("draftLabel").value=v.label; $("draftDef").value=v.entry.def; $("lensSeed").value=v.entry.tags[0]||"Yuyu"; draftDeps.clear(); v.entry.deps.forEach(d=>draftDeps.add(d)); root=v.entry.id; $("query").value=root; view="workbench"; $("view").value=view; analyze();
+  };
+}
+function cycleKey(c){const a=c.slice(0,-1);let best=null;for(let i=0;i<a.length;i++){const r=a.slice(i).concat(a.slice(0,i)).join(">");if(best===null||r<best)best=r}return best}
+function analysisPack(map,id){
+  return withLexicon(map,()=>{
+    const oldRoot=root; root=id;
+    const g=reachable(id), nodes=g.nodes.filter(n=>!cuts.has(n)&&!LX()[n].primitive), edges=g.edges.filter(([a,b])=>!cuts.has(a)&&!cuts.has(b)&&!LX()[a].primitive);
+    const kr=kernelReport(nodes,edges), cycles=simpleCycles(nodes,edges,80,9), results=allReaderResults(), comp=kr.parts.find(p=>p.comp.includes(id));
+    root=oldRoot;
+    return {g,kr,cycles,results,comp};
+  });
+}
+function draftDelta(entry){
+  const baseMap={...LEXICON}, hypMap={...LEXICON,[entry.id]:entry};
+  const canonical=LEXICON[entry.id]?analysisPack(baseMap,entry.id):null, hyp=analysisPack(hypMap,entry.id);
+  const baseCycles=new Map((canonical?canonical.cycles:[]).map(c=>[cycleKey(c),c])), hypCycles=new Map(hyp.cycles.map(c=>[cycleKey(c),c]));
+  const gained=[...hypCycles.keys()].filter(k=>!baseCycles.has(k)), lost=[...baseCycles.keys()].filter(k=>!hypCycles.has(k));
+  const readerRows=READER_DEFS.map(r=>{
+    const h=hyp.results[r.id], hs=withLexicon(hypMap,()=>readerStatus(entry.id,h));
+    if(!canonical)return {label:h.profile.label,base:"new",hyp:Number.isFinite(h.depth[entry.id])?h.depth[entry.id]:"∞",cls:hs.cls,move:"new",block:hs.block};
+    const b=canonical.results[r.id], bs=withLexicon(baseMap,()=>readerStatus(entry.id,b)), bd=Number.isFinite(b.depth[entry.id])?b.depth[entry.id]:Infinity, hd=Number.isFinite(h.depth[entry.id])?h.depth[entry.id]:Infinity;
+    return {label:h.profile.label,base:Number.isFinite(bd)?bd:"∞",hyp:Number.isFinite(hd)?hd:"∞",cls:hd<bd?"ok":hd>bd?"bad":hs.cls,move:hd<bd?"faster":hd>bd?"slower":hs.status===bs.status?"same":"changed",block:hs.block};
+  });
+  return {canonical,hyp,gained,lost,readerRows,baseMap,hypMap};
+}
+function renderWorkbench(results,div){
+  const entry=draftEntryFromForm(); if(!entry)return;
+  root=entry.id; $("query").value=root; $("graph").style.display="none"; $("passagePane").classList.remove("active"); $("workbenchPane").classList.add("active");
+  renderDraftDeps(); renderDraftList();
+  const d=draftDelta(entry), comp=d.hyp.comp, baseComp=d.canonical?.comp, mfvs=comp?(comp.size===null?"?":comp.size):0, baseMfvs=baseComp?(baseComp.size===null?"?":baseComp.size):"new";
+  $("modeLabel").textContent="Workbench";
+  $("graphlabel").innerHTML=`Live draft overlay for <b>${esc(entry.id)}</b>: ${entry.deps.length} selected edges, ${d.gained.length} cycles gained, ${d.lost.length} cycles removed.`;
+  const rows=d.readerRows.map(r=>`<tr><td>${esc(r.label)}</td><td>${r.base}</td><td class="${r.cls}">${r.hyp}</td><td>${r.move}</td><td>${esc(r.block)}</td></tr>`).join("");
+  $("workbenchDelta").innerHTML=`<div class="delta"><div class="metric"><b class="diffadd">${d.gained.length}</b><span>cycles gained</span></div><div class="metric"><b class="diffloss">${d.lost.length}</b><span>cycles lost</span></div><div class="metric"><b>${baseComp?baseComp.comp.length:0}→${comp?comp.comp.length:0}</b><span>SCC nodes</span></div><div class="metric"><b>${baseMfvs}→${mfvs}</b><span>MFVS</span></div></div><table style="margin-top:6px"><tr><th>reader</th><th>seed</th><th>draft</th><th>delta</th><th>certificate</th></tr>${rows}</table><p class="micro">The gloss is not parsed. Only the dependency chips above create or remove graph edges.</p>`;
+  renderCandidateCompare(entry.id);
+}
+function renderCandidateCompare(id){
+  const vars=draftVariants.filter(v=>v.entry.id===id);
+  $("candidateCompare").innerHTML=(vars.length?vars:[{key:"live",label:"live unsaved",entry:draftEntryFromForm()}]).map(v=>{
+    const d=draftDelta(v.entry), good=d.readerRows.filter(r=>r.move==="faster").length, bad=d.readerRows.filter(r=>r.move==="slower").length;
+    const mini=d.readerRows.map(r=>`<div class="minirow"><span>${esc(r.label)}</span><span class="bar"><span style="width:${r.hyp==="∞"?100:Math.min(100,Number(r.hyp)*18)}%;background:${r.cls==="ok"?"#396b48":r.cls==="bad"?"#af332b":"#185a78"}"></span></span><span>${r.hyp}</span></div>`).join("");
+    return `<div class="candidate"><b>${esc(v.label)}</b><span class="micro">${esc(v.entry.deps.join(", "))}</span><div class="chips"><span class="chip">+${d.gained.length} cycles</span><span class="chip">${d.lost.length} removed</span><span class="chip ok">${good} faster</span><span class="chip bad">${bad} slower</span></div>${mini}</div>`;
+  }).join("");
+}
+function renderWorkbenchReport(){
+  if(view!=="workbench"){$("workbenchReport").innerHTML='<span class="micro">Switch to Workbench to author a definition and compare it against the canonical seed.</span>';return}
+  const e=draftEntryFromForm(), d=draftDelta(e), faster=d.readerRows.filter(r=>r.move==="faster").map(r=>r.label).join(", ")||"none", slower=d.readerRows.filter(r=>r.move==="slower").map(r=>r.label).join(", ")||"none";
+  $("workbenchReport").innerHTML=`<p><b>${esc(e.id)}</b> draft tested against ${LEXICON[e.id]?"canonical seed":"no canonical baseline"}.</p><p>Reader movement: faster for ${esc(faster)}; slower for ${esc(slower)}. Cycles: <span class="diffadd">${d.gained.length} gained</span>, <span class="diffloss">${d.lost.length} removed</span>.</p>`;
+}
+function analyze(){
+  maxDepth=Number($("depth").value); view=$("view").value;
+  if(view==="passage")passageText=$("passageInput").value;
+  if(view==="workbench"){const e=draftEntryFromForm(); if(e)root=e.id}
+  if(!LX()[root])root="meaning#general";
+  domainLens=$("domainLens").value||domainLens;
+  refreshLexicalLists();
+  renderDraftList();
+  const results=allReaderResults(), gd=results[activeReader], div=divergenceMap(results);
+  const map=LX(), g=reachable(root), fullNodes=view==="atlas"?Object.keys(map):g.nodes, fullEdges=view==="atlas"?allEdges(fullNodes):g.edges;
+  const kr=kernelReport(fullNodes.filter(n=>!cuts.has(n)&&!map[n].primitive),fullEdges.filter(([a,b])=>!cuts.has(a)&&!cuts.has(b)&&!map[a].primitive));
+  const cycles=simpleCycles(g.nodes.filter(n=>!cuts.has(n)&&!map[n].primitive),g.edges.filter(([a,b])=>!cuts.has(a)&&!cuts.has(b)&&!map[a].primitive),40,9);
+  $("atlasBtn").classList.toggle("active",view==="atlas"); $("focusBtn").classList.toggle("active",view==="focus"); $("passageBtn").classList.toggle("active",view==="passage"); $("workbenchBtn").classList.toggle("active",view==="workbench");
+  renderReaderBar(); renderMiniTerrains(results);
+  renderGraphSet(g.nodes,g.edges,kr,cycles,gd,div); if(view==="passage")renderPassage(results,div); if(view==="workbench")renderWorkbench(results,div); renderPanels(g,kr,cycles,gd,results,div);
+}
+init();
+</script>
+</body>
+</html>

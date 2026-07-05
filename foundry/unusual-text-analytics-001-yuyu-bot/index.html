@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interpretant Loom</title>
+<style>
+:root{
+  --ink:#171512;--muted:#575b61;--faint:#8a8f96;--paper:#f7f8f6;--panel:#eceff1;
+  --line:#c8ced2;--line2:#9aa3aa;--red:#9d342c;--blue:#255f85;--green:#2f7152;
+  --gold:#a36316;--violet:#6f4d7d;--hi:#fff19a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Arial,sans-serif;font-size:13px;line-height:1.25}
+body{min-height:100vh}
+button,textarea,select,input{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:300px minmax(460px,1fr) 360px;grid-template-rows:auto 1fr;gap:8px;padding:8px;min-height:100vh}
+header{grid-column:1/-1;display:grid;grid-template-columns:300px 1fr 360px;gap:8px;align-items:stretch}
+.brand,.strip,.status{border:1px solid var(--line2);background:#ffffff;min-height:54px}
+.brand{padding:7px 9px}
+h1{font-family:ui-serif,Georgia,serif;font-size:21px;line-height:1;margin:0 0 4px;letter-spacing:0;font-weight:650}
+.deck{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);border-left:0}
+.metric{padding:6px 8px;border-left:1px solid var(--line);min-width:0}
+.metric:first-child{border-left:0}
+.metric b{display:block;font-size:17px;line-height:1.05;font-variant-numeric:tabular-nums}
+.metric span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{padding:6px 8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px}
+.status div{border-bottom:1px dotted var(--line);padding-bottom:2px}
+.status b{font-variant-numeric:tabular-nums}
+.panel{border:1px solid var(--line2);background:#ffffff;min-height:0;overflow:hidden}
+.left,.middle,.right{display:grid;gap:8px;min-height:0}
+.left{grid-template-rows:265px 1fr 170px}
+.middle{grid-template-rows:minmax(360px,1.1fr) minmax(230px,.9fr)}
+.right{grid-template-rows:260px 1fr 210px}
+.panel-title{height:25px;display:flex;align-items:center;justify-content:space-between;padding:0 7px;border-bottom:1px solid var(--line);background:var(--panel);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#332f29}
+.panel-title .small{color:var(--muted);letter-spacing:0;text-transform:none;font-size:11px}
+.controls{display:grid;grid-template-columns:1fr auto;gap:6px;padding:7px;border-bottom:1px solid var(--line)}
+select,button,input{border:1px solid var(--line2);background:#fff;color:var(--ink);height:25px;padding:2px 6px;border-radius:0}
+button{cursor:pointer}
+button:hover{background:var(--hi)}
+textarea{width:100%;height:174px;resize:none;border:0;border-top:1px solid var(--line);background:#ffffff;padding:8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.35}
+.micro{padding:7px;color:var(--muted);font-size:11px;display:grid;grid-template-columns:1fr 1fr;gap:4px;border-top:1px solid var(--line)}
+.micro b{color:var(--ink)}
+.term-list{overflow:auto;height:calc(100% - 25px)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:3px 5px;border-bottom:1px solid #e1e5e8;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:#e7ebee;color:#394047;font-size:10px;text-transform:uppercase;letter-spacing:.06em;z-index:2}
+td.num{text-align:right;color:#453f38}
+tr.term-row{cursor:pointer}
+tr.term-row:hover, tr.term-row.active{background:var(--hi)}
+.tag{display:inline-block;border:1px solid var(--line2);padding:1px 4px;margin:0 2px 2px 0;font-size:10px;background:#fff}
+.tag.red{border-color:#c9867f;color:var(--red)}.tag.blue{border-color:#83a9c0;color:var(--blue)}.tag.green{border-color:#82ad93;color:var(--green)}.tag.gold{border-color:#c8a06c;color:var(--gold)}
+#loom{width:100%;height:100%;display:block;background:#ffffff}
+.canvas-wrap{height:calc(100% - 25px);position:relative}
+.legend{position:absolute;left:8px;bottom:6px;display:flex;gap:6px;background:rgba(255,255,255,.88);border:1px solid var(--line);padding:3px 5px;font-size:10px;color:var(--muted)}
+.sw{width:18px;height:7px;display:inline-block;border-top:2px solid currentColor}
+.sense{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;height:calc(100% - 25px)}
+.sense>div{border-left:1px solid var(--line);padding:7px;overflow:auto}
+.sense>div:first-child{border-left:0}
+.sense h2{font-family:ui-serif,Georgia,serif;font-size:18px;margin:0 0 4px}
+.sense h3{font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin:8px 0 4px;color:var(--muted)}
+.bigterm{font-family:ui-serif,Georgia,serif;font-size:34px;line-height:.95;overflow-wrap:anywhere}
+.definition{color:var(--muted);font-size:12px}
+.kv{display:grid;grid-template-columns:94px 1fr;gap:3px;margin-top:6px}
+.kv span:nth-child(odd){color:var(--muted)}
+.bar{height:8px;background:#e6eaed;margin:3px 0;position:relative}
+.bar i{display:block;height:100%;background:var(--blue)}
+.bar.red i{background:var(--red)}.bar.green i{background:var(--green)}.bar.gold i{background:var(--gold)}
+.concord{overflow:auto;height:calc(100% - 25px);padding:5px 7px}
+.kwic{display:grid;grid-template-columns:1fr auto 1fr;gap:5px;border-bottom:1px solid #e1e5e8;padding:3px 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px}
+.kwic .l{text-align:right;color:#555}.kwic .k{background:var(--hi);font-weight:700}.kwic .r{color:#555}
+.sentence-list{overflow:auto;height:calc(100% - 25px)}
+.sent{display:grid;grid-template-columns:42px 1fr 58px;border-bottom:1px solid #e1e5e8}
+.sent div{padding:4px 5px}.sent .n{color:var(--muted);font-variant-numeric:tabular-nums}.sent .txt{font-family:ui-serif,Georgia,serif;font-size:13px}.sent .force{text-align:right;font-size:10px;color:var(--blue);text-transform:uppercase}
+.glyphs{display:flex;flex-wrap:wrap;gap:3px;padding:7px;overflow:auto;height:calc(100% - 25px);align-content:flex-start}
+.glyph{width:18px;height:18px;border:1px solid var(--line2);display:grid;place-items:center;font-size:9px;background:#fff;cursor:pointer}
+.glyph.sel{outline:2px solid var(--red);background:var(--hi)}
+.footer-note{padding:7px;color:var(--muted);font-size:11px;border-top:1px solid var(--line)}
+@media (max-width:1050px){
+  .app{grid-template-columns:270px 1fr;grid-template-rows:auto auto auto}
+  header{grid-template-columns:270px 1fr;grid-column:1/-1}.status{grid-column:1/-1}
+  .right{grid-column:1/-1;grid-template-columns:1fr 1fr 1fr;grid-template-rows:260px}.right .panel{min-height:260px}
+}
+@media (max-width:760px){
+  .app,header{display:block}.panel,.brand,.strip,.status{margin-bottom:8px}.left,.middle,.right{display:block}.left .panel,.middle .panel,.right .panel{height:320px;margin-bottom:8px}.strip{grid-template-columns:repeat(2,1fr)}.sense{grid-template-columns:1fr}.sense>div{border-left:0;border-top:1px solid var(--line)}.sense>div:first-child{border-top:0}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1>Interpretant Loom</h1>
+      <div class="deck">semiotic close-reading instrument / offline</div>
+    </div>
+    <div class="strip" id="metrics"></div>
+    <div class="status" id="status"></div>
+  </header>
+
+  <section class="left">
+    <div class="panel">
+      <div class="panel-title">Corpus Material <span class="small">paste or choose</span></div>
+      <div class="controls">
+        <select id="sample"></select>
+        <button id="analyze">Analyze</button>
+      </div>
+      <textarea id="text"></textarea>
+      <div class="micro" id="micro"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Signifier Ledger <span class="small">click a row</span></div>
+      <div class="term-list"><table id="terms"></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Token Glyph Index <span class="small">material recurrence</span></div>
+      <div class="glyphs" id="glyphs"></div>
+    </div>
+  </section>
+
+  <section class="middle">
+    <div class="panel">
+      <div class="panel-title">Peircean Loom <span class="small">signifier / proxy object / interpretants</span></div>
+      <div class="canvas-wrap">
+        <canvas id="loom"></canvas>
+        <div class="legend"><span><i class="sw" style="color:var(--red)"></i> token</span><span><i class="sw" style="color:var(--gold)"></i> collocate</span><span><i class="sw" style="color:var(--blue)"></i> pragmatic pressure</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Triadic Reading <span class="small" id="readTitle"></span></div>
+      <div class="sense" id="sense"></div>
+    </div>
+  </section>
+
+  <section class="right">
+    <div class="panel">
+      <div class="panel-title">Collocate Field <span class="small">window ±4</span></div>
+      <div class="term-list"><table id="collocates"></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Concordance <span class="small">KWIC</span></div>
+      <div class="concord" id="kwic"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Sentence Force Strip <span class="small">use, not topic</span></div>
+      <div class="sentence-list" id="sentences"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const SAMPLES = [
+  {name:"Frege / Wittgenstein / semiotic notes", text:`A name does not carry its object the way a label carries ink. It works inside a practice: in proof, in command, in memory, in repair. The morning star and the evening star may meet the same body, yet the route of recognition is not the same. Meaning is not a vapor behind the word. Meaning is the public handling of the sign, the correction it licenses, the expectation it prepares, the surprise it can survive.
+
+When a child learns "game", no hidden essence is handed over. Examples pull against examples. Board, field, wager, move, rule, joke: the word gathers family likeness while refusing a single frontier. A signifier becomes stable by being risked in different scenes. The interpretant is not private decoration; it is the next competent act.
+
+This is why a glossary can fail. It may fix reference while leaving sense loose. It may list terms while hiding their grammar of use. A reader needs concordance, contrast, and the small machinery of deixis: here, now, we, this, that. These words do not describe a place from nowhere. They fasten utterance to a situation and ask the reader to stand somewhere.`},
+  {name:"Technical policy fragment", text:`The system shall retain audit events for ninety days unless a tenant requests legal hold. An operator may export records only after approval by two administrators. The export is logged as a privileged action and is visible to the tenant. If the tenant disputes the export, the system must preserve the disputed record, the approval trail, and the notification.
+
+"Deletion" means removal from active indexes; it does not mean destruction of backups before the retention window expires. The policy distinguishes deletion, suppression, and redaction. Deletion removes ordinary access. Suppression hides a record from product surfaces while preserving auditability. Redaction replaces selected fields with a reason code.
+
+We should not describe these controls as privacy guarantees. They are accountability controls. Their meaning depends on who can inspect them, when inspection occurs, and what remedy follows from inspection.`},
+  {name:"Civic speech with indexicals", text:`We meet here because the map says the river is a boundary, but our streets say otherwise. This bridge is not an ornament. It is a promise that work, school, care, and memory can cross without asking permission from a line drawn elsewhere.
+
+Some will call the plan symbolic. They are right, but not in the way they intend. A symbol is not a lesser thing. A symbol tells strangers what conduct to expect. It gives a neighborhood a grammar of arrival: where to slow down, whom to greet, what to repair first.
+
+If we build only a road, we have failed. If we build a sign that changes where people may go and what they may claim, then the sign has become infrastructure.`}
+];
+const STOP = new Set("a an and are as at be been before but by can could did do does for from had has have he her here him his i if in into is it its may must not of on only or our she should so than that the their them then there these they this those to was we what when where which while who whom why will with without yet you your".split(" "));
+const DEIXIS = new Set("i we you here there now then this that these those our your my their".split(" "));
+const MODAL = new Set("shall must may should can could will would might ought".split(" "));
+const NEG = new Set("not no never without neither nor".split(" "));
+const EVID = new Set("because therefore since unless if while yet but however".split(" "));
+const FUNCTION = new Set([...STOP, ..."am is are was were be been being do does did have has had the a an of to in for on by with from at as and or but if then than".split(" ")]);
+const app = {tokens:[], sentences:[], terms:new Map(), selected:"meaning", collocates:[], maxFreq:1};
+const $ = id => document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function norm(w){return w.toLowerCase().replace(/^['"]+|['"]+$/g,"").replace(/'s$/,"")}
+function tokenize(text){
+  const re = /[A-Za-z]+(?:'[A-Za-z]+)?|[0-9]+(?:\.[0-9]+)?|[.,;:!?()[\]"“”]/g;
+  const out=[]; let m, i=0;
+  while((m=re.exec(text))){
+    const raw=m[0], n=norm(raw), word=/[A-Za-z0-9]/.test(raw[0]);
+    out.push({raw,n,word,pos:m.index,i:i++, sent:0});
+  }
+  return out;
+}
+function splitSentences(text,tokens){
+  const parts=[]; const re=/[^.!?]+[.!?]+|[^.!?]+$/g; let m, si=0;
+  while((m=re.exec(text))){
+    const raw=m[0].trim(); if(!raw) continue;
+    parts.push({i:si,start:m.index,end:m.index+m[0].length,text:raw,tokens:[],force:""});
+    si++;
+  }
+  tokens.forEach(t=>{const s=parts.find(p=>t.pos>=p.start&&t.pos<p.end)||parts[parts.length-1]; if(s){t.sent=s.i;s.tokens.push(t)}});
+  parts.forEach(s=>s.force=forceOf(s.tokens));
+  return parts;
+}
+function forceOf(tokens){
+  const words=tokens.filter(t=>t.word).map(t=>t.n);
+  if(words.some(w=>MODAL.has(w))) return "modal";
+  if(words.some(w=>NEG.has(w))) return "neg";
+  if(words.some(w=>DEIXIS.has(w))) return "deictic";
+  if(words.some(w=>EVID.has(w))) return "infer";
+  return "assert";
+}
+function analyze(){
+  const text=$("text").value.trim();
+  app.tokens=tokenize(text);
+  app.sentences=splitSentences(text,app.tokens);
+  app.terms=new Map();
+  app.tokens.forEach(t=>{
+    if(!t.word) return;
+    if(!app.terms.has(t.n)) app.terms.set(t.n,{term:t.n,raw:t.raw,count:0,positions:[],sents:new Set(),classes:new Set()});
+    const row=app.terms.get(t.n); row.count++; row.positions.push(t.i); row.sents.add(t.sent);
+    if(STOP.has(t.n)) row.classes.add("function");
+    if(DEIXIS.has(t.n)) row.classes.add("deixis");
+    if(MODAL.has(t.n)) row.classes.add("modal");
+    if(NEG.has(t.n)) row.classes.add("negation");
+    if(EVID.has(t.n)) row.classes.add("linker");
+  });
+  app.maxFreq=Math.max(...[...app.terms.values()].map(x=>x.count),1);
+  if(!app.terms.has(app.selected)){
+    const first=[...app.terms.values()].filter(t=>!STOP.has(t.term)).sort((a,b)=>b.count-a.count)[0];
+    app.selected=first?first.term:[...app.terms.keys()][0]||"";
+  }
+  computeCollocates();
+  renderAll();
+}
+function termRows(){
+  return [...app.terms.values()].sort((a,b)=>{
+    const af=STOP.has(a.term)?1:0,bf=STOP.has(b.term)?1:0;
+    return af-bf || b.count-a.count || a.term.localeCompare(b.term);
+  });
+}
+function computeCollocates(){
+  const selectedPositions=(app.terms.get(app.selected)||{positions:[]}).positions;
+  const counts=new Map(), totalWords=app.tokens.filter(t=>t.word).length;
+  selectedPositions.forEach(p=>{
+    for(let j=Math.max(0,p-4);j<=Math.min(app.tokens.length-1,p+4);j++){
+      if(j===p) continue; const t=app.tokens[j]; if(!t.word || STOP.has(t.n)) continue;
+      counts.set(t.n,(counts.get(t.n)||0)+1);
+    }
+  });
+  app.collocates=[...counts].map(([term,c])=>{
+    const base=(app.terms.get(term)||{count:1}).count;
+    const score=(c/Math.max(selectedPositions.length,1))/(base/Math.max(totalWords,1));
+    return {term,count:c,score};
+  }).sort((a,b)=>b.score-a.score||b.count-a.count).slice(0,28);
+}
+function renderMetrics(){
+  const words=app.tokens.filter(t=>t.word), types=app.terms.size;
+  const lexical=words.filter(t=>!FUNCTION.has(t.n)).length;
+  const hapax=[...app.terms.values()].filter(t=>t.count===1).length;
+  const deix=words.filter(t=>DEIXIS.has(t.n)).length, modal=words.filter(t=>MODAL.has(t.n)).length, neg=words.filter(t=>NEG.has(t.n)).length;
+  const quote=(($("text").value.match(/["“”]/g)||[]).length/2);
+  const metrics=[
+    ["tokens",words.length],["types",types],["TTR",words.length?(types/words.length).toFixed(2):"0"],
+    ["lexical",words.length?Math.round(100*lexical/words.length)+"%":"0%"],["hapax",types?Math.round(100*hapax/types)+"%":"0%"],["sentences",app.sentences.length]
+  ];
+  $("metrics").innerHTML=metrics.map(m=>`<div class="metric"><b>${m[1]}</b><span>${m[0]}</span></div>`).join("");
+  $("status").innerHTML=[
+    ["deictic pressure",deix+" markers"],["modal force",modal+" auxiliaries"],["negation",neg+" markers"],["quoted material",quote+" spans"]
+  ].map(x=>`<div>${x[0]} <b>${x[1]}</b></div>`).join("");
+  $("micro").innerHTML=[
+    ["Selected",app.selected],["Window","±4 tokens"],["Sense model","local use"],["Reference","not inferred"]
+  ].map(x=>`<div>${x[0]} <b>${esc(x[1])}</b></div>`).join("");
+}
+function renderTerms(){
+  $("terms").innerHTML=`<thead><tr><th>signifier</th><th class="num">n</th><th class="num">s</th><th>diagnostics</th></tr></thead><tbody>`+
+  termRows().slice(0,130).map(t=>`<tr class="term-row ${t.term===app.selected?"active":""}" data-term="${esc(t.term)}"><td>${esc(t.term)}</td><td class="num">${t.count}</td><td class="num">${t.sents.size}</td><td>${[...t.classes].filter(c=>c!=="function").map(c=>`<span class="tag ${c==="deixis"?"blue":c==="modal"?"green":c==="negation"?"red":"gold"}">${c}</span>`).join("")}</td></tr>`).join("")+`</tbody>`;
+  document.querySelectorAll(".term-row").forEach(r=>r.onclick=()=>selectTerm(r.dataset.term));
+}
+function renderCollocates(){
+  $("collocates").innerHTML=`<thead><tr><th>neighbor</th><th class="num">hits</th><th class="num">assoc.</th></tr></thead><tbody>`+
+  app.collocates.map(c=>`<tr class="term-row" data-term="${esc(c.term)}"><td>${esc(c.term)}</td><td class="num">${c.count}</td><td class="num">${c.score.toFixed(2)}</td></tr>`).join("")+`</tbody>`;
+  document.querySelectorAll("#collocates .term-row").forEach(r=>r.onclick=()=>selectTerm(r.dataset.term));
+}
+function selectTerm(term){app.selected=term;computeCollocates();renderAll();}
+function renderSense(){
+  const t=app.terms.get(app.selected)||{count:0,positions:[],sents:new Set(),classes:new Set()};
+  const sents=[...t.sents].map(i=>app.sentences[i]).filter(Boolean);
+  const forces={}; sents.forEach(s=>forces[s.force]=(forces[s.force]||0)+1);
+  const top=app.collocates.slice(0,10);
+  $("readTitle").textContent=app.selected;
+  $("sense").innerHTML=`
+    <div><h3>Signifier</h3><div class="bigterm">${esc(app.selected)}</div><div class="definition">observable form: ${t.count} token${t.count===1?"":"s"} across ${t.sents.size||0} sentence${t.sents.size===1?"":"s"}</div><div class="kv"><span>material share</span><span>${app.tokens.filter(x=>x.word).length?((100*t.count/app.tokens.filter(x=>x.word).length).toFixed(2)+"%"):"0%"}</span><span>classes</span><span>${[...t.classes].join(", ")||"lexical / unmarked"}</span><span>dispersion</span><span>${dispersion(t.positions)}</span></div></div>
+    <div><h3>Signified Proxy</h3><div class="definition">local distributional neighborhood, not reference.</div>${top.map(c=>`<div>${esc(c.term)} <span style="float:right">${c.score.toFixed(2)}</span><div class="bar gold"><i style="width:${Math.min(100,c.score*14)}%"></i></div></div>`).join("")||"<p class='definition'>No strong lexical neighbors in the current window.</p>"}</div>
+    <div><h3>Interpretant Evidence</h3><div class="definition">sentences and pragmatic cues that make the sign consequential here.</div>${Object.keys(forces).map(f=>`<div>${f} <span style="float:right">${forces[f]}</span><div class="bar ${f==="neg"?"red":f==="modal"?"green":f==="deictic"?"":"blue"}"><i style="width:${Math.min(100,100*forces[f]/Math.max(sents.length,1))}%"></i></div></div>`).join("")||"<p class='definition'>Select a term present in the text.</p>"}</div>`;
+}
+function dispersion(pos){
+  if(!pos||pos.length<2) return "single point";
+  const n=app.tokens.length, span=Math.max(...pos)-Math.min(...pos);
+  return Math.round(100*span/Math.max(n,1))+"% text span";
+}
+function renderKwic(){
+  const positions=(app.terms.get(app.selected)||{positions:[]}).positions.slice(0,80);
+  $("kwic").innerHTML=positions.map(p=>{
+    const left=app.tokens.slice(Math.max(0,p-7),p).map(t=>t.raw).join(" ");
+    const right=app.tokens.slice(p+1,Math.min(app.tokens.length,p+8)).map(t=>t.raw).join(" ");
+    return `<div class="kwic"><div class="l">${esc(left)}</div><div class="k">${esc(app.tokens[p].raw)}</div><div class="r">${esc(right)}</div></div>`;
+  }).join("") || `<div class="footer-note">No concordance lines.</div>`;
+}
+function renderSentences(){
+  const selectedSents=new Set((app.terms.get(app.selected)||{sents:new Set()}).sents);
+  $("sentences").innerHTML=app.sentences.map(s=>`<div class="sent" style="${selectedSents.has(s.i)?"background:#fff7bf":""}"><div class="n">${String(s.i+1).padStart(2,"0")}</div><div class="txt">${highlight(s.text,app.selected)}</div><div class="force">${s.force}</div></div>`).join("");
+}
+function highlight(text,term){
+  if(!term) return esc(text);
+  return esc(text).replace(new RegExp(`\\b(${term.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})\\b`,"ig"),"<mark>$1</mark>");
+}
+function renderGlyphs(){
+  const rows=app.tokens.filter(t=>t.word).slice(0,420);
+  $("glyphs").innerHTML=rows.map(t=>{
+    const cls=t.n===app.selected?"sel":"";
+    const letter=t.raw[0]||"";
+    return `<button class="glyph ${cls}" title="${esc(t.raw)} / sentence ${t.sent+1}" data-term="${esc(t.n)}">${esc(letter)}</button>`;
+  }).join("");
+  document.querySelectorAll(".glyph").forEach(g=>g.onclick=()=>selectTerm(g.dataset.term));
+}
+function renderLoom(){
+  const canvas=$("loom"), wrap=canvas.parentElement, dpr=window.devicePixelRatio||1;
+  const w=wrap.clientWidth, h=wrap.clientHeight; canvas.width=w*dpr; canvas.height=h*dpr; canvas.style.width=w+"px"; canvas.style.height=h+"px";
+  const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,w,h);
+  const words=app.tokens.filter(t=>t.word), term=app.terms.get(app.selected), n=Math.max(words.length-1,1);
+  const yMid=h*.50, yTop=34, yBot=h-44, left=34, right=w-24;
+  ctx.strokeStyle="#d7dde1"; ctx.lineWidth=1;
+  for(let i=0;i<app.sentences.length;i++){const x=left+(right-left)*(i/Math.max(app.sentences.length-1,1)); ctx.beginPath();ctx.moveTo(x,yTop);ctx.lineTo(x,yBot);ctx.stroke();}
+  ctx.fillStyle="#6b655b"; ctx.font="10px ui-monospace, monospace"; ctx.fillText("SIGNIFIER",8,18); ctx.fillText("INTERPRETANTS",8,h-18);
+  const selectedPositions=new Set((term||{positions:[]}).positions);
+  words.forEach((t,wi)=>{
+    const x=left+(right-left)*(wi/n);
+    if(DEIXIS.has(t.n)||MODAL.has(t.n)||NEG.has(t.n)){
+      ctx.strokeStyle=DEIXIS.has(t.n)?"rgba(37,95,133,.38)":MODAL.has(t.n)?"rgba(56,109,80,.38)":"rgba(157,52,44,.38)";
+      ctx.beginPath();ctx.moveTo(x,yTop);ctx.lineTo(x,yBot);ctx.stroke();
+    }
+    if(selectedPositions.has(t.i)){
+      ctx.strokeStyle="#9d342c"; ctx.lineWidth=2; ctx.beginPath();ctx.moveTo(x,yTop);ctx.lineTo(x,yBot);ctx.stroke(); ctx.lineWidth=1;
+      ctx.fillStyle="#9d342c"; ctx.fillRect(x-2,yMid-12,4,24);
+    }
+  });
+  app.collocates.slice(0,14).forEach((c,idx)=>{
+    const ct=app.terms.get(c.term); if(!ct) return;
+    ctx.strokeStyle=`rgba(162,102,34,${Math.max(.18,Math.min(.75,c.score/7))})`; ctx.lineWidth=1.2;
+    ct.positions.slice(0,14).forEach(p=>{
+      const wi=words.findIndex(t=>t.i===p); if(wi<0) return;
+      const x=left+(right-left)*(wi/n), y=yMid + Math.sin(idx*.9)*Math.min(130,h*.22);
+      ctx.beginPath(); ctx.moveTo(x,yMid); ctx.quadraticCurveTo(w/2,y, w-40, 28+idx*12); ctx.stroke();
+    });
+    ctx.fillStyle="#6c4b20"; ctx.font="10px ui-monospace, monospace"; ctx.fillText(c.term, Math.max(42,w-128), 31+idx*12);
+  });
+  const sentSet=new Set((term||{sents:new Set()}).sents);
+  app.sentences.forEach((s,i)=>{
+    const x=left+(right-left)*(i/Math.max(app.sentences.length-1,1));
+    ctx.fillStyle=sentSet.has(i)?"#255f85":"#c7cdd2";
+    const hh=sentSet.has(i)?20:9; ctx.fillRect(x-3,yBot-hh,6,hh);
+    if(sentSet.has(i)){ctx.fillStyle="#255f85";ctx.fillText(String(i+1),x-3,yBot-hh-3)}
+  });
+  ctx.fillStyle="#171512"; ctx.font="16px ui-serif, Georgia, serif"; ctx.fillText(app.selected||"select a term", left, yMid-20);
+}
+function renderAll(){renderMetrics();renderTerms();renderCollocates();renderSense();renderKwic();renderSentences();renderGlyphs();renderLoom();}
+function init(){
+  $("sample").innerHTML=SAMPLES.map((s,i)=>`<option value="${i}">${esc(s.name)}</option>`).join("");
+  $("text").value=SAMPLES[0].text;
+  $("sample").onchange=e=>{$("text").value=SAMPLES[+e.target.value].text; analyze();};
+  $("analyze").onclick=analyze;
+  window.addEventListener("resize",()=>renderLoom());
+  analyze();
+}
+init();
+</script>
+</body>
+</html>

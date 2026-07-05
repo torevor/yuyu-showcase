@@ -1,0 +1,1729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounding Atlas</title>
+<style>
+  :root {
+    --ink: #202629;
+    --muted: #5f686b;
+    --line: #b8bfc0;
+    --paper: #fbfaf6;
+    --panel: #f0eee5;
+    --panel2: #e7ece7;
+    --white: #fffefb;
+    --accent: #a23a2a;
+    --blue: #245f87;
+    --green: #45733e;
+    --gold: #80691f;
+    --violet: #5e5177;
+    --anchor: #0f766e;
+    --adrift: #8d4130;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 12px/1.34 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  button, input, select { font: inherit; color: inherit; }
+  button {
+    border: 1px solid var(--ink);
+    background: var(--white);
+    padding: 4px 7px;
+    cursor: pointer;
+  }
+  button:hover, button:focus { background: #eadfbe; outline: none; }
+  .shell { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: end;
+    padding: 8px 10px 7px;
+    border-bottom: 2px solid var(--ink);
+    background: #f7f4eb;
+  }
+  h1 {
+    margin: 0;
+    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+  .dek { margin-top: 3px; max-width: 1040px; color: var(--muted); }
+  .status-strip { display: grid; grid-template-columns: repeat(9, auto); gap: 5px; }
+  .metric { min-width: 72px; border: 1px solid var(--ink); background: var(--white); padding: 3px 6px; }
+  .metric b { display: block; font-size: 16px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .metric span { display: block; color: var(--muted); font-size: 9px; text-transform: uppercase; }
+  main {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 275px minmax(540px, 1fr) 360px;
+  }
+  aside, section { min-height: 0; border-right: 1px solid var(--line); }
+  .left, .right { background: var(--panel); overflow: auto; }
+  .right { border-right: 0; border-left: 1px solid var(--line); }
+  .block { padding: 7px; border-bottom: 1px solid var(--line); }
+  .block h2, .block h3 { margin: 0 0 5px; font-size: 11px; text-transform: uppercase; letter-spacing: 0; }
+  .controls { display: grid; grid-template-columns: 1fr auto; gap: 5px; }
+  input[type="search"], select {
+    min-width: 0;
+    border: 1px solid var(--ink);
+    background: var(--white);
+    padding: 5px 6px;
+  }
+  .word-list { display: grid; grid-template-columns: 1fr 40px 42px 58px; border-top: 1px solid var(--line); }
+  .word-row { display: contents; }
+  .word-row button, .word-row span {
+    min-height: 25px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background: transparent;
+    text-align: left;
+    padding: 4px 5px;
+  }
+  .word-row span { color: var(--muted); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .word-row.active button, .word-row.active span { background: #f6e5c4; color: var(--ink); font-weight: 700; }
+  .tagbar { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+  .tag, .pill {
+    display: inline-block;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--muted);
+    padding: 1px 5px;
+    margin: 1px 2px 1px 0;
+    font-size: 10px;
+  }
+  .atlas { display: grid; grid-template-rows: auto 1fr auto; background: var(--white); min-height: 0; }
+  .toolbar {
+    display: grid;
+    grid-template-columns: repeat(13, auto) 1fr;
+    gap: 5px;
+    align-items: center;
+    padding: 6px 7px;
+    border-bottom: 1px solid var(--line);
+    background: #faf8ef;
+  }
+  .toggle, .depth-control { display: inline-grid; grid-template-columns: 13px auto; gap: 4px; align-items: center; white-space: nowrap; }
+  .depth-control { grid-template-columns: auto 50px; }
+  .toggle input { margin: 0; }
+  .view-switch { display: inline-grid; grid-template-columns: repeat(4, auto); border: 1px solid var(--ink); }
+  .view-switch button { border: 0; border-right: 1px solid var(--ink); padding: 4px 6px; }
+  .view-switch button:last-child { border-right: 0; }
+  .view-switch button.active { background: #f6e5c4; font-weight: 700; }
+  .legend { display: flex; gap: 8px; justify-content: flex-end; color: var(--muted); font-size: 10px; }
+  .persona-control { display: inline-grid; grid-template-columns: auto 86px; gap: 4px; align-items: center; white-space: nowrap; }
+  .persona-control select { padding: 4px 5px; }
+  .key { display: inline-flex; gap: 4px; align-items: center; }
+  .swatch { width: 10px; height: 10px; border: 1px solid var(--ink); display: inline-block; }
+  .graph-wrap { min-height: 0; position: relative; overflow: hidden; background: var(--white); }
+  .matrix-wrap { position: absolute; inset: 0; overflow: auto; background: var(--white); display: none; }
+  svg { width: 100%; height: 100%; display: block; }
+  .edge { stroke: #879197; stroke-width: 1.15; fill: none; marker-end: url(#arrow); opacity: .88; }
+  .edge.cycle { stroke: var(--accent); stroke-width: 1.9; opacity: .96; }
+  .edge.ambig { stroke: var(--violet); stroke-dasharray: 4 3; opacity: .72; }
+  .edge.lemma { stroke: #9aa0a1; stroke-dasharray: 2 3; marker-end: none; opacity: .6; }
+  .edge.ground { stroke: var(--anchor); stroke-width: 1.25; marker-end: none; opacity: .62; }
+  .edge.ground.mediated { stroke-dasharray: 5 3; opacity: .45; }
+  .edge.ground.rejected { stroke: #9b8076; stroke-dasharray: 2 4; opacity: .35; }
+  .edge.dialogue { stroke-width: 1.25; marker-end: url(#arrow); }
+  .edge.speaker { stroke: var(--blue); }
+  .edge.hearer { stroke: var(--green); }
+  .fork-rung { stroke: var(--violet); stroke-width: 1.5; stroke-dasharray: 4 3; opacity: .72; fill: none; }
+  .fork-rung.load { stroke: var(--accent); stroke-width: 2.2; stroke-dasharray: none; opacity: .9; }
+  .dialogue-band { fill: #f7f4eb; stroke: var(--line); }
+  .dialogue-title { font-size: 11px; font-weight: 700; text-transform: uppercase; fill: var(--muted); }
+  .word-hull { fill: #f7f4eb; stroke: #a7adaf; stroke-dasharray: 3 3; stroke-width: 1; opacity: .82; }
+  .lemma-label { font-size: 9px; fill: var(--muted); text-anchor: middle; text-transform: uppercase; pointer-events: none; }
+  .node circle { stroke: var(--ink); stroke-width: 1.1; fill: #fdfbf4; }
+  .node.root circle { fill: #f6dcae; }
+  .node.kernel circle { fill: #d66551; }
+  .node.leaf circle { fill: #d8e8d2; }
+  .node.external circle { fill: #dde7ef; }
+  .node.ambig circle { stroke: var(--violet); stroke-dasharray: 3 2; }
+  .node .ground-ring { fill: none; stroke-width: 2.2; pointer-events: none; }
+  .node.anchored .ground-ring { stroke: var(--anchor); }
+  .node.mediated .ground-ring { stroke: var(--gold); stroke-dasharray: 4 3; }
+  .node.adrift .ground-ring { stroke: var(--adrift); stroke-dasharray: 1 4; opacity: .78; }
+  .node text { font-size: 10px; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+  .node.selected circle { stroke-width: 3; }
+  .node:hover circle { stroke-width: 2.3; }
+  .anchor-node circle { fill: #d7eee7; stroke: var(--anchor); stroke-width: 1.5; }
+  .anchor-node.rejected circle { fill: #eee7df; stroke: #9b8076; stroke-dasharray: 3 2; }
+  .anchor-node text { font-size: 8px; text-anchor: middle; dominant-baseline: middle; pointer-events: none; fill: #154b46; }
+  .component rect { stroke: var(--ink); fill: #fbfaf6; stroke-width: 1.2; }
+  .component.cyclic rect { fill: #f6e5c4; stroke: var(--accent); stroke-width: 1.6; }
+  .component.selected rect { stroke-width: 3; }
+  .component text { font-size: 10px; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+  .component .sub { font-size: 8px; fill: var(--muted); }
+  .footer-grid { display: grid; grid-template-columns: 1.15fr 1fr; border-top: 1px solid var(--line); max-height: 205px; overflow: auto; }
+  .footer-grid > div { padding: 7px; border-right: 1px solid var(--line); }
+  .footer-grid > div:last-child { border-right: 0; }
+  .definition { font-family: ui-serif, Georgia, "Times New Roman", serif; font-size: 14px; }
+  .term { display: inline-block; border-bottom: 2px solid #c7a84d; padding: 0 1px; cursor: pointer; }
+  .term.ambig { border-bottom-color: var(--violet); background: #f2edf7; }
+  .term:hover { background: #fff1bd; }
+  .smallcap { color: var(--muted); font-size: 9px; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { border-bottom: 1px solid var(--line); padding: 3px 4px; text-align: left; vertical-align: top; }
+  th { font-size: 9px; text-transform: uppercase; color: var(--muted); background: #ece8d9; }
+  .matrix-table { min-width: 760px; }
+  .matrix-table th { position: sticky; top: 0; z-index: 2; }
+  .matrix-table td { padding: 2px 3px; }
+  .matrix-table button { width: 100%; border: 1px solid transparent; padding: 2px 3px; text-align: center; font-size: 10px; }
+  .matrix-table button.anchored { background: #d7eee7; color: #154b46; }
+  .matrix-table button.mediated { background: #f2e7bc; color: #5f4a10; }
+  .matrix-table button.adrift { background: #efd9d2; color: #7b2f20; }
+  .matrix-table button:hover, .matrix-table button:focus { border-color: var(--ink); }
+  .robustness { font-weight: 700; text-align: center; }
+  .pill.kernel { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .pill.cycle { border-color: var(--gold); color: #5f4a10; }
+  .pill.leaf { border-color: var(--green); color: var(--green); }
+  .pill.ambig { border-color: var(--violet); color: var(--violet); }
+  .pill.load { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .pill.cosmetic { border-color: var(--violet); color: var(--violet); }
+  .pill.anchored { border-color: var(--anchor); color: var(--anchor); }
+  .pill.mediated { border-color: var(--gold); color: #5f4a10; }
+  .pill.adrift { border-color: var(--adrift); color: var(--adrift); }
+  .anchor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
+  .anchor-toggle { display: grid; grid-template-columns: 14px 1fr; gap: 4px; align-items: start; border: 1px solid var(--line); background: var(--white); padding: 3px 4px; min-height: 34px; }
+  .anchor-toggle input { margin: 1px 0 0; }
+  .anchor-toggle b { display: block; font-size: 10px; line-height: 1.05; }
+  .anchor-toggle span { display: block; color: var(--muted); font-size: 9px; line-height: 1.15; overflow-wrap: anywhere; }
+  .anchor-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 5px 0; }
+  .path { margin: 0 0 4px; padding: 4px 5px; background: var(--white); border: 1px solid var(--line); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10px; overflow-wrap: anywhere; }
+  .finding { border-left: 4px solid var(--blue); padding: 4px 6px; margin-bottom: 5px; background: var(--white); }
+  .finding.risk { border-left-color: var(--accent); }
+  .finding.ambig { border-left-color: var(--violet); }
+  .finding h4 { margin: 0 0 2px; font-size: 11px; }
+  .finding p { margin: 0; color: var(--muted); }
+  @media (max-width: 1120px) {
+    main { grid-template-columns: 245px 1fr; }
+    .right { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); max-height: 42vh; }
+    header { grid-template-columns: 1fr; }
+    .status-strip { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 760px) {
+    main { grid-template-columns: 1fr; }
+    .left { max-height: 265px; }
+    .atlas { min-height: 660px; }
+    .toolbar { grid-template-columns: 1fr 1fr; }
+    .legend { justify-content: flex-start; flex-wrap: wrap; }
+    .footer-grid { grid-template-columns: 1fr; max-height: 275px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div>
+      <h1>Grounding Atlas</h1>
+      <div class="dek">A sense-disambiguated lexical workbench: definition edges, ambiguity fan-out, collapsed-word baselines, SCCs, kernels, anchor commitments, and grounding reachability.</div>
+    </div>
+    <div class="status-strip" aria-label="graph metrics">
+      <div class="metric"><b id="mReach">0</b><span>nodes</span></div>
+      <div class="metric"><b id="mEdges">0</b><span>edges</span></div>
+      <div class="metric"><b id="mAmbig">0</b><span>ambig</span></div>
+      <div class="metric"><b id="mCycles">0</b><span>cycles</span></div>
+      <div class="metric"><b id="mKernel">0</b><span>kernel</span></div>
+      <div class="metric"><b id="mDelta">0</b><span>delta</span></div>
+      <div class="metric"><b id="mPockets">0</b><span>pockets</span></div>
+      <div class="metric"><b id="mRobust">0%</b><span>robust</span></div>
+      <div class="metric"><b id="mPolicy">0%</b><span>policy</span></div>
+    </div>
+  </header>
+  <main>
+    <aside class="left">
+      <div class="block">
+        <h2>Lexical Probe</h2>
+        <div class="controls">
+          <input id="search" type="search" autocomplete="off" placeholder="type: meaning, sign, object">
+          <button id="clearBtn" title="Reset to meaning">Reset</button>
+        </div>
+        <div class="tagbar" id="tagbar"></div>
+      </div>
+      <div class="block">
+        <h2>Seed Lemmas</h2>
+        <div class="word-list" id="wordList"></div>
+      </div>
+    </aside>
+    <section class="atlas">
+      <div class="toolbar">
+        <div class="view-switch" aria-label="view mode">
+          <button id="viewDescent" class="active" title="Local selected-root graph">Descent</button>
+          <button id="viewCondensation" title="Whole-corpus SCC condensation">Census</button>
+          <button id="viewMatrix" title="Scenario robustness heatmap">Matrix</button>
+          <button id="viewDialogue" title="Two-reader ambiguity divergence">Dialogue</button>
+        </div>
+        <label class="persona-control">speaker <select id="speakerPersona"></select></label>
+        <label class="persona-control">hearer <select id="hearerPersona"></select></label>
+        <label class="toggle"><input id="expandedMode" type="checkbox" checked> senses</label>
+        <label class="toggle"><input id="showCycles" type="checkbox" checked> cycles</label>
+        <label class="toggle"><input id="showExternal" type="checkbox" checked> external</label>
+        <label class="toggle"><input id="showHulls" type="checkbox" checked> lemmas</label>
+        <label class="toggle"><input id="radialMode" type="checkbox"> radial</label>
+        <label class="depth-control">depth <select id="depthLimit"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>all</option></select></label>
+        <button id="baselineBtn" title="Toggle collapsed word baseline">Baseline</button>
+        <div class="legend">
+          <span class="key"><i class="swatch" style="background:#f6dcae"></i>root</span>
+          <span class="key"><i class="swatch" style="background:#d66551"></i>kernel</span>
+          <span class="key"><i class="swatch" style="background:#d8e8d2"></i>leaf</span>
+          <span class="key"><i class="swatch" style="background:#f2edf7"></i>fan-out</span>
+          <span class="key"><i class="swatch" style="background:#d7eee7"></i>anchor</span>
+        </div>
+      </div>
+      <div class="graph-wrap">
+        <svg id="graph" role="img" aria-label="definition graph"></svg>
+        <div id="matrixView" class="matrix-wrap"></div>
+      </div>
+      <div class="footer-grid">
+        <div>
+          <div class="smallcap">selected sense / definition</div>
+          <div id="definition" class="definition"></div>
+        </div>
+        <div>
+          <div class="smallcap">sense stack and definiens</div>
+          <div id="definiens"></div>
+        </div>
+      </div>
+    </section>
+    <aside class="right">
+      <div class="block">
+        <h2>Grounding Kernel</h2>
+        <div id="kernelBox"></div>
+      </div>
+      <div class="block">
+        <h2>Anchor Layer</h2>
+        <div class="anchor-actions">
+          <button id="anchorsAll" title="Accept every stipulated anchor">All</button>
+          <button id="anchorsSkeptic" title="Reject every stipulated anchor">None</button>
+          <button id="anchorsPercept" title="Keep perceptual/deictic anchors only">Body</button>
+        </div>
+        <div id="anchorBox" class="anchor-grid"></div>
+      </div>
+      <div class="block">
+        <h2>Grounding Ledger</h2>
+        <div id="groundingBox"></div>
+      </div>
+      <div class="block">
+        <h2>Divergence Report</h2>
+        <div id="dialogueBox"></div>
+      </div>
+      <div class="block">
+        <h2>Conflation Delta</h2>
+        <div id="deltaBox"></div>
+      </div>
+      <div class="block">
+        <h2>Determinism Wall</h2>
+        <div id="findings"></div>
+      </div>
+      <div class="block">
+        <h2>Shortest Circular Witnesses</h2>
+        <div id="paths"></div>
+      </div>
+      <div class="block">
+        <h2>Reachable Evidence</h2>
+        <table>
+          <thead><tr><th>node</th><th>d</th><th>out</th><th>class</th></tr></thead>
+          <tbody id="evidence"></tbody>
+        </table>
+      </div>
+    </aside>
+  </main>
+</div>
+<script>
+const LEXICON = {
+  meaning: { tags: ["semantics", "pragmatics"], senses: [
+    { id: "meaning.semantic", label: "semantic content", def: "content conveyed by a sign or expression to an interpreter in a context", terms: [t("content"), t("sign", "sign.semiotic"), t("expression", "expression.linguistic"), t("interpreter", "interpreter.agent"), t("context", "context.pragmatic")], note: "The atlas root: meaning as interpreted content." },
+    { id: "meaning.significance", label: "practical import", def: "importance an event or action has for purposes within a practice", terms: [t("importance"), t("event", "event.change"), t("action", "action.agentive"), t("purpose"), t("practice", "practice.social")], note: "A second sense that should not be merged with semantic content." }
+  ]},
+  sign: { tags: ["semiotics"], senses: [
+    { id: "sign.semiotic", label: "semiotic vehicle", def: "perceptible form that stands for an object or sense for an interpreter", terms: [t("form", "form.perceptible"), t("object", "object.referent"), t("sense", "sense.fregean"), t("interpreter", "interpreter.agent")], note: "Peircean/Saussurean bridge without treating either tradition as imported authority." },
+    { id: "sign.indicator", label: "symptom or mark", def: "observable mark taken as evidence of an event or state", terms: [t("observable"), t("mark"), t("evidence", "evidence.support"), t("event", "event.change"), t("state", "state.condition"), a("anchor.here"), a("anchor.same")], note: "A weather-sign/symptom sense that creates different loops." },
+    { id: "sign.inscription", label: "public notice", def: "physical display carrying words or symbols for public interpretation", terms: [t("display"), t("word", "word.lexical"), t("symbol", "symbol.conventional"), t("interpretation", "interpretation.act"), a("anchor.visible")], note: "Included so signage does not silently collapse into semiotic signhood." }
+  ]},
+  symbol: { tags: ["semiotics"], senses: [
+    { id: "symbol.conventional", label: "conventional sign", def: "sign whose relation to an object depends on convention and use", terms: [t("sign", "sign.semiotic"), t("object", "object.referent"), t("convention", "convention.social"), t("use", "use.linguistic")], note: "Makes convention a grounding demand." },
+    { id: "symbol.token", label: "written token", def: "visible mark used as an element of notation or language", terms: [t("visible"), t("mark"), t("notation"), t("language", "language.system"), a("anchor.visible"), a("anchor.line")], note: "A notational sense that grounds nearer perception." }
+  ]},
+  word: { tags: ["lexicon"], senses: [
+    { id: "word.lexical", label: "lexical item", def: "conventional symbol used in a language to express a sense or refer to an object", terms: [t("symbol", "symbol.conventional"), t("language", "language.system"), t("sense", "sense.fregean"), t("reference", "reference.relation"), t("object", "object.referent")], note: "Routes back into sign, symbol, sense, and reference." },
+    { id: "word.uttered", label: "spoken occurrence", def: "uttered or written occurrence of a lexical item in discourse", terms: [t("utterance"), t("written"), t("word", "word.lexical"), t("discourse", "discourse.text")], note: "Token use, not the vocabulary item." }
+  ]},
+  sense: { tags: ["Frege", "perception"], senses: [
+    { id: "sense.fregean", label: "mode of presentation", def: "mode of presentation by which an expression gives access to a reference", terms: [t("presentation"), t("expression", "expression.linguistic"), t("access"), t("reference", "reference.relation")], note: "A compact Fregean paraphrase." },
+    { id: "sense.faculty", label: "perceptual faculty", def: "capacity for perception through which an agent registers forms or events", terms: [t("capacity"), t("perception", "perception.sensory"), t("agent", "interpreter.agent"), t("form", "form.perceptible"), t("event", "event.change"), a("anchor.visible"), a("anchor.sound")], note: "The homograph that word-level graphs usually confuse with Fregean sense." },
+    { id: "sense.judgment", label: "good judgment", def: "practical judgment about what is fitting within a situation", terms: [t("judgment"), t("practice", "practice.social"), t("situation"), t("rule", "rule.norm")], note: "Adds a normative ambiguity channel." }
+  ]},
+  reference: { tags: ["reference"], senses: [
+    { id: "reference.relation", label: "referential relation", def: "relation by which an expression picks out an object, event, or state in context", terms: [t("relation"), t("expression", "expression.linguistic"), t("object", "object.referent"), t("event", "event.change"), t("state", "state.condition"), t("context", "context.pragmatic")], note: "Reference as relation, not truth." },
+    { id: "reference.source", label: "citation source", def: "source offered as evidence for a claim", terms: [t("source"), t("evidence", "evidence.support"), t("claim", "claim.assertion")], note: "A bibliographic sense that should not be circularized with reference.relation." }
+  ]},
+  object: { tags: ["ontology", "grammar"], senses: [
+    { id: "object.referent", label: "referable entity", def: "entity treated as available for reference, perception, or action", terms: [t("entity", "entity.thing"), t("reference", "reference.relation"), t("perception", "perception.sensory"), t("action", "action.agentive")], note: "The current atlas's object sense, now made explicit." },
+    { id: "object.goal", label: "aim or purpose", def: "goal toward which action or inquiry is directed", terms: [t("goal"), t("action", "action.agentive"), t("inquiry"), t("purpose")], note: "Separates object-of-action from object-of-reference." },
+    { id: "object.grammar", label: "grammatical object", def: "noun phrase receiving or completing the action of a verb", terms: [t("phrase"), t("action", null), t("verb"), t("language", "language.system")], note: "Deliberately leaves action ambiguous: grammar borrows the word." }
+  ]},
+  entity: { tags: ["ontology"], senses: [
+    { id: "entity.thing", label: "counted thing", def: "something counted as an object of thought, discourse, or action", terms: [t("something"), t("object", "object.referent"), t("thought", "thought.content"), t("discourse", "discourse.text"), t("action", "action.agentive"), a("anchor.many")], note: "A fake primitive unless the counting practice is recorded." },
+    { id: "entity.record", label: "database entity", def: "record treated as a distinct object in an information system", terms: [t("record"), t("object", null), t("system"), t("information")], note: "Shows how technical senses can add fan-out pressure." }
+  ]},
+  expression: { tags: ["linguistics"], senses: [
+    { id: "expression.linguistic", label: "linguistic form", def: "form used to present a sense or perform an action in language", terms: [t("form", "form.perceptible"), t("sense", "sense.fregean"), t("action", "action.communicative"), t("language", "language.system")], note: "Ties form, sense, and use into one definitional knot." },
+    { id: "expression.display", label: "outward display", def: "observable display of thought, feeling, or stance", terms: [t("observable"), t("display"), t("thought", "thought.content"), t("stance"), t("interpretation", "interpretation.act"), a("anchor.visible"), a("anchor.face")], note: "Useful contrast with linguistic expression." }
+  ]},
+  language: { tags: ["linguistics"], senses: [
+    { id: "language.system", label: "sign system", def: "shared system of signs and practices for communication and interpretation", terms: [t("system"), t("sign", "sign.semiotic"), t("practice", "practice.social"), t("communication", "communication.exchange"), t("interpretation", "interpretation.act")], note: "Social practice plus sign system." },
+    { id: "language.style", label: "style or register", def: "way of using words associated with a group, discipline, or situation", terms: [t("use", "use.linguistic"), t("word", "word.lexical"), t("group"), t("discipline"), t("situation")], note: "A register sense that changes grounding pressure." }
+  ]},
+  interpretation: { tags: ["hermeneutics"], senses: [
+    { id: "interpretation.act", label: "assigning meaning", def: "act of assigning meaning to a sign, expression, event, or action", terms: [t("action", "action.agentive"), t("meaning", "meaning.semantic"), t("sign", "sign.semiotic"), t("expression", "expression.linguistic"), t("event", "event.change")], note: "Deliberately closes the meaning loop." },
+    { id: "interpretation.result", label: "reading produced", def: "claim or paraphrase produced from a text under a context", terms: [t("claim", "claim.assertion"), t("paraphrase"), t("discourse", "discourse.text"), t("context", "context.pragmatic")], note: "Keeps interpretive product separate from interpretive act." }
+  ]},
+  interpreter: { tags: ["pragmatics"], senses: [
+    { id: "interpreter.agent", label: "interpreting agent", def: "agent that uses context and practice to interpret a sign or expression", terms: [t("agent"), t("context", "context.pragmatic"), t("practice", "practice.social"), t("interpretation", "interpretation.act"), t("sign", "sign.semiotic"), t("expression", "expression.linguistic")], note: "Reader-model assumptions stay explicit." },
+    { id: "interpreter.program", label: "runtime translator", def: "program that executes or translates expressions in a formal language", terms: [t("program"), t("expression", null), t("language", null), t("rule", "rule.formal")], note: "A technical sense that creates honest unresolved edges." }
+  ]},
+  context: { tags: ["pragmatics"], senses: [
+    { id: "context.pragmatic", label: "use situation", def: "surrounding situation, discourse, and practice that constrain interpretation", terms: [t("situation"), t("discourse", "discourse.text"), t("practice", "practice.social"), t("constraint"), t("interpretation", "interpretation.act")], note: "Context has components; it is not a bin." },
+    { id: "context.syntax", label: "linguistic environment", def: "nearby expressions that affect the interpretation of a word or phrase", terms: [t("expression", "expression.linguistic"), t("interpretation", "interpretation.act"), t("word", "word.lexical"), t("phrase")], note: "Local text context, not all circumstances." }
+  ]},
+  use: { tags: ["Wittgenstein", "pragmatics"], senses: [
+    { id: "use.linguistic", label: "practice-governed use", def: "practice-governed action by which an expression gets force in a language", terms: [t("practice", "practice.social"), t("action", "action.communicative"), t("expression", "expression.linguistic"), t("force"), t("language", "language.system")], note: "Operational pressure on meaning." },
+    { id: "use.utility", label: "utility", def: "purpose for which an object or action is employed", terms: [t("purpose"), t("object", null), t("action", null), t("employment")], note: "Utility sense, intentionally fan-out heavy." }
+  ]},
+  convention: { tags: ["social"], senses: [
+    { id: "convention.social", label: "shared regularity", def: "shared practice that stabilizes how a sign or action is interpreted", terms: [t("practice", "practice.social"), t("sign", "sign.semiotic"), t("action", "action.communicative"), t("interpretation", "interpretation.act")], note: "Social regularity, not private intention." },
+    { id: "convention.meeting", label: "assembly", def: "gathering of a community for agreed purposes", terms: [t("gathering"), t("community"), t("purpose"), t("agreement")], note: "A lexical distractor that should mostly fall out of semantic loops." }
+  ]},
+  practice: { tags: ["social"], senses: [
+    { id: "practice.social", label: "social practice", def: "repeatable pattern of action learned within a community", terms: [t("pattern"), t("action", "action.agentive"), t("learning"), t("community"), a("anchor.repeat")], note: "Can ground in training and institutions." },
+    { id: "practice.rehearsal", label: "rehearsal", def: "repeated action performed to improve skill", terms: [t("repetition"), t("action", null), t("skill"), t("learning"), a("anchor.repeat")], note: "Another place where action ambiguity matters." }
+  ]},
+  action: { tags: ["agency"], senses: [
+    { id: "action.agentive", label: "agentive deed", def: "something an agent does that can alter a state or carry meaning", terms: [t("something"), t("agent"), t("state", "state.condition"), t("meaning", null), a("anchor.move"), a("anchor.resist")], note: "Joins causal alteration and possible communicative force." },
+    { id: "action.communicative", label: "speech/practical act", def: "use of a sign or expression that changes uptake in a practice", terms: [t("use", "use.linguistic"), t("sign", "sign.semiotic"), t("expression", "expression.linguistic"), t("practice", "practice.social"), t("uptake")], note: "A narrower action sense that keeps speech acts visible." },
+    { id: "action.legal", label: "legal proceeding", def: "formal claim pursued under rules before an institution", terms: [t("claim", "claim.demand"), t("rule", "rule.norm"), t("institution"), t("procedure")], note: "Prevents legal action from poisoning agency loops." }
+  ]},
+  communication: { tags: ["pragmatics"], senses: [
+    { id: "communication.exchange", label: "sign exchange", def: "use of signs or actions to coordinate interpretation between agents", terms: [t("use", "use.linguistic"), t("sign", "sign.semiotic"), t("action", "action.communicative"), t("interpretation", "interpretation.act"), t("agent")], note: "Not assumed to be successful transfer." },
+    { id: "communication.message", label: "message sent", def: "material expression transmitted from one agent to another", terms: [t("material"), t("expression", "expression.linguistic"), t("agent"), t("transmission")], note: "Communication as artifact, not process." }
+  ]},
+  discourse: { tags: ["discourse"], senses: [
+    { id: "discourse.text", label: "connected text", def: "connected expressions and practices through which a community develops topics, claims, and roles", terms: [t("expression", "expression.linguistic"), t("practice", "practice.social"), t("community"), t("topic"), t("claim", "claim.assertion"), t("role")], note: "Open text as graph substrate." },
+    { id: "discourse.field", label: "discursive field", def: "social domain whose conventions shape possible claims and interpretations", terms: [t("domain"), t("convention", "convention.social"), t("claim", "claim.assertion"), t("interpretation", "interpretation.act")], note: "A broader sociolinguistic sense." }
+  ]},
+  claim: { tags: ["argumentation"], senses: [
+    { id: "claim.assertion", label: "assertion", def: "expression presented as answerable to evidence, objection, or inference", terms: [t("expression", "expression.linguistic"), t("evidence", "evidence.support"), t("objection"), t("inference", "inference.argument")], note: "Where grounding becomes discourse analysis." },
+    { id: "claim.demand", label: "demand of right", def: "demand that an agent treats as licensed by a rule or entitlement", terms: [t("demand"), t("agent"), t("rule", "rule.norm"), t("entitlement")], note: "Legal/normative claim, not assertion." },
+    { id: "claim.territory", label: "staked territory", def: "asserted control over an object or domain", terms: [t("control"), t("object", null), t("domain")], note: "A concrete homograph that exposes collapsed false positives." }
+  ]},
+  inference: { tags: ["argumentation"], senses: [
+    { id: "inference.argument", label: "argument move", def: "move from premises to a claim under a rule or warrant", terms: [t("premise"), t("claim", "claim.assertion"), t("rule", "rule.norm"), t("warrant", "warrant.license")], note: "Toulmin/Walton bridge term." },
+    { id: "inference.model", label: "model inference", def: "computed conclusion produced by a model from observed evidence", terms: [t("conclusion"), t("model"), t("evidence", "evidence.support"), t("observation")], note: "Modern technical sense, separated from argumentation." }
+  ]},
+  evidence: { tags: ["argumentation"], senses: [
+    { id: "evidence.support", label: "supporting material", def: "material offered to support or defeat a claim for an interpreter", terms: [t("material"), t("support"), t("defeat"), t("claim", "claim.assertion"), t("interpreter", "interpreter.agent")], note: "Role-relative support." },
+    { id: "evidence.trace", label: "observable trace", def: "observable sign from which an event or state may be inferred", terms: [t("observable"), t("sign", "sign.indicator"), t("event", "event.change"), t("state", "state.condition"), t("inference", "inference.argument"), a("anchor.here")], note: "Perceptual evidence routes through sign.indicator." }
+  ]},
+  warrant: { tags: ["argumentation"], senses: [
+    { id: "warrant.license", label: "inferential license", def: "rule or backing that licenses an inference from evidence to claim", terms: [t("rule", "rule.norm"), t("backing"), t("inference", "inference.argument"), t("evidence", "evidence.support"), t("claim", "claim.assertion")], note: "Argumentation loops as definitional structure." },
+    { id: "warrant.authorization", label: "authorization", def: "document or rule that permits an action", terms: [t("document"), t("rule", "rule.norm"), t("permission"), t("action", "action.agentive")], note: "Institutional warrant." }
+  ]},
+  rule: { tags: ["normativity"], senses: [
+    { id: "rule.norm", label: "normative constraint", def: "constraint on action, inference, or interpretation within a practice", terms: [t("constraint"), t("action", "action.agentive"), t("inference", "inference.argument"), t("interpretation", "interpretation.act"), t("practice", "practice.social")], note: "Rules recurse into practices." },
+    { id: "rule.formal", label: "formal rule", def: "specified operation for transforming expressions in a system", terms: [t("operation"), t("expression", null), t("system"), t("transformation")], note: "Formal-language rule, intentionally leaves expression open." }
+  ]},
+  form: { tags: ["perception"], senses: [
+    { id: "form.perceptible", label: "observable arrangement", def: "observable arrangement that can be perceived or reproduced", terms: [t("observable"), t("arrangement"), t("perception", "perception.sensory"), t("reproduction"), a("anchor.visible"), a("anchor.same"), a("anchor.shape")], note: "Candidate external grounding point." },
+    { id: "form.document", label: "document template", def: "structured document used to record information", terms: [t("document"), t("structure"), t("information"), t("record")], note: "Keeps bureaucratic form separate from perceptible form." }
+  ]},
+  perception: { tags: ["perception"], senses: [
+    { id: "perception.sensory", label: "sensory access", def: "sensory access by which an agent registers a form, object, or event", terms: [t("sensory"), t("access"), t("agent"), t("form", "form.perceptible"), t("object", "object.referent"), t("event", "event.change"), a("anchor.visible"), a("anchor.sound"), a("anchor.touch"), a("anchor.pain")], note: "Embodied access route." },
+    { id: "perception.impression", label: "interpretive impression", def: "interpretation an agent forms about a situation from signs", terms: [t("interpretation", "interpretation.result"), t("agent"), t("situation"), t("sign", null)], note: "Perception as social impression, not sensory access." }
+  ]},
+  event: { tags: ["ontology"], senses: [
+    { id: "event.change", label: "temporal change", def: "change in state located in time and available for reference or evidence", terms: [t("change"), t("state", "state.condition"), t("time"), t("reference", "reference.relation"), t("evidence", "evidence.trace"), a("anchor.before"), a("anchor.change")], note: "Bridge to temporal discourse graphs." },
+    { id: "event.occasion", label: "organized occasion", def: "planned gathering or occurrence within a community", terms: [t("plan"), t("gathering"), t("community"), t("time")], note: "Avoids collapsing event tickets into metaphysics." }
+  ]},
+  state: { tags: ["ontology"], senses: [
+    { id: "state.condition", label: "condition", def: "condition of an entity at a time", terms: [t("condition"), t("entity", "entity.thing"), t("time"), a("anchor.now")], note: "Loops into entity and event." },
+    { id: "state.polity", label: "political body", def: "institutional community governed by rules", terms: [t("institution"), t("community"), t("rule", "rule.norm")], note: "A classic homograph that should not enter object-state loops." }
+  ]},
+  thought: { tags: ["cognition"], senses: [
+    { id: "thought.content", label: "mental content", def: "mental act or content available to an interpreter as sense, claim, or image", terms: [t("mental"), t("action", null), t("interpreter", "interpreter.agent"), t("sense", null), t("claim", "claim.assertion"), t("image")], note: "Broad enough to expose fake-primitive pressure." },
+    { id: "thought.consideration", label: "consideration", def: "idea considered as a possible claim or purpose", terms: [t("idea"), t("claim", "claim.assertion"), t("purpose")], note: "Thought as deliberative item." }
+  ]}
+};
+
+const EXTERNAL = {
+  access: "relation allowing registration or use", agent: "role-bearing actor, human or artificial",
+  agreement: "shared acceptance", arrangement: "spatial or temporal ordering", backing: "support for a warrant",
+  capacity: "ability available to an agent", change: "temporal primitive candidate", community: "group whose practices can be observed",
+  conclusion: "output claim of an inference", condition: "state descriptor", constraint: "normative or mechanical limitation",
+  content: "what is carried or presented", control: "practical authority over something", defeat: "negative evidential relation",
+  demand: "request treated as normatively pressing", discipline: "organized field of practice", display: "perceptible presentation",
+  document: "stable written artifact", domain: "bounded field of activity", employment: "putting something to use",
+  entitlement: "recognized permission or right", force: "speech-act or practical uptake", gathering: "assembled community",
+  goal: "aim toward which activity is directed", group: "social collection", idea: "candidate content of thought",
+  image: "perceptual or cognitive presentation", importance: "practical significance", information: "structured content",
+  inquiry: "organized search for answer", institution: "durable rule-governed social form", judgment: "evaluative discrimination",
+  learning: "training process", mark: "perceptible trace or inscription", material: "evidential substrate", mental: "cognitive domain marker",
+  model: "formal or statistical representation", notation: "system of written symbols", objection: "argumentation move",
+  observable: "available to perception", observation: "registered event or state", operation: "specified transformation",
+  paraphrase: "restatement under another expression", pattern: "repeatable arrangement", permission: "licensed action",
+  phrase: "multi-word expression", plan: "organized intention", premise: "input claim for inference", presentation: "mode by which content is given",
+  procedure: "ordered action sequence", program: "executable formal artifact", purpose: "aim or reason for action",
+  record: "stored representation", relation: "typed connection between items", repetition: "recurring performance",
+  reproduction: "making a form again", role: "position in a practice", sensory: "embodied access marker",
+  situation: "bounded context of action", skill: "trained capacity", something: "unresolved existential placeholder",
+  source: "origin used for reference", stance: "practical or interpretive position", structure: "organized internal relation",
+  support: "positive evidential relation", system: "organized relations among parts", time: "temporal index",
+  topic: "subject under development", transformation: "change of form or state", transmission: "movement of material or signal",
+  uptake: "received practical force", utterance: "spoken/written occurrence", verb: "predicate-bearing lexical form",
+  visible: "available to sight", written: "inscribed in visible form"
+};
+
+const ANCHOR = {
+  "anchor.visible": { label: "seen light/color", mode: "visual", glyph: "eye", note: "Ostensive visual access: a presented patch, line, or surface." },
+  "anchor.line": { label: "seen line", mode: "visual", glyph: "line", note: "A visible inscription stroke before it is read as notation." },
+  "anchor.shape": { label: "seen shape", mode: "visual", glyph: "shape", note: "Spatial contour discrimination." },
+  "anchor.sound": { label: "heard sound", mode: "auditory", glyph: "wave", note: "Auditory presence prior to lexical description." },
+  "anchor.touch": { label: "felt contact", mode: "tactile", glyph: "touch", note: "Tactile pressure or contact." },
+  "anchor.pain": { label: "felt pain", mode: "interoceptive", glyph: "pain", note: "A bodily sensation, not a description of one." },
+  "anchor.move": { label: "felt motion", mode: "kinesthetic", glyph: "move", note: "Kinesthetic/proprioceptive self-movement." },
+  "anchor.resist": { label: "felt resistance", mode: "kinesthetic", glyph: "resist", note: "Bodily resistance while acting on something." },
+  "anchor.here": { label: "here / this", mode: "deictic", glyph: "point", note: "Fixed by pointing in the present situation." },
+  "anchor.now": { label: "now", mode: "temporal", glyph: "now", note: "Immediate temporal index." },
+  "anchor.before": { label: "before / after", mode: "temporal", glyph: "time", note: "Experienced succession before clock description." },
+  "anchor.change": { label: "noticed change", mode: "temporal", glyph: "delta", note: "Discriminated alteration across moments." },
+  "anchor.same": { label: "same / different", mode: "discrimination", glyph: "same", note: "Basic comparison judgment." },
+  "anchor.many": { label: "one / many", mode: "discrimination", glyph: "many", note: "Small-number discrimination and plurality." },
+  "anchor.repeat": { label: "again", mode: "pattern", glyph: "repeat", note: "Recognition of recurrence across performances." },
+  "anchor.face": { label: "seen expression", mode: "social-perceptual", glyph: "face", note: "Visible posture or expression before interpretation." }
+};
+
+const anchorIds = Object.keys(ANCHOR);
+const anchorsByMode = modes => anchorIds.filter(id => modes.includes(ANCHOR[id].mode));
+const SCENARIOS = [
+  { id: "empiricist", label: "Empiricist", anchors: new Set(anchorsByMode(["visual", "auditory", "tactile", "interoceptive", "deictic"])) },
+  { id: "rationalist", label: "Rationalist", anchors: new Set(anchorsByMode(["temporal", "discrimination"])) },
+  { id: "embodied", label: "Embodied", anchors: new Set(anchorsByMode(["tactile", "interoceptive", "kinesthetic"])) },
+  { id: "skeptic", label: "Skeptic", anchors: new Set() },
+  { id: "maximalist", label: "Maximalist", anchors: new Set(anchorIds) }
+];
+const ROBUST_SCENARIOS = SCENARIOS.filter(s => s.id !== "skeptic");
+const PERSONAS = [
+  { id: "literalist", label: "Literalist", scenario: "maximalist", note: "Lowest indexed sense at every fork." },
+  { id: "charitable", label: "Charitable", scenario: "maximalist", note: "Prefers the sense with strongest anchor reachability." },
+  { id: "adversarial", label: "Adversarial", scenario: "skeptic", note: "Prefers adrift and cyclic readings under sparse grounding." },
+  { id: "domain", label: "Domain-Primed", scenario: "empiricist", note: "Prefers senses whose lemma tags overlap the root domain." },
+  { id: "custom", label: "Custom", scenario: "custom", note: "Current anchor toggles with literal disambiguation." }
+];
+const PERSONA = Object.fromEntries(PERSONAS.map(p => [p.id, p]));
+
+function t(word, sense) { return { word, sense: sense === undefined ? null : sense }; }
+function a(id) { return { word: id, sense: id, anchor: true }; }
+
+const SENSE = {};
+const SENSES = [];
+const words = Object.keys(LEXICON).sort();
+words.forEach(word => LEXICON[word].senses.forEach((sense, index) => {
+  sense.word = word;
+  sense.index = index + 1;
+  SENSE[sense.id] = sense;
+  SENSES.push(sense);
+}));
+const allTags = [...new Set(words.flatMap(w => LEXICON[w].tags))].sort();
+
+const state = {
+  root: "meaning.semantic",
+  selected: "meaning.semantic",
+  view: "descent",
+  selectedComponent: null,
+  expanded: true,
+  compareBaseline: false,
+  showCycles: true,
+  showExternal: true,
+  showHulls: true,
+  radial: false,
+  maxDepth: 4,
+  speakerPersona: "domain",
+  hearerPersona: "charitable",
+  acceptedAnchors: new Set(Object.keys(ANCHOR))
+};
+const scoreCache = new Map();
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+const firstSense = word => LEXICON[word]?.senses[0]?.id || word;
+const labelOf = id => SENSE[id] ? `${SENSE[id].word}.${SENSE[id].index}` : ANCHOR[id] ? ANCHOR[id].label : id;
+const nodeWord = id => SENSE[id]?.word || id;
+const known = id => state.expanded ? !!SENSE[id] || !!ANCHOR[id] : !!LEXICON[id] || !!ANCHOR[id];
+
+function edgeTargets(term, expanded) {
+  if (term.anchor && ANCHOR[term.sense]) return [term.sense];
+  if (!expanded) return LEXICON[term.word] ? [term.word] : [term.word];
+  if (!LEXICON[term.word]) return [term.word];
+  if (term.sense && SENSE[term.sense]) return [term.sense];
+  return LEXICON[term.word].senses.map(s => s.id);
+}
+
+function outgoing(node, expanded = state.expanded) {
+  if (ANCHOR[node]) return [];
+  if (expanded) {
+    const sense = SENSE[node];
+    if (!sense) return [];
+    return sense.terms.flatMap(term => edgeTargets(term, true).map(to => ({ from: node, to, ambiguous: !term.sense && !!LEXICON[term.word], word: term.word })));
+  }
+  const entry = LEXICON[node];
+  if (!entry) return [];
+  const seen = new Set();
+  const out = [];
+  entry.senses.forEach(sense => sense.terms.forEach(term => {
+    const to = term.anchor ? term.sense : term.word;
+    if (!seen.has(to)) {
+      seen.add(to);
+      out.push({ from: node, to, ambiguous: !term.sense && !!LEXICON[to], word: term.anchor ? term.sense : to });
+    }
+  }));
+  return out;
+}
+
+function reachable(root, limit = Infinity, expanded = state.expanded) {
+  const seen = new Set();
+  const depth = new Map([[root, 0]]);
+  const stack = [root];
+  const edges = [];
+  while (stack.length) {
+    const cur = stack.shift();
+    if (seen.has(cur)) continue;
+    seen.add(cur);
+    if ((depth.get(cur) || 0) >= limit) continue;
+    for (const edge of outgoing(cur, expanded)) {
+      edges.push(edge);
+      if (!depth.has(edge.to)) depth.set(edge.to, depth.get(cur) + 1);
+      if ((expanded ? SENSE[edge.to] : LEXICON[edge.to]) && !seen.has(edge.to)) stack.push(edge.to);
+    }
+  }
+  return { nodes: [...depth.keys()], edges, depth, expanded };
+}
+
+function tarjan(nodes, edges, expanded = state.expanded) {
+  const nodeSet = new Set(nodes.filter(n => expanded ? SENSE[n] : LEXICON[n]));
+  const adj = new Map([...nodeSet].map(n => [n, []]));
+  edges.forEach(e => { if (nodeSet.has(e.from) && nodeSet.has(e.to)) adj.get(e.from).push(e.to); });
+  let index = 0;
+  const stack = [], onStack = new Set(), idx = new Map(), low = new Map(), comps = [];
+  function strong(v) {
+    idx.set(v, index); low.set(v, index); index++;
+    stack.push(v); onStack.add(v);
+    for (const w of adj.get(v)) {
+      if (!idx.has(w)) { strong(w); low.set(v, Math.min(low.get(v), low.get(w))); }
+      else if (onStack.has(w)) low.set(v, Math.min(low.get(v), idx.get(w)));
+    }
+    if (low.get(v) === idx.get(v)) {
+      const comp = [];
+      let w;
+      do { w = stack.pop(); onStack.delete(w); comp.push(w); } while (w !== v);
+      comps.push(comp);
+    }
+  }
+  [...nodeSet].forEach(n => { if (!idx.has(n)) strong(n); });
+  return comps.filter(c => c.length > 1 || edges.some(e => e.from === c[0] && e.to === c[0]));
+}
+
+function tarjanAll(nodes, edges, expanded = state.expanded) {
+  const nodeSet = new Set(nodes.filter(n => expanded ? SENSE[n] : LEXICON[n]));
+  const adj = new Map([...nodeSet].map(n => [n, []]));
+  edges.forEach(e => { if (nodeSet.has(e.from) && nodeSet.has(e.to)) adj.get(e.from).push(e.to); });
+  let index = 0;
+  const stack = [], onStack = new Set(), idx = new Map(), low = new Map(), comps = [];
+  function strong(v) {
+    idx.set(v, index); low.set(v, index); index++;
+    stack.push(v); onStack.add(v);
+    for (const w of adj.get(v)) {
+      if (!idx.has(w)) { strong(w); low.set(v, Math.min(low.get(v), low.get(w))); }
+      else if (onStack.has(w)) low.set(v, Math.min(low.get(v), idx.get(w)));
+    }
+    if (low.get(v) === idx.get(v)) {
+      const comp = [];
+      let w;
+      do { w = stack.pop(); onStack.delete(w); comp.push(w); } while (w !== v);
+      comps.push(comp.sort());
+    }
+  }
+  [...nodeSet].sort().forEach(n => { if (!idx.has(n)) strong(n); });
+  return comps;
+}
+
+function isAcyclic(nodes, edges, removed = new Set()) {
+  const usable = nodes.filter(n => !removed.has(n));
+  const indeg = new Map(usable.map(n => [n, 0]));
+  const adj = new Map(usable.map(n => [n, []]));
+  edges.forEach(e => {
+    if (indeg.has(e.from) && indeg.has(e.to)) { adj.get(e.from).push(e.to); indeg.set(e.to, indeg.get(e.to) + 1); }
+  });
+  const q = usable.filter(n => indeg.get(n) === 0);
+  let count = 0;
+  while (q.length) {
+    const n = q.shift(); count++;
+    adj.get(n).forEach(m => { indeg.set(m, indeg.get(m) - 1); if (indeg.get(m) === 0) q.push(m); });
+  }
+  return count === usable.length;
+}
+
+function combinations(arr, k, start = 0, prefix = [], out = []) {
+  if (prefix.length === k) { out.push([...prefix]); return out; }
+  for (let i = start; i <= arr.length - (k - prefix.length); i++) {
+    prefix.push(arr[i]); combinations(arr, k, i + 1, prefix, out); prefix.pop();
+  }
+  return out;
+}
+
+function scoreKernel(cut, edges) {
+  return -cut.reduce((sum, n) => sum + edges.filter(e => e.from === n || e.to === n).length, 0);
+}
+
+function greedyFeedbackSet(nodes, edges) {
+  const removed = new Set();
+  while (!isAcyclic(nodes, edges, removed)) {
+    const remaining = nodes.filter(n => !removed.has(n));
+    let best = remaining[0], bestScore = -1;
+    for (const n of remaining) {
+      const score = edges.filter(e => !removed.has(e.from) && !removed.has(e.to) && (e.from === n || e.to === n)).length;
+      if (score > bestScore || (score === bestScore && n < best)) { best = n; bestScore = score; }
+    }
+    removed.add(best);
+  }
+  return [...removed];
+}
+
+function feedbackKernel(nodes, edges, expanded = state.expanded) {
+  const cyclic = tarjan(nodes, edges, expanded);
+  const kernel = new Set();
+  const detail = [];
+  for (const comp of cyclic) {
+    const compSet = new Set(comp);
+    const compEdges = edges.filter(e => compSet.has(e.from) && compSet.has(e.to));
+    let found = [];
+    let exact = comp.length <= 10;
+    if (exact) {
+      for (let k = 1; k <= comp.length; k++) {
+        const candidates = combinations(comp, k).sort((a,b) => scoreKernel(a, compEdges) - scoreKernel(b, compEdges));
+        const hit = candidates.find(c => isAcyclic(comp, compEdges, new Set(c)));
+        if (hit) { found = hit; break; }
+      }
+    } else {
+      found = greedyFeedbackSet(comp, compEdges);
+    }
+    found.forEach(n => kernel.add(n));
+    detail.push({ comp: comp.sort(), cut: found.sort(), edges: compEdges.length, exact });
+  }
+  return { kernel, detail, cyclic };
+}
+
+function corpusGraph(expanded = state.expanded) {
+  const nodes = expanded ? SENSES.map(s => s.id) : words.slice();
+  const nodeSet = new Set(nodes);
+  const edges = [];
+  nodes.forEach(n => outgoing(n, expanded).forEach(e => {
+    edges.push(e);
+    if (!nodeSet.has(e.to) && !ANCHOR[e.to]) nodeSet.add(e.to);
+    if (ANCHOR[e.to]) nodeSet.add(e.to);
+  }));
+  return { nodes: [...nodeSet], edges, depth: new Map([...nodeSet].map(n => [n, 0])), expanded };
+}
+
+function globalCondensation(expanded = state.expanded) {
+  const data = corpusGraph(expanded);
+  const defined = data.nodes.filter(n => expanded ? SENSE[n] : LEXICON[n]);
+  const comps = tarjanAll(defined, data.edges, expanded);
+  const compOf = new Map();
+  comps.forEach((comp, i) => comp.forEach(n => compOf.set(n, i)));
+  const superEdges = new Map();
+  data.edges.forEach(e => {
+    const from = compOf.get(e.from), to = compOf.get(e.to);
+    if (from === undefined || to === undefined || from === to) return;
+    const key = `${from}->${to}`;
+    if (!superEdges.has(key)) superEdges.set(key, { from, to, count: 0 });
+    superEdges.get(key).count++;
+  });
+  const components = comps.map((members, id) => {
+    const memberSet = new Set(members);
+    const internalEdges = data.edges.filter(e => memberSet.has(e.from) && memberSet.has(e.to));
+    const cyclic = members.length > 1 || internalEdges.some(e => e.from === e.to);
+    const analysis = cyclic ? feedbackKernel(members, internalEdges, expanded) : { kernel: new Set(), detail: [], cyclic: [] };
+    return { id, members, edges: internalEdges, cyclic, analysis };
+  });
+  const pockets = components.filter(c => c.cyclic);
+  return { data, components, edges: [...superEdges.values()], pockets, expanded };
+}
+
+function componentDepths(condensation) {
+  const indeg = new Map(condensation.components.map(c => [c.id, 0]));
+  const adj = new Map(condensation.components.map(c => [c.id, []]));
+  condensation.edges.forEach(e => { adj.get(e.from).push(e.to); indeg.set(e.to, indeg.get(e.to) + 1); });
+  const q = [...indeg.entries()].filter(([, d]) => d === 0).map(([id]) => id).sort((a,b) => a - b);
+  const depth = new Map(q.map(id => [id, 0]));
+  while (q.length) {
+    const cur = q.shift();
+    adj.get(cur).forEach(nxt => {
+      depth.set(nxt, Math.max(depth.get(nxt) || 0, (depth.get(cur) || 0) + 1));
+      indeg.set(nxt, indeg.get(nxt) - 1);
+      if (indeg.get(nxt) === 0) q.push(nxt);
+    });
+  }
+  condensation.components.forEach(c => { if (!depth.has(c.id)) depth.set(c.id, 0); });
+  return depth;
+}
+
+function cycleWitnesses(edges, expanded = state.expanded) {
+  const adj = new Map();
+  edges.forEach(e => { if (!adj.has(e.from)) adj.set(e.from, []); adj.get(e.from).push(e.to); });
+  const out = [];
+  function walk(start, cur, path, seen) {
+    if (out.length > 14 || path.length > 8) return;
+    for (const nxt of adj.get(cur) || []) {
+      if (nxt === start && path.length > 1) out.push([...path, nxt]);
+      else if ((expanded ? SENSE[nxt] : LEXICON[nxt]) && !seen.has(nxt)) {
+        seen.add(nxt); walk(start, nxt, [...path, nxt], seen); seen.delete(nxt);
+      }
+    }
+  }
+  [...new Set(edges.map(e => e.from))].forEach(n => walk(n, n, [n], new Set([n])));
+  return out.sort((a,b) => a.length - b.length).slice(0, 8);
+}
+
+function analyzePair() {
+  const expandedRoot = SENSE[state.root] ? state.root : firstSense(state.root);
+  const collapsedRoot = nodeWord(expandedRoot);
+  const senseData = reachable(expandedRoot, state.maxDepth, true);
+  const wordData = reachable(collapsedRoot, state.maxDepth, false);
+  const senseAnalysis = feedbackKernel(senseData.nodes, senseData.edges, true);
+  const wordAnalysis = feedbackKernel(wordData.nodes, wordData.edges, false);
+  return { senseData, wordData, senseAnalysis, wordAnalysis, displayData: state.expanded ? senseData : wordData, displayAnalysis: state.expanded ? senseAnalysis : wordAnalysis };
+}
+
+function conflateSignature(comp, expanded) {
+  const wordsInComp = [...new Set(comp.map(n => expanded ? nodeWord(n) : n))].sort();
+  return wordsInComp.join("|");
+}
+
+function delta(pair) {
+  const collapsed = pair.wordAnalysis.cyclic.map(c => conflateSignature(c, false));
+  const expanded = pair.senseAnalysis.cyclic.map(c => conflateSignature(c, true));
+  const expandedSet = new Set(expanded);
+  const collapsedSet = new Set(collapsed);
+  const artifacts = collapsed.filter(sig => !expandedSet.has(sig));
+  const latent = expanded.filter(sig => !collapsedSet.has(sig));
+  const ambiguousEdges = pair.senseData.edges.filter(e => e.ambiguous);
+  const fanTargets = new Map();
+  ambiguousEdges.forEach(e => fanTargets.set(e.to, (fanTargets.get(e.to) || 0) + 1));
+  return { artifacts, latent, ambiguousEdges, fanTargets };
+}
+
+function anchorAdjacency(data) {
+  const adj = new Map();
+  data.edges.forEach(e => {
+    if (!adj.has(e.from)) adj.set(e.from, []);
+    adj.get(e.from).push(e.to);
+  });
+  return adj;
+}
+
+function anchorPaths(start, data, accepted, avoided = new Set(), maxPaths = 4) {
+  if (ANCHOR[start]) return accepted.has(start) ? [[start]] : [];
+  const adj = anchorAdjacency(data);
+  const out = [];
+  const q = [{ node: start, path: [start] }];
+  const seen = new Set([start]);
+  while (q.length && out.length < maxPaths) {
+    const cur = q.shift();
+    for (const nxt of adj.get(cur.node) || []) {
+      if (ANCHOR[nxt]) {
+        if (accepted.has(nxt)) out.push([...cur.path, nxt]);
+        continue;
+      }
+      if (avoided.has(nxt) && nxt !== start) continue;
+      if (!seen.has(nxt) && (data.expanded ? SENSE[nxt] : LEXICON[nxt])) {
+        seen.add(nxt);
+        q.push({ node: nxt, path: [...cur.path, nxt] });
+      }
+    }
+  }
+  return out;
+}
+
+function groundingReport(data, analysis, accepted = state.acceptedAnchors) {
+  const kernel = analysis.kernel;
+  const classes = new Map();
+  const routes = new Map();
+  const counts = { anchored: 0, mediated: 0, adrift: 0 };
+  const candidates = data.nodes.filter(n => data.expanded ? SENSE[n] : LEXICON[n]);
+  candidates.forEach(n => {
+    const any = anchorPaths(n, data, accepted, new Set(), 5);
+    if (!any.length) {
+      classes.set(n, "adrift");
+      routes.set(n, []);
+      counts.adrift++;
+      return;
+    }
+    const clear = anchorPaths(n, data, accepted, kernel, 5);
+    const cls = clear.length ? "anchored" : "mediated";
+    classes.set(n, cls);
+    routes.set(n, clear.length ? clear : any);
+    counts[cls]++;
+  });
+  const reachedAnchors = data.nodes.filter(n => ANCHOR[n]);
+  return { accepted, classes, routes, counts, reachedAnchors, total: candidates.length };
+}
+
+function nodeScenarioClass(node, expanded, accepted) {
+  const data = reachable(node, Infinity, expanded);
+  const analysis = feedbackKernel(data.nodes, data.edges, expanded);
+  const grounding = groundingReport(data, analysis, accepted);
+  return grounding.classes.get(node) || "adrift";
+}
+
+function personaAnchors(personaId) {
+  const persona = PERSONA[personaId] || PERSONA.literalist;
+  if (persona.scenario === "custom") return state.acceptedAnchors;
+  return SCENARIOS.find(s => s.id === persona.scenario)?.anchors || SCENARIOS[4].anchors;
+}
+
+function senseGroundingScore(senseId, anchors) {
+  const anchorSig = [...anchors].sort().join(",");
+  const cacheKey = `${senseId}|${anchorSig}`;
+  if (scoreCache.has(cacheKey)) return scoreCache.get(cacheKey);
+  const data = reachable(senseId, Infinity, true);
+  const analysis = feedbackKernel(data.nodes, data.edges, true);
+  const grounding = groundingReport(data, analysis, anchors);
+  const cls = grounding.classes.get(senseId) || "adrift";
+  const routes = grounding.routes.get(senseId) || [];
+  const hop = routes.length ? Math.min(...routes.map(p => p.length)) : 999;
+  const kernel = analysis.kernel.has(senseId) ? 1 : 0;
+  const cycle = analysis.cyclic.some(c => c.includes(senseId)) ? 1 : 0;
+  const score = { cls, hop, kernel, cycle, scc: analysis.cyclic.find(c => c.includes(senseId))?.slice().sort().join("|") || senseId };
+  scoreCache.set(cacheKey, score);
+  return score;
+}
+
+function chooseSense(word, personaId, rootSense, cache = new Map()) {
+  const senses = LEXICON[word]?.senses || [];
+  if (!senses.length) return word;
+  const key = `${personaId}|${rootSense}|${word}`;
+  if (cache.has(key)) return cache.get(key);
+  const persona = PERSONA[personaId] || PERSONA.literalist;
+  const anchors = personaAnchors(personaId);
+  let chosen = senses[0].id;
+  if (persona.id === "domain") {
+    const rootTags = new Set(LEXICON[nodeWord(rootSense)]?.tags || []);
+    const ranked = senses.map(s => {
+      const termTags = s.terms.flatMap(term => LEXICON[term.word]?.tags || []);
+      const overlap = termTags.filter(tag => rootTags.has(tag)).length;
+      return { id: s.id, overlap, index: s.index };
+    });
+    ranked.sort((a,b) => b.overlap - a.overlap || a.index - b.index);
+    chosen = ranked[0].id;
+  } else if (persona.id === "charitable") {
+    const rank = { anchored: 0, mediated: 1, adrift: 2 };
+    chosen = senses.map(s => ({ id: s.id, index: s.index, score: senseGroundingScore(s.id, anchors) }))
+      .sort((a,b) => rank[a.score.cls] - rank[b.score.cls] || a.score.hop - b.score.hop || a.score.cycle - b.score.cycle || a.index - b.index)[0].id;
+  } else if (persona.id === "adversarial") {
+    const rank = { adrift: 0, mediated: 1, anchored: 2 };
+    chosen = senses.map(s => ({ id: s.id, index: s.index, score: senseGroundingScore(s.id, anchors) }))
+      .sort((a,b) => rank[a.score.cls] - rank[b.score.cls] || b.score.kernel - a.score.kernel || b.score.cycle - a.score.cycle || a.score.hop - b.score.hop || a.index - b.index)[0].id;
+  }
+  cache.set(key, chosen);
+  return chosen;
+}
+
+function resolvedOutgoing(node, personaId, rootSense, cache) {
+  const sense = SENSE[node];
+  if (!sense) return [];
+  return sense.terms.map(term => {
+    if (term.anchor) return { from: node, to: term.sense, word: term.word, ambiguous: false, chosen: term.sense };
+    if (!LEXICON[term.word]) return { from: node, to: term.word, word: term.word, ambiguous: false, chosen: term.word };
+    const to = term.sense && SENSE[term.sense] ? term.sense : chooseSense(term.word, personaId, rootSense, cache);
+    return { from: node, to, word: term.word, ambiguous: !term.sense, chosen: to };
+  });
+}
+
+function resolvePersona(rootSense, personaId, limit = state.maxDepth) {
+  const root = SENSE[rootSense] ? rootSense : firstSense(nodeWord(rootSense));
+  const cache = new Map();
+  const depth = new Map([[root, 0]]);
+  const nodes = [root];
+  const edges = [];
+  const decisions = [];
+  const q = [root];
+  const expanded = true;
+  while (q.length) {
+    const cur = q.shift();
+    const d = depth.get(cur) || 0;
+    if (d >= limit) continue;
+    for (const edge of resolvedOutgoing(cur, personaId, root, cache)) {
+      edges.push(edge);
+      if (edge.ambiguous) decisions.push({ key: `${cur}|${edge.word}`, from: cur, word: edge.word, chosen: edge.to, depth: d + 1 });
+      if (!depth.has(edge.to)) {
+        depth.set(edge.to, d + 1);
+        nodes.push(edge.to);
+        if (SENSE[edge.to]) q.push(edge.to);
+      }
+    }
+  }
+  const data = { nodes, edges, depth, expanded, personaId, root };
+  const analysis = feedbackKernel(nodes, edges, true);
+  const grounding = groundingReport(data, analysis, personaAnchors(personaId));
+  return { data, analysis, grounding, decisions, persona: PERSONA[personaId] || PERSONA.literalist };
+}
+
+function compareDialogues(left, right) {
+  const rightByKey = new Map(right.decisions.map(d => [d.key, d]));
+  const forks = left.decisions
+    .map(a => ({ a, b: rightByKey.get(a.key) }))
+    .filter(x => x.b && x.a.chosen !== x.b.chosen)
+    .map(({ a, b }) => {
+      const as = senseGroundingScore(a.chosen, personaAnchors(left.data.personaId));
+      const bs = senseGroundingScore(b.chosen, personaAnchors(right.data.personaId));
+      const load = as.cls !== bs.cls || as.kernel !== bs.kernel || as.scc !== bs.scc;
+      return { key: a.key, from: a.from, word: a.word, depth: Math.min(a.depth, b.depth), left: a.chosen, right: b.chosen, leftScore: as, rightScore: bs, load };
+    })
+    .sort((x,y) => x.depth - y.depth || x.word.localeCompare(y.word) || x.left.localeCompare(y.left));
+  const first = forks[0] || null;
+  const leftRootClass = left.grounding.classes.get(left.data.root) || "adrift";
+  const rightRootClass = right.grounding.classes.get(right.data.root) || "adrift";
+  const prefix = [];
+  let cursor = left.data.root;
+  const visited = new Set();
+  while (cursor && !visited.has(cursor) && prefix.length < 8) {
+    visited.add(cursor);
+    prefix.push(cursor);
+    const nextLeft = left.data.edges.find(e => e.from === cursor && (!first || e.word !== first.word));
+    const nextRight = right.data.edges.find(e => e.from === cursor && (!first || e.word !== first.word));
+    if (!nextLeft || !nextRight || nextLeft.to !== nextRight.to || !SENSE[nextLeft.to]) break;
+    cursor = nextLeft.to;
+  }
+  return { forks, first, load: forks.filter(f => f.load), leftRootClass, rightRootClass, sameRootClass: leftRootClass === rightRootClass, prefix };
+}
+
+function dialogueAnalysis() {
+  const root = SENSE[state.root] ? state.root : firstSense(nodeWord(state.root));
+  const speaker = resolvePersona(root, state.speakerPersona);
+  const hearer = resolvePersona(root, state.hearerPersona);
+  return { speaker, hearer, comparison: compareDialogues(speaker, hearer) };
+}
+
+function divergenceCensus() {
+  const ids = PERSONAS.map(p => p.id);
+  const rows = SENSES.map(sense => {
+    const resolved = new Map(ids.map(id => [id, resolvePersona(sense.id, id, 3)]));
+    const classes = [];
+    const forkLoads = [];
+    ids.forEach(a => ids.forEach(b => {
+      const left = resolved.get(a);
+      const right = resolved.get(b);
+      const cmp = compareDialogues(left, right);
+      classes.push(`${cmp.leftRootClass}/${cmp.rightRootClass}`);
+      forkLoads.push(cmp.load.length);
+    }));
+    const classInvariant = new Set(classes).size === 1;
+    const policyInvariant = classInvariant && forkLoads.every(n => n === 0);
+    return { node: sense.id, classInvariant, policyInvariant, maxLoad: Math.max(...forkLoads) };
+  });
+  const invariant = rows.filter(r => r.policyInvariant).length;
+  const classStable = rows.filter(r => r.classInvariant).length;
+  return { rows, invariant, classStable, fragile: rows.length - invariant, percent: rows.length ? Math.round(invariant / rows.length * 100) : 0 };
+}
+
+function scenarioMatrix(expanded = state.expanded) {
+  const nodes = expanded ? SENSES.map(s => s.id) : words.slice();
+  return nodes.map(node => {
+    const fixed = SCENARIOS.map(scenario => ({
+      id: scenario.id,
+      label: scenario.label,
+      cls: nodeScenarioClass(node, expanded, scenario.anchors),
+      anchors: scenario.anchors
+    }));
+    const robust = fixed.filter(c => c.id !== "skeptic" && c.cls === "anchored").length;
+    const custom = nodeScenarioClass(node, expanded, state.acceptedAnchors);
+    return { node, fixed, custom, robust };
+  }).sort((a,b) => b.robust - a.robust || nodeWord(a.node).localeCompare(nodeWord(b.node)) || a.node.localeCompare(b.node));
+}
+
+function corpusRobustness(expanded = state.expanded) {
+  const rows = scenarioMatrix(expanded);
+  const allFive = rows.filter(r => r.robust === ROBUST_SCENARIOS.length).length;
+  const zero = rows.filter(r => r.robust === 0).length;
+  return { rows, allFive, zero, percent: rows.length ? Math.round(allFive / rows.length * 100) : 0 };
+}
+
+function compactPath(path, expanded) {
+  return path.map(x => ANCHOR[x] ? ANCHOR[x].label : expanded ? labelOf(x) : x).join(" -> ");
+}
+
+function anchorCode(id) {
+  return ({
+    "anchor.visible": "VIS", "anchor.line": "LIN", "anchor.shape": "SHP", "anchor.sound": "SND",
+    "anchor.touch": "TCH", "anchor.pain": "PAI", "anchor.move": "MOV", "anchor.resist": "RES",
+    "anchor.here": "HER", "anchor.now": "NOW", "anchor.before": "BEF", "anchor.change": "CHG",
+    "anchor.same": "SAM", "anchor.many": "MNY", "anchor.repeat": "REP", "anchor.face": "FAC"
+  })[id] || id.slice(7, 10).toUpperCase();
+}
+
+function renderWordList() {
+  const q = $("search").value.trim().toLowerCase();
+  $("wordList").innerHTML = "";
+  words.filter(w => !q || w.includes(q) || LEXICON[w].tags.some(t => t.toLowerCase().includes(q))).forEach(w => {
+    const row = document.createElement("div");
+    row.className = "word-row" + (nodeWord(state.root) === w ? " active" : "");
+    const btn = document.createElement("button");
+    btn.textContent = w;
+    btn.onclick = () => { state.root = firstSense(w); state.selected = state.root; render(); };
+    const senses = document.createElement("span");
+    senses.textContent = LEXICON[w].senses.length;
+    const out = document.createElement("span");
+    out.textContent = LEXICON[w].senses.reduce((sum, s) => sum + s.terms.length, 0);
+    const tag = document.createElement("span");
+    tag.textContent = LEXICON[w].tags[0] || "";
+    row.append(btn, senses, out, tag);
+    $("wordList").append(row);
+  });
+  $("tagbar").innerHTML = allTags.map(tg => `<span class="tag">${esc(tg)}</span>`).join("");
+}
+
+function renderPersonaControls() {
+  const options = PERSONAS.map(p => `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join("");
+  $("speakerPersona").innerHTML = options;
+  $("hearerPersona").innerHTML = options;
+  $("speakerPersona").value = state.speakerPersona;
+  $("hearerPersona").value = state.hearerPersona;
+}
+
+function renderDefinition(node) {
+  if (ANCHOR[node]) {
+    const anchor = ANCHOR[node];
+    const accepted = state.acceptedAnchors.has(node);
+    $("definition").innerHTML = `<b>${esc(anchor.label)}</b> <span class="pill anchored">${esc(anchor.mode)}</span>: stipulated non-linguistic anchor.<div class="smallcap">${esc(anchor.note)} ${accepted ? "Accepted in this run." : "Rejected in this run."}</div>`;
+    $("definiens").innerHTML = `<span class="pill ${accepted ? "anchored" : "adrift"}">${accepted ? "accepted anchor" : "rejected anchor"}</span><span class="pill">no outgoing definition edges</span>`;
+    return;
+  }
+  const expandedNode = SENSE[node] ? node : firstSense(node);
+  const sense = SENSE[expandedNode];
+  if (!sense) {
+    $("definition").textContent = `${node}: ${EXTERNAL[node] || "external leaf; no local definition in seed corpus"}`;
+    $("definiens").innerHTML = `<span class="pill leaf">external</span>`;
+    return;
+  }
+  const senseButtons = LEXICON[sense.word].senses.map(s => `<button data-sense="${s.id}" class="${s.id === sense.id ? "active" : ""}">${esc(s.word)}.${s.index}</button>`).join(" ");
+  const termMap = new Map(sense.terms.map(term => [term.word.toLowerCase(), term]));
+  const html = sense.def.split(/(\b[a-z]+\b)/gi).map(part => {
+    const term = termMap.get(part.toLowerCase());
+    if (!term) return esc(part);
+    const cls = term.sense ? "" : " ambig";
+    return `<span class="term${cls}" data-word="${esc(term.word)}" data-sense="${esc(term.sense || "")}">${esc(part)}</span>`;
+  }).join("");
+  $("definition").innerHTML = `<b>${esc(sense.word)}.${sense.index}</b> ${esc(sense.label)}: ${html}<div class="smallcap">${esc(sense.note)}</div>`;
+  $("definition").querySelectorAll(".term").forEach(el => {
+    el.onclick = () => {
+      const next = el.dataset.sense || firstSense(el.dataset.word);
+      state.selected = next;
+      if (SENSE[next]) state.root = next;
+      render();
+    };
+  });
+  $("definiens").innerHTML = `<div>${senseButtons}</div>` + sense.terms.map(term => {
+    const target = term.anchor ? ANCHOR[term.sense].label : term.sense || (LEXICON[term.word] ? `${LEXICON[term.word].senses.length} senses` : "external");
+    const cls = term.anchor ? "anchored" : term.sense ? (LEXICON[term.word] ? "" : "leaf") : "ambig";
+    return `<span class="pill ${cls}">${esc(term.word)} -> ${esc(target)}</span>`;
+  }).join("");
+  $("definiens").querySelectorAll("button[data-sense]").forEach(btn => {
+    btn.onclick = () => { state.root = btn.dataset.sense; state.selected = btn.dataset.sense; render(); };
+  });
+}
+
+function layout(nodes, depth, radial, expanded) {
+  const box = $("graph").getBoundingClientRect();
+  const w = Math.max(540, box.width || 800), h = Math.max(430, box.height || 560);
+  const levels = new Map();
+  nodes.forEach(n => {
+    const d = Math.min(depth.get(n) || 0, 5);
+    if (!levels.has(d)) levels.set(d, []);
+    levels.get(d).push(n);
+  });
+  const pos = new Map();
+  if (radial) {
+    const cx = w / 2, cy = h / 2;
+    nodes.forEach(n => {
+      const d = depth.get(n) || 0;
+      if (d === 0) pos.set(n, { x: cx, y: cy });
+      else {
+        const peers = levels.get(Math.min(d, 5)) || [];
+        peers.sort();
+        const i = peers.indexOf(n), r = Math.min(w, h) * (0.11 + Math.min(d, 5) * 0.078);
+        const angle = (-Math.PI / 2) + (i / Math.max(1, peers.length)) * Math.PI * 2 + d * 0.17;
+        pos.set(n, { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r });
+      }
+    });
+  } else {
+    const maxD = Math.max(...nodes.map(n => Math.min(depth.get(n) || 0, 5)), 1);
+    [...levels.entries()].forEach(([d, arr]) => {
+      arr.sort((a,b) => nodeWord(a).localeCompare(nodeWord(b)) || a.localeCompare(b));
+      const groups = new Map();
+      arr.forEach(n => {
+        const key = expanded ? nodeWord(n) : n;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(n);
+      });
+      const orderedGroups = [...groups.entries()].sort((a,b) => a[0].localeCompare(b[0]));
+      let row = 0;
+      orderedGroups.forEach(([word, group]) => {
+        row++;
+        group.forEach((n, i) => {
+          const x = 48 + (w - 96) * (d / maxD) + (i - (group.length - 1) / 2) * 18;
+          const y = 36 + (h - 72) * (row / (orderedGroups.length + 1)) + (i % 2) * 10;
+          pos.set(n, { x, y });
+        });
+      });
+    });
+  }
+  return pos;
+}
+
+function renderGraph(data, analysis, grounding) {
+  $("graph").style.display = "block";
+  $("matrixView").style.display = "none";
+  const svg = $("graph");
+  const box = svg.getBoundingClientRect();
+  const w = Math.max(540, box.width || 800), h = Math.max(430, box.height || 560);
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const visibleNodes = data.nodes.filter(n => ANCHOR[n] || (data.expanded ? SENSE[n] : LEXICON[n]) || state.showExternal);
+  const visibleSet = new Set(visibleNodes);
+  const positions = layout(visibleNodes, data.depth, state.radial, data.expanded);
+  const anchors = visibleNodes.filter(n => ANCHOR[n]).sort();
+  anchors.forEach((id, i) => {
+    const side = i % 4;
+    const slot = Math.floor(i / 4);
+    const perSide = Math.ceil(anchors.length / 4);
+    const t = (slot + 1) / (perSide + 1);
+    if (side === 0) positions.set(id, { x: 22 + t * (w - 44), y: 24 });
+    if (side === 1) positions.set(id, { x: w - 26, y: 32 + t * (h - 64) });
+    if (side === 2) positions.set(id, { x: w - 22 - t * (w - 44), y: h - 24 });
+    if (side === 3) positions.set(id, { x: 26, y: h - 32 - t * (h - 64) });
+  });
+  const cyclicNodes = new Set(analysis.cyclic.flat());
+  const kernel = analysis.kernel;
+  const cycleEdge = new Set(data.edges.filter(e => cyclicNodes.has(e.from) && cyclicNodes.has(e.to)).map(e => `${e.from}->${e.to}`));
+  let html = `<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#879197"></path></marker></defs>`;
+  data.edges.filter(e => ANCHOR[e.to]).forEach(e => {
+    if (!visibleSet.has(e.from) || !visibleSet.has(e.to)) return;
+    const p = positions.get(e.from), q = positions.get(e.to);
+    if (!p || !q) return;
+    const accepted = state.acceptedAnchors.has(e.to);
+    const cls = ["edge", "ground"];
+    if (!accepted) cls.push("rejected");
+    else if (grounding.classes.get(e.from) === "mediated") cls.push("mediated");
+    html += `<path class="${cls.join(" ")}" d="M${p.x},${p.y} L${q.x},${q.y}"></path>`;
+  });
+  if (data.expanded && state.showHulls) {
+    const groups = new Map();
+    visibleNodes.filter(n => SENSE[n]).forEach(n => {
+      const word = nodeWord(n);
+      if (!groups.has(word)) groups.set(word, []);
+      groups.get(word).push(n);
+    });
+    groups.forEach((ids, word) => {
+      if (ids.length < 2) return;
+      const pts = ids.map(id => positions.get(id));
+      const cx = pts.reduce((s,p) => s + p.x, 0) / pts.length;
+      const cy = pts.reduce((s,p) => s + p.y, 0) / pts.length;
+      const rx = Math.max(32, Math.max(...pts.map(p => Math.abs(p.x - cx))) + 25);
+      const ry = Math.max(24, Math.max(...pts.map(p => Math.abs(p.y - cy))) + 21);
+      html += `<ellipse class="word-hull" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"></ellipse><text class="lemma-label" x="${cx}" y="${cy - ry - 3}">${esc(word)}</text>`;
+      ids.forEach(id => {
+        const p = positions.get(id);
+        html += `<path class="edge lemma" d="M${cx},${cy} L${p.x},${p.y}"></path>`;
+      });
+    });
+  }
+  data.edges.forEach(e => {
+    if (ANCHOR[e.to]) return;
+    if (!visibleSet.has(e.from) || !visibleSet.has(e.to)) return;
+    if (!state.showCycles && cycleEdge.has(`${e.from}->${e.to}`)) return;
+    const p = positions.get(e.from), q = positions.get(e.to);
+    const dx = q.x - p.x, dy = q.y - p.y;
+    const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
+    const bend = Math.min(42, Math.hypot(dx,dy) * (e.ambiguous ? 0.18 : 0.11));
+    const cx = mx - dy / Math.max(1, Math.hypot(dx,dy)) * bend;
+    const cy = my + dx / Math.max(1, Math.hypot(dx,dy)) * bend;
+    const cls = ["edge"];
+    if (cycleEdge.has(`${e.from}->${e.to}`)) cls.push("cycle");
+    if (e.ambiguous) cls.push("ambig");
+    html += `<path class="${cls.join(" ")}" d="M${p.x},${p.y} Q${cx},${cy} ${q.x},${q.y}"></path>`;
+  });
+  visibleNodes.forEach(n => {
+    const p = positions.get(n);
+    if (ANCHOR[n]) {
+      const anchor = ANCHOR[n];
+      const rejected = !state.acceptedAnchors.has(n);
+      html += `<g class="anchor-node${rejected ? " rejected" : ""}" data-node="${esc(n)}" transform="translate(${p.x},${p.y})"><title>${esc(anchor.label)}: ${esc(anchor.note)}</title><circle r="14"></circle><text>${esc(anchorCode(n))}</text></g>`;
+      return;
+    }
+    const isKnown = data.expanded ? SENSE[n] : LEXICON[n];
+    const cls = ["node"];
+    const out = outgoing(n, data.expanded);
+    if (n === (data.expanded ? state.root : nodeWord(state.root))) cls.push("root");
+    if (kernel.has(n)) cls.push("kernel");
+    if (isKnown && !out.length) cls.push("leaf");
+    if (!isKnown) cls.push("external");
+    if (out.some(e => e.ambiguous)) cls.push("ambig");
+    if (grounding.classes.has(n)) cls.push(grounding.classes.get(n));
+    if (n === (data.expanded ? state.selected : nodeWord(state.selected))) cls.push("selected");
+    const label = data.expanded && SENSE[n] ? labelOf(n) : (n.length > 13 ? n.slice(0, 12) + "." : n);
+    const r = kernel.has(n) ? 21 : 17;
+    html += `<g class="${cls.join(" ")}" data-node="${esc(n)}" transform="translate(${p.x},${p.y})"><circle r="${r}"></circle>${grounding.classes.has(n) ? `<circle class="ground-ring" r="${r + 4}"></circle>` : ""}<text>${esc(label)}</text></g>`;
+  });
+  svg.innerHTML = html;
+  svg.querySelectorAll(".node").forEach(g => {
+    g.onclick = () => {
+      const raw = g.dataset.node;
+      const next = data.expanded ? raw : firstSense(raw);
+      state.selected = next;
+      if (SENSE[next]) state.root = next;
+      render();
+    };
+  });
+  svg.querySelectorAll(".anchor-node").forEach(g => {
+    g.onclick = () => {
+      const id = g.dataset.node;
+      if (state.acceptedAnchors.has(id)) state.acceptedAnchors.delete(id);
+      else state.acceptedAnchors.add(id);
+      state.selected = id;
+      render();
+    };
+  });
+}
+
+function renderCondensationGraph(condensation) {
+  $("graph").style.display = "block";
+  $("matrixView").style.display = "none";
+  const svg = $("graph");
+  const box = svg.getBoundingClientRect();
+  const w = Math.max(540, box.width || 800), h = Math.max(430, box.height || 560);
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const depth = componentDepths(condensation);
+  const levels = new Map();
+  condensation.components.forEach(c => {
+    const d = depth.get(c.id) || 0;
+    if (!levels.has(d)) levels.set(d, []);
+    levels.get(d).push(c);
+  });
+  const maxD = Math.max(...[...depth.values()], 1);
+  const pos = new Map();
+  [...levels.entries()].sort((a,b) => a[0] - b[0]).forEach(([d, comps]) => {
+    comps.sort((a,b) => b.members.length - a.members.length || a.members[0].localeCompare(b.members[0]));
+    comps.forEach((c, i) => {
+      const x = 54 + (w - 108) * (d / maxD);
+      const y = 36 + (h - 72) * ((i + 1) / (comps.length + 1));
+      pos.set(c.id, { x, y });
+    });
+  });
+  let html = `<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#879197"></path></marker></defs>`;
+  condensation.edges.forEach(e => {
+    const p = pos.get(e.from), q = pos.get(e.to);
+    if (!p || !q) return;
+    const dx = q.x - p.x, dy = q.y - p.y;
+    const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
+    const bend = Math.min(34, Math.hypot(dx,dy) * 0.1);
+    const cx = mx - dy / Math.max(1, Math.hypot(dx,dy)) * bend;
+    const cy = my + dx / Math.max(1, Math.hypot(dx,dy)) * bend;
+    html += `<path class="edge" d="M${p.x},${p.y} Q${cx},${cy} ${q.x},${q.y}"><title>${e.count} underlying edge(s)</title></path>`;
+  });
+  condensation.components.forEach(c => {
+    const p = pos.get(c.id);
+    const width = Math.min(148, Math.max(58, 42 + c.members.length * 8));
+    const height = c.cyclic ? 40 : 30;
+    const label = c.members.length === 1 ? (condensation.expanded ? labelOf(c.members[0]) : c.members[0]) : `${c.members.length} nodes`;
+    const cut = c.analysis.kernel ? [...c.analysis.kernel].length : 0;
+    const cls = ["component"];
+    if (c.cyclic) cls.push("cyclic");
+    if (state.selectedComponent === c.id) cls.push("selected");
+    html += `<g class="${cls.join(" ")}" data-component="${c.id}" transform="translate(${p.x},${p.y})">
+      <rect x="${-width / 2}" y="${-height / 2}" width="${width}" height="${height}" rx="2"></rect>
+      <text y="${c.cyclic ? -5 : 0}">${esc(label)}</text>
+      ${c.cyclic ? `<text class="sub" y="10">SCC ${c.id} cut:${cut} edges:${c.edges.length}</text>` : ""}
+      <title>${esc(c.members.map(m => condensation.expanded ? labelOf(m) : m).join(", "))}</title>
+    </g>`;
+  });
+  svg.innerHTML = html;
+  svg.querySelectorAll(".component").forEach(g => {
+    g.onclick = () => {
+      const id = Number(g.dataset.component);
+      const comp = condensation.components.find(c => c.id === id);
+      if (!comp) return;
+      state.selectedComponent = id;
+      const first = comp.members[0];
+      state.root = condensation.expanded ? first : firstSense(first);
+      state.selected = state.root;
+      render();
+    };
+  });
+}
+
+function renderMatrix(rows) {
+  $("graph").style.display = "none";
+  const box = $("matrixView");
+  box.style.display = "block";
+  box.innerHTML = `
+    <table class="matrix-table">
+      <thead><tr><th>node</th><th>tag</th>${SCENARIOS.map(s => `<th>${esc(s.label)}</th>`).join("")}<th>Custom</th><th>4-way</th></tr></thead>
+      <tbody>
+        ${rows.map(row => {
+          const tag = state.expanded && SENSE[row.node] ? (LEXICON[SENSE[row.node].word].tags[0] || "") : (LEXICON[row.node]?.tags[0] || "");
+          return `<tr>
+            <td><button data-node="${esc(row.node)}" data-scenario="custom">${esc(state.expanded ? labelOf(row.node) : row.node)}</button></td>
+            <td>${esc(tag)}</td>
+            ${row.fixed.map(cell => `<td><button class="${cell.cls}" data-node="${esc(row.node)}" data-scenario="${esc(cell.id)}">${esc(cell.cls.slice(0, 3))}</button></td>`).join("")}
+            <td><button class="${row.custom}" data-node="${esc(row.node)}" data-scenario="custom">${esc(row.custom.slice(0, 3))}</button></td>
+            <td class="robustness">${row.robust}/${ROBUST_SCENARIOS.length}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>`;
+  box.querySelectorAll("button[data-node]").forEach(btn => {
+    btn.onclick = () => {
+      const scenario = SCENARIOS.find(s => s.id === btn.dataset.scenario);
+      if (scenario) state.acceptedAnchors = new Set(scenario.anchors);
+      const raw = btn.dataset.node;
+      state.root = state.expanded ? raw : firstSense(raw);
+      state.selected = state.root;
+      state.view = "descent";
+      render();
+    };
+  });
+}
+
+function dialoguePositions(data, side, w, h) {
+  const leftSide = side === "speaker";
+  const x0 = leftSide ? 48 : w * 0.56;
+  const x1 = leftSide ? w * 0.44 : w - 48;
+  const visible = data.nodes.filter(n => ANCHOR[n] || SENSE[n] || state.showExternal);
+  const levels = new Map();
+  visible.forEach(n => {
+    const d = Math.min(data.depth.get(n) || 0, 5);
+    if (!levels.has(d)) levels.set(d, []);
+    levels.get(d).push(n);
+  });
+  const maxD = Math.max(...visible.map(n => Math.min(data.depth.get(n) || 0, 5)), 1);
+  const pos = new Map();
+  [...levels.entries()].forEach(([d, arr]) => {
+    arr.sort((a,b) => nodeWord(a).localeCompare(nodeWord(b)) || a.localeCompare(b));
+    arr.forEach((n, i) => {
+      const x = x0 + (x1 - x0) * (d / maxD);
+      const y = 54 + (h - 92) * ((i + 1) / (arr.length + 1));
+      pos.set(n, { x, y });
+    });
+  });
+  return pos;
+}
+
+function renderDialogueGraph(dialogue) {
+  $("graph").style.display = "block";
+  $("matrixView").style.display = "none";
+  const svg = $("graph");
+  const box = svg.getBoundingClientRect();
+  const w = Math.max(760, box.width || 900), h = Math.max(450, box.height || 580);
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const s = dialogue.speaker, r = dialogue.hearer, cmp = dialogue.comparison;
+  const spos = dialoguePositions(s.data, "speaker", w, h);
+  const rpos = dialoguePositions(r.data, "hearer", w, h);
+  const posFor = (side, id) => side === "speaker" ? spos.get(id) : rpos.get(id);
+  const nodeHtml = (side, pack, id) => {
+    const p = posFor(side, id);
+    if (!p) return "";
+    if (ANCHOR[id]) {
+      const accepted = pack.grounding.accepted.has(id);
+      return `<g class="anchor-node${accepted ? "" : " rejected"}" data-node="${esc(id)}" transform="translate(${p.x},${p.y})"><title>${esc(ANCHOR[id].label)}</title><circle r="12"></circle><text>${esc(anchorCode(id))}</text></g>`;
+    }
+    const cls = ["node", side];
+    if (id === pack.data.root) cls.push("root");
+    if (pack.analysis.kernel.has(id)) cls.push("kernel");
+    if (!SENSE[id]) cls.push("external");
+    if (pack.grounding.classes.has(id)) cls.push(pack.grounding.classes.get(id));
+    if (id === state.selected) cls.push("selected");
+    const label = SENSE[id] ? labelOf(id) : (id.length > 12 ? id.slice(0, 11) + "." : id);
+    const rad = pack.analysis.kernel.has(id) ? 18 : 15;
+    return `<g class="${cls.join(" ")}" data-node="${esc(id)}" transform="translate(${p.x},${p.y})"><circle r="${rad}"></circle>${pack.grounding.classes.has(id) ? `<circle class="ground-ring" r="${rad + 4}"></circle>` : ""}<text>${esc(label)}</text></g>`;
+  };
+  const edgeHtml = (side, pack, edge) => {
+    const p = posFor(side, edge.from), q = posFor(side, edge.to);
+    if (!p || !q) return "";
+    const cls = ["edge", "dialogue", side];
+    if (edge.ambiguous) cls.push("ambig");
+    if (ANCHOR[edge.to]) cls.push("ground");
+    const dx = q.x - p.x, dy = q.y - p.y;
+    const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
+    const bend = Math.min(28, Math.hypot(dx,dy) * 0.09);
+    const cx = mx - dy / Math.max(1, Math.hypot(dx,dy)) * bend;
+    const cy = my + dx / Math.max(1, Math.hypot(dx,dy)) * bend;
+    return `<path class="${cls.join(" ")}" d="M${p.x},${p.y} Q${cx},${cy} ${q.x},${q.y}"><title>${esc(edge.word)} -> ${esc(labelOf(edge.to))}</title></path>`;
+  };
+  let html = `<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#879197"></path></marker></defs>
+    <rect class="dialogue-band" x="10" y="10" width="${w * 0.47 - 20}" height="${h - 20}"></rect>
+    <rect class="dialogue-band" x="${w * 0.53}" y="10" width="${w * 0.47 - 10}" height="${h - 20}"></rect>
+    <text class="dialogue-title" x="22" y="27">Speaker: ${esc(s.persona.label)}</text>
+    <text class="dialogue-title" x="${w * 0.54}" y="27">Hearer: ${esc(r.persona.label)}</text>`;
+  s.data.edges.forEach(e => { html += edgeHtml("speaker", s, e); });
+  r.data.edges.forEach(e => { html += edgeHtml("hearer", r, e); });
+  cmp.forks.slice(0, 18).forEach(f => {
+    const lp = spos.get(f.left), rp = rpos.get(f.right);
+    if (!lp || !rp) return;
+    const y = (lp.y + rp.y) / 2;
+    html += `<path class="fork-rung${f.load ? " load" : ""}" d="M${lp.x + 18},${lp.y} C${w * 0.49},${y} ${w * 0.51},${y} ${rp.x - 18},${rp.y}"><title>${esc(f.word)}: ${esc(labelOf(f.left))} vs ${esc(labelOf(f.right))}</title></path>`;
+    html += `<text class="lemma-label" x="${w / 2}" y="${y - 3}">${esc(f.word)}</text>`;
+  });
+  s.data.nodes.forEach(n => { html += nodeHtml("speaker", s, n); });
+  r.data.nodes.forEach(n => { html += nodeHtml("hearer", r, n); });
+  svg.innerHTML = html;
+  svg.querySelectorAll(".node").forEach(g => {
+    g.onclick = () => {
+      state.selected = g.dataset.node;
+      if (SENSE[state.selected]) state.root = state.selected;
+      render();
+    };
+  });
+  svg.querySelectorAll(".anchor-node").forEach(g => {
+    g.onclick = () => {
+      state.selected = g.dataset.node;
+      renderDefinition(state.selected);
+    };
+  });
+}
+
+function renderKernel(analysis, expanded, condensation = null) {
+  if (state.view === "condensation" && condensation) {
+    const selected = condensation.components.find(c => c.id === state.selectedComponent) || condensation.pockets[0];
+    if (!selected) {
+      $("kernelBox").innerHTML = `<div class="finding"><h4>No corpus circular pocket</h4><p>The whole-corpus condensation is acyclic under this graph model.</p></div>`;
+      return;
+    }
+    const pocketList = condensation.pockets.map(c => `<span class="pill cycle">SCC ${c.id}:${c.members.length}</span>`).join("");
+    const cut = [...(selected.analysis.kernel || [])];
+    $("kernelBox").innerHTML = `
+      <div class="finding risk"><h4>Corpus SCC ${selected.id}: ${selected.members.length} ${expanded ? "senses" : "words"}</h4><p>${selected.members.map(x => `<span class="pill cycle">${esc(expanded ? labelOf(x) : x)}</span>`).join("")}</p><p class="smallcap">${selected.edges.length} internal edge(s); ${selected.analysis.detail[0]?.exact ? "minimum" : "greedy"} feedback set</p><p>${cut.map(x => `<span class="pill kernel">${esc(expanded ? labelOf(x) : x)}</span>`).join("") || `<span class="pill">no cut</span>`}</p></div>
+      <div class="finding"><h4>All circular pockets</h4><p>${pocketList || "none"}</p></div>`;
+    return;
+  }
+  if (!analysis.detail.length) {
+    $("kernelBox").innerHTML = `<div class="finding"><h4>No circular component in local descent</h4><p>This view reaches leaves before a definitional loop for the selected root.</p></div>`;
+    return;
+  }
+  $("kernelBox").innerHTML = analysis.detail.map((d, i) => `
+    <div class="finding risk">
+      <h4>SCC ${i + 1}: ${d.comp.length} ${expanded ? "senses" : "words"}, ${d.edges} internal edges</h4>
+      <p>${d.comp.map(x => `<span class="pill cycle">${esc(expanded ? labelOf(x) : x)}</span>`).join("")}</p>
+      <p class="smallcap">${d.exact ? "minimum feedback set" : "greedy feedback set"}</p>
+      <p>${d.cut.map(x => `<span class="pill kernel">${esc(expanded ? labelOf(x) : x)}</span>`).join("")}</p>
+    </div>`).join("");
+}
+
+function renderAnchors() {
+  $("anchorBox").innerHTML = Object.entries(ANCHOR).map(([id, anchor]) => `
+    <label class="anchor-toggle">
+      <input type="checkbox" data-anchor="${esc(id)}" ${state.acceptedAnchors.has(id) ? "checked" : ""}>
+      <span><b>${esc(anchor.label)}</b><span>${esc(anchor.mode)}</span></span>
+    </label>`).join("");
+  $("anchorBox").querySelectorAll("input[data-anchor]").forEach(input => {
+    input.onchange = () => {
+      if (input.checked) state.acceptedAnchors.add(input.dataset.anchor);
+      else state.acceptedAnchors.delete(input.dataset.anchor);
+      state.selected = input.dataset.anchor;
+      render();
+    };
+  });
+}
+
+function renderGrounding(data, grounding, robustness = null) {
+  const selected = data.expanded ? state.selected : nodeWord(state.selected);
+  const cls = grounding.classes.get(selected);
+  const selectedRoutes = grounding.routes.get(selected) || [];
+  const acceptedCount = state.acceptedAnchors.size;
+  const anchorModes = [...state.acceptedAnchors].reduce((acc, id) => {
+    const mode = ANCHOR[id].mode;
+    acc[mode] = (acc[mode] || 0) + 1;
+    return acc;
+  }, {});
+  const modeText = Object.entries(anchorModes).sort().map(([k, v]) => `${k}:${v}`).join(" ");
+  const zeroLine = acceptedCount ? "" : `<div class="finding risk"><h4>Radical skeptic setting</h4><p>With zero accepted anchors, every reachable defined node is adrift by construction: the dictionary graph cannot escape language from inside itself.</p></div>`;
+  const robustLine = robustness ? `<div class="finding"><h4>DetectorFinding: scenario robustness</h4><p>${robustness.allFive}/${robustness.rows.length} ${data.expanded ? "senses" : "words"} anchored under all four constructive postures; ${robustness.zero} anchored under none. Skeptic is retained as a zero-anchor control, not counted in robustness.</p></div>` : "";
+  $("groundingBox").innerHTML = `
+    <div class="finding"><h4>DetectorFinding: grounding reachability</h4><p>${grounding.total} defined node(s): <span class="pill anchored">${grounding.counts.anchored} anchored</span><span class="pill mediated">${grounding.counts.mediated} kernel-mediated</span><span class="pill adrift">${grounding.counts.adrift} adrift</span> under ${acceptedCount}/${Object.keys(ANCHOR).length} accepted anchor(s).</p></div>
+    ${robustLine}
+    <div class="finding"><h4>Accepted primitive mix</h4><p>${modeText || "none"}</p></div>
+    ${zeroLine}
+    <div class="finding risk"><h4>InterpretiveRiskFinding: anchor stipulation</h4><p>Anchor edges are editorial commitments to ostensive, bodily, temporal, or deictic access. The computed fact is only whether a route reaches the commitments currently accepted.</p></div>
+    <div class="finding"><h4>Selected route audit${cls ? `: ${esc(cls)}` : ""}</h4>${selectedRoutes.length ? selectedRoutes.slice(0, 4).map(p => `<div class="path">${esc(compactPath(p, data.expanded))}</div>`).join("") : "<p>No accepted anchor route in the current depth window.</p>"}</div>`;
+}
+
+function renderDialogueReport(dialogue, census) {
+  const cmp = dialogue.comparison;
+  const first = cmp.first;
+  const forkList = cmp.forks.slice(0, 8).map(f => `
+    <div class="path">${esc(f.word)}: ${esc(labelOf(f.left))} <span class="pill ${f.leftScore.cls}">${esc(f.leftScore.cls)}</span> / ${esc(labelOf(f.right))} <span class="pill ${f.rightScore.cls}">${esc(f.rightScore.cls)}</span> <span class="pill ${f.load ? "load" : "cosmetic"}">${f.load ? "load" : "cosmetic"}</span></div>`).join("");
+  $("dialogueBox").innerHTML = `
+    <div class="finding ${cmp.sameRootClass ? "" : "risk"}"><h4>DetectorFinding: two-reader resolution</h4><p><b>${esc(dialogue.speaker.persona.label)}</b> root is <span class="pill ${cmp.leftRootClass}">${esc(cmp.leftRootClass)}</span>; <b>${esc(dialogue.hearer.persona.label)}</b> root is <span class="pill ${cmp.rightRootClass}">${esc(cmp.rightRootClass)}</span>.</p></div>
+    <div class="finding ambig"><h4>First fork</h4><p>${first ? `depth ${first.depth}, term <b>${esc(first.word)}</b>: ${esc(labelOf(first.left))} vs ${esc(labelOf(first.right))}` : "No policy fork inside the current depth window."}</p></div>
+    <div class="finding ${cmp.load.length ? "risk" : ""}"><h4>Fork ledger</h4><p>${cmp.forks.length} fork(s), ${cmp.load.length} load-bearing. Shared prefix: ${esc(cmp.prefix.map(labelOf).join(" -> "))}</p>${forkList || "<p>No divergent decisions to list.</p>"}</div>
+    <div class="finding"><h4>Corpus policy census</h4><p>${census.invariant}/${census.rows.length} senses are fully policy-invariant; ${census.classStable}/${census.rows.length} keep the same root grounding class even when persona paths differ.</p></div>`;
+}
+
+function renderDelta(pair) {
+  const d = delta(pair);
+  const topLoads = [...d.fanTargets.entries()].sort((a,b) => b[1] - a[1]).slice(0, 8);
+  $("deltaBox").innerHTML = `
+    <div class="finding ambig"><h4>DetectorFinding: ambiguity fan-out</h4><p>${d.ambiguousEdges.length} expanded edge(s) are generated from unresolved sense targets. These are dashed violet sprays, not clean arrows.</p></div>
+    <div class="finding"><h4>Collapsed vs expanded cycles</h4><p>${pair.wordAnalysis.cyclic.length} word-level cyclic component(s) vs ${pair.senseAnalysis.cyclic.length} sense-level component(s).</p></div>
+    <div class="finding risk"><h4>InterpretiveRiskFinding: conflation delta</h4><p>${d.artifacts.length} collapsed cycle signature(s) dissolve when senses are separated; ${d.latent.length} sense-level signature(s) appear only after fan-out expansion.</p></div>
+    <div>${topLoads.map(([id, n]) => `<span class="pill ambig">${esc(labelOf(id))}:${n}</span>`).join("") || `<span class="pill">no fan-out load</span>`}</div>`;
+}
+
+function renderFindings(pair, condensation = null, robustness = null, dialogue = null, census = null) {
+  const data = pair.displayData, analysis = pair.displayAnalysis;
+  if (state.view === "dialogue") {
+    dialogue = dialogue || dialogueAnalysis();
+    census = census || divergenceCensus();
+    $("findings").innerHTML = `
+      <div class="finding"><h4>DetectorFinding: persona policies</h4><p>Ambiguous definiens are resolved by pure policy functions. No persona adds corpus facts; each only chooses among existing sense IDs.</p></div>
+      <div class="finding"><h4>DetectorFinding: policy invariance</h4><p>${census.invariant}/${census.rows.length} senses survive every ordered persona pair without a fork or grounding-class change.</p></div>
+      <div class="finding risk"><h4>InterpretiveRiskFinding: reader model</h4><p>The detector can prove two policies diverge. It does not prove which policy is the right reader for a real audience.</p></div>`;
+    return;
+  }
+  if (state.view === "condensation" && condensation) {
+    const cyclicMembers = new Set(condensation.pockets.flatMap(c => c.members));
+    $("findings").innerHTML = `
+      <div class="finding"><h4>DetectorFinding: corpus condensation</h4><p>${condensation.components.length} SCC super-node(s) and ${condensation.edges.length} DAG edge(s) over all ${condensation.expanded ? SENSES.length + " senses" : words.length + " words"}.</p></div>
+      <div class="finding"><h4>DetectorFinding: independent circular pockets</h4><p>${condensation.pockets.length} cyclic pocket(s), containing ${cyclicMembers.size} defined node(s).</p></div>
+      <div class="finding risk"><h4>InterpretiveRiskFinding: pocket independence</h4><p>The census shows where local descents share the same circular kernel versus where they enter a separate definitional pocket.</p></div>`;
+    return;
+  }
+  if (state.view === "matrix" && robustness) {
+    $("findings").innerHTML = `
+      <div class="finding"><h4>DetectorFinding: grounding-robustness matrix</h4><p>${robustness.rows.length} ${data.expanded ? "sense" : "word"} row(s) scored across ${SCENARIOS.length} fixed anchor postures plus Custom.</p></div>
+      <div class="finding"><h4>DetectorFinding: robust vs fragile</h4><p>${robustness.allFive} row(s) are anchored in all four constructive postures; ${robustness.zero} row(s) are anchored in none. Skeptic remains a visible zero-anchor control.</p></div>
+      <div class="finding risk"><h4>InterpretiveRiskFinding: posture choice</h4><p>The matrix computes robustness mechanically. Which posture deserves trust remains outside the detector.</p></div>`;
+    return;
+  }
+  const externalLeaves = data.nodes.filter(n => data.expanded ? !SENSE[n] : !LEXICON[n]);
+  const knownLeaves = data.nodes.filter(n => (data.expanded ? SENSE[n] : LEXICON[n]) && outgoing(n, data.expanded).length === 0);
+  const maxDepth = Math.max(...data.nodes.map(n => data.depth.get(n) || 0));
+  $("findings").innerHTML = `
+    <div class="finding"><h4>DetectorFinding: graph construction</h4><p>${data.nodes.length} displayed node(s) and ${data.edges.length} definition edge(s) from <b>${esc(data.expanded ? labelOf(state.root) : nodeWord(state.root))}</b>. Depth max ${maxDepth}${Number.isFinite(state.maxDepth) ? ` of ${state.maxDepth}` : ""}.</p></div>
+    <div class="finding"><h4>DetectorFinding: strongly connected components</h4><p>${analysis.cyclic.length} cyclic component(s), computed mechanically over ${data.expanded ? "sense IDs" : "collapsed word IDs"}.</p></div>
+    <div class="finding"><h4>DetectorFinding: unresolved leaves</h4><p>${externalLeaves.length} external seed leaves, ${knownLeaves.length} locally terminal entries.</p></div>
+    <div class="finding risk"><h4>InterpretiveRiskFinding: grounding pressure</h4><p>Kernel claims are only about the selected graph model. The baseline comparison shows when a word-level kernel would be too coarse to trust.</p></div>`;
+}
+
+function renderPaths(data) {
+  const paths = cycleWitnesses(data.edges, data.expanded);
+  $("paths").innerHTML = paths.length ? paths.map(p => `<div class="path">${p.map(x => data.expanded ? labelOf(x) : x).join(" -> ")}</div>`).join("") : `<div class="path">No circular witness found in this local descent.</div>`;
+}
+
+function renderEvidence(data, analysis, grounding) {
+  const kernel = analysis.kernel;
+  const cyclicNodes = new Set(analysis.cyclic.flat());
+  $("evidence").innerHTML = data.nodes
+    .filter(n => ANCHOR[n] || (data.expanded ? SENSE[n] : LEXICON[n]) || state.showExternal)
+    .sort((a,b) => (data.depth.get(a) - data.depth.get(b)) || a.localeCompare(b))
+    .map(n => {
+      if (ANCHOR[n]) {
+        const cls = state.acceptedAnchors.has(n) ? "anchored" : "adrift";
+        return `<tr><td>${esc(ANCHOR[n].label)}</td><td>${data.depth.get(n)}</td><td>0</td><td><span class="pill ${cls}">${esc(cls === "anchored" ? "anchor" : "rejected")}</span></td></tr>`;
+      }
+      const isKnown = data.expanded ? SENSE[n] : LEXICON[n];
+      const out = outgoing(n, data.expanded);
+      const cls = !isKnown ? "external" : grounding.classes.get(n) || (kernel.has(n) ? "kernel" : cyclicNodes.has(n) ? "cycle" : out.some(e => e.ambiguous) ? "ambig" : out.length ? "defined" : "leaf");
+      const name = data.expanded && SENSE[n] ? labelOf(n) : n;
+      return `<tr><td>${esc(name)}</td><td>${data.depth.get(n)}</td><td>${out.length}</td><td><span class="pill ${cls}">${cls}</span></td></tr>`;
+    }).join("");
+}
+
+function renderMetrics(pair, condensation, robustness, policyCensus) {
+  const d = delta(pair);
+  $("mReach").textContent = pair.displayData.nodes.length;
+  $("mEdges").textContent = pair.displayData.edges.length;
+  $("mAmbig").textContent = d.ambiguousEdges.length;
+  $("mCycles").textContent = pair.displayAnalysis.cyclic.length;
+  $("mKernel").textContent = pair.displayAnalysis.kernel.size;
+  $("mDelta").textContent = d.artifacts.length + d.latent.length;
+  $("mPockets").textContent = condensation.pockets.length;
+  $("mRobust").textContent = `${robustness.percent}%`;
+  $("mPolicy").textContent = `${policyCensus.percent}%`;
+}
+
+function render() {
+  if (!SENSE[state.root]) state.root = firstSense(nodeWord(state.root));
+  if (!SENSE[state.selected] && !ANCHOR[state.selected]) state.selected = state.root;
+  ["Descent", "Condensation", "Matrix", "Dialogue"].forEach(name => {
+    const btn = $(`view${name}`);
+    if (btn) btn.classList.toggle("active", state.view === name.toLowerCase() || (name === "Condensation" && state.view === "condensation"));
+  });
+  renderWordList();
+  renderPersonaControls();
+  const pair = analyzePair();
+  if (state.compareBaseline) state.expanded = false;
+  const activePair = analyzePair();
+  const condensation = globalCondensation(activePair.displayData.expanded);
+  const robustness = corpusRobustness(activePair.displayData.expanded);
+  const dialogue = dialogueAnalysis();
+  const policyCensus = divergenceCensus();
+  const grounding = groundingReport(activePair.displayData, activePair.displayAnalysis);
+  renderMetrics(activePair, condensation, robustness, policyCensus);
+  if (state.view === "condensation") renderCondensationGraph(condensation);
+  else if (state.view === "matrix") renderMatrix(robustness.rows);
+  else if (state.view === "dialogue") renderDialogueGraph(dialogue);
+  else renderGraph(activePair.displayData, activePair.displayAnalysis, grounding);
+  renderDefinition(state.selected);
+  renderKernel(activePair.displayAnalysis, activePair.displayData.expanded, condensation);
+  renderAnchors();
+  renderGrounding(activePair.displayData, grounding, robustness);
+  renderDialogueReport(dialogue, policyCensus);
+  renderDelta(pair);
+  renderFindings(activePair, condensation, robustness, dialogue, policyCensus);
+  renderPaths(activePair.displayData);
+  renderEvidence(activePair.displayData, activePair.displayAnalysis, grounding);
+}
+
+$("search").addEventListener("input", renderWordList);
+$("clearBtn").onclick = () => { $("search").value = ""; state.root = "meaning.semantic"; state.selected = "meaning.semantic"; render(); };
+$("viewDescent").onclick = () => { state.view = "descent"; render(); };
+$("viewCondensation").onclick = () => { state.view = "condensation"; render(); };
+$("viewMatrix").onclick = () => { state.view = "matrix"; render(); };
+$("viewDialogue").onclick = () => { state.view = "dialogue"; render(); };
+$("speakerPersona").onchange = e => { state.speakerPersona = e.target.value; state.view = "dialogue"; render(); };
+$("hearerPersona").onchange = e => { state.hearerPersona = e.target.value; state.view = "dialogue"; render(); };
+$("expandedMode").onchange = e => { state.expanded = e.target.checked; state.compareBaseline = !e.target.checked; render(); };
+$("baselineBtn").onclick = () => { state.compareBaseline = !state.compareBaseline; state.expanded = !state.compareBaseline; $("expandedMode").checked = state.expanded; render(); };
+$("showCycles").onchange = e => { state.showCycles = e.target.checked; render(); };
+$("showExternal").onchange = e => { state.showExternal = e.target.checked; render(); };
+$("showHulls").onchange = e => { state.showHulls = e.target.checked; render(); };
+$("radialMode").onchange = e => { state.radial = e.target.checked; render(); };
+$("depthLimit").onchange = e => { state.maxDepth = e.target.value === "all" ? Infinity : Number(e.target.value); render(); };
+$("anchorsAll").onclick = () => { state.acceptedAnchors = new Set(Object.keys(ANCHOR)); render(); };
+$("anchorsSkeptic").onclick = () => { state.acceptedAnchors = new Set(); render(); };
+$("anchorsPercept").onclick = () => {
+  state.acceptedAnchors = new Set(Object.entries(ANCHOR)
+    .filter(([, a]) => ["visual", "auditory", "tactile", "interoceptive", "kinesthetic", "deictic", "temporal"].includes(a.mode))
+    .map(([id]) => id));
+  render();
+};
+window.addEventListener("resize", () => render());
+render();
+</script>
+</body>
+</html>

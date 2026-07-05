@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interpretant Press</title>
+<style>
+:root{
+  --ink:#161513; --muted:#5d5a52; --paper:#f8f5e9; --panel:#fffdf6; --soft:#ebe3cf;
+  --line:#c6bda9; --hard:#7f735d; --blue:#1f5f8b; --red:#a33b32; --green:#3d7048;
+  --gold:#946513; --violet:#67508d; --cyan:#267b7b; --black:#2d2922;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;line-height:1.25}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--line);background:#f4eddc;border-radius:2px;padding:4px 7px;cursor:pointer}
+button:hover,button.active{background:#e4d7bc;border-color:var(--hard)}
+textarea{width:100%;height:68px;resize:vertical;border:1px solid var(--line);background:#fffef9;padding:6px 7px;line-height:1.3}
+select,input[type=range]{width:100%}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid var(--line);padding:4px 5px;vertical-align:top}
+th{background:#e7decb;text-align:left;text-transform:uppercase;letter-spacing:.055em;font-size:10px}
+td{background:#fffdf7}
+.app{display:grid;grid-template-columns:320px minmax(560px,1fr) 390px;gap:7px;max-width:1680px;margin:0 auto;padding:7px}
+.brand{grid-column:1/-1;display:grid;grid-template-columns:320px 1fr 390px;gap:7px}
+.mast,.panel{border:1px solid var(--line);background:var(--panel)}
+.mast{background:#ece4d2;padding:6px 8px}
+h1{font-family:Georgia,serif;font-size:25px;line-height:.95;margin:0;letter-spacing:0}
+.sub{font-size:11px;color:var(--muted);margin-top:3px}
+.panel h2{margin:0;padding:5px 7px;border-bottom:1px solid var(--line);background:#e7decb;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.body{padding:6px}
+.stack{display:grid;gap:7px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
+.strip{border:1px solid var(--line);background:#fffdf6;display:grid;grid-template-columns:repeat(7,1fr)}
+.metric{padding:5px 6px;border-left:1px solid var(--line);min-width:0}
+.metric:first-child{border-left:0}
+.metric b{display:block;font-family:Georgia,serif;font-size:18px;line-height:1}
+.metric span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.055em;margin-top:2px}
+.smallcaps{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.055em}
+.tiny{font-size:11px;color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.examples{display:grid;gap:4px}
+.ex{display:grid;grid-template-columns:22px 1fr;text-align:left;gap:5px;background:#fffaf0;padding:4px 5px}
+.ex.active{background:#e4efea;border-color:#76977f}
+.ex code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#514b41;font-size:10px}
+.control{border:1px solid var(--line);background:#fffaf0;padding:5px}
+.control label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.055em;color:var(--muted);margin-bottom:2px}
+.plate-wrap{height:560px;border:1px solid var(--line);background:#fffef9;position:relative}
+canvas{display:block;width:100%;height:100%}
+.legend{position:absolute;left:6px;bottom:6px;display:grid;grid-template-columns:repeat(5,max-content);gap:4px;background:rgba(255,253,246,.94);border:1px solid var(--line);padding:4px}
+.key{display:flex;align-items:center;gap:4px;font-size:10px;color:#3f3a32}
+.sw{width:10px;height:10px;border:1px solid #777}
+.token-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:4px}
+.tok{border:1px solid var(--line);background:#fffdf7;padding:4px;min-height:78px;overflow:hidden}
+.tok strong{font-family:Georgia,serif;font-size:15px}
+.tok .pos{float:right;font-size:10px;color:#fff;padding:1px 3px;background:#555}
+.tok ul{margin:3px 0 0 13px;padding:0;color:#4e4a42;font-size:10px}
+.tag{display:inline-block;border:1px solid var(--line);background:#f1eadc;margin:1px 2px 1px 0;padding:1px 4px;font-size:10px}
+.tag.hot{background:#ead2cc;border-color:#b47970}
+.tag.blue{background:#dce8ef;border-color:#8caec3}
+.reading{border:1px solid var(--line);background:#fffdf7;padding:5px}
+.reading h3{margin:0 0 3px;font-family:Georgia,serif;font-size:12px}
+.reading p{margin:0;color:#49443b}
+.chain{display:grid;grid-template-columns:1fr 18px 1fr 18px 1fr;gap:4px;align-items:stretch}
+.tri{border:1px solid var(--line);background:#fffaf0;min-height:84px;padding:5px}
+.tri b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.055em;color:var(--muted);margin-bottom:3px}
+.arrow{align-self:center;text-align:center;color:var(--muted)}
+.note{border-left:4px solid var(--gold);background:#fff8e5;padding:5px 7px}
+.heat{height:8px;background:#ece4d2;border:1px solid var(--line);margin-top:3px}
+.heat i{display:block;height:100%;background:var(--red)}
+.parse-list{display:grid;gap:4px}
+.parse-option{display:grid;grid-template-columns:42px 1fr 34px;gap:5px;align-items:start;text-align:left}
+.parse-option b{font-family:Georgia,serif}
+.dep-type{font-size:10px;text-transform:uppercase;letter-spacing:.045em;color:var(--muted)}
+.dense-list{max-height:220px;overflow:auto;border:1px solid var(--line)}
+.dense-list table{border:0}
+.dense-list th:first-child,.dense-list td:first-child{border-left:0}
+.dense-list th:last-child,.dense-list td:last-child{border-right:0}
+.dense-list tr:first-child th{border-top:0}
+.crit{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.genre-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.genre-strip button{padding:3px 5px;text-align:left;min-height:28px}
+.genre-strip button.active{background:#dce8ef;border-color:#6f9db7}
+.corpus-wrap{height:420px;border:1px solid var(--line);background:#fffef9;position:relative}
+.corpus-readout{position:absolute;right:6px;top:6px;width:220px;max-height:176px;overflow:auto;background:rgba(255,253,246,.96);border:1px solid var(--line);padding:5px}
+.corpus-readout h3{font:700 11px Georgia,serif;margin:0 0 3px}
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.neighbor-list{display:grid;gap:2px}
+.neighbor{display:grid;grid-template-columns:1fr 38px;gap:4px;border:1px solid var(--line);background:#fffdf7;padding:2px 4px}
+.badge{display:inline-block;border:1px solid var(--line);padding:1px 4px;font-size:10px;background:#eee6d6}
+.badge.agree{background:#dfeee4;border-color:#83a58d}
+.badge.silent{background:#eee8d8;border-color:#b5aa92}
+.badge.conflict{background:#efd9d5;border-color:#b9827a}
+.rewrite{border:1px solid var(--line);background:#fffdf7;padding:5px}
+.rewrite b{font-family:Georgia,serif}
+.judgment-grid{display:grid;grid-template-columns:minmax(290px,1fr) 1fr;gap:5px}
+.begriff-wrap{height:190px;border:1px solid var(--line);background:#fffef9}
+.formula-box{border:1px solid var(--line);background:#fffaf0;padding:5px;min-height:54px}
+.formula-box .mono{font-size:11px;line-height:1.35;word-break:break-word}
+.truth-table td,.truth-table th{text-align:center}
+.truth-table td:first-child,.truth-table th:first-child{text-align:left}
+.truth-true{background:#dfeee4}
+.truth-false{background:#efd9d5}
+.truth-undef{background:#eee8d8}
+.model-readout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.model-readout .reading{min-height:68px}
+@media(max-width:1150px){.app,.brand{grid-template-columns:1fr}.brand{grid-column:auto}.plate-wrap{height:470px}.strip{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.judgment-grid,.model-readout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="brand">
+    <div class="mast">
+      <h1>Interpretant Press</h1>
+      <div class="sub">offline grammar, derivational lexicon, scoped operators, and a syntactic loom for text as material under stress</div>
+    </div>
+    <div class="strip" id="metrics"></div>
+    <div class="mast">
+      <div class="smallcaps">current plate</div>
+      <div id="plateTitle" style="font-family:Georgia,serif;font-size:18px;margin-top:2px"></div>
+      <div class="tiny">Single file. No network, model call, dependency, or hidden parser service.</div>
+    </div>
+  </section>
+
+  <aside class="stack">
+    <section class="panel">
+      <h2>Utterance Feed</h2>
+      <div class="body stack">
+        <textarea id="utterance"></textarea>
+        <div class="row">
+          <button id="pressBtn">Press Plate</button>
+          <button id="invertBtn">Invert Oppositions</button>
+        </div>
+        <div class="examples" id="examples"></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Speech Situation</h2>
+      <div class="body stack">
+        <div class="control"><label for="context">Language game</label><select id="context"></select></div>
+        <div class="control"><label for="stance">Interpretive stance</label><select id="stance"></select></div>
+        <div class="row">
+          <div class="control"><label for="modality">Modal pressure</label><input id="modality" type="range" min="0" max="100" value="48"></div>
+          <div class="control"><label for="deixis">Deictic pressure</label><input id="deixis" type="range" min="0" max="100" value="55"></div>
+        </div>
+        <div class="row">
+          <div class="control"><label for="institution">Institutional force</label><input id="institution" type="range" min="0" max="100" value="38"></div>
+          <div class="control"><label for="metaphor">Metaphor tolerance</label><input id="metaphor" type="range" min="0" max="100" value="62"></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Parse Alternatives</h2>
+      <div class="body stack">
+        <div id="parseOptions" class="parse-list"></div>
+        <div class="dense-list"><table id="phraseTable"></table></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Generated Readings</h2>
+      <div class="body stack" id="readings"></div>
+    </section>
+  </aside>
+
+  <section class="stack">
+    <section class="panel">
+      <h2>Interpretant Loom</h2>
+      <div class="body">
+        <div class="plate-wrap">
+          <canvas id="loom" width="1040" height="680"></canvas>
+          <div class="legend">
+            <div class="key"><i class="sw" style="background:#1f5f8b"></i>subject</div>
+            <div class="key"><i class="sw" style="background:#a33b32"></i>object/scope</div>
+            <div class="key"><i class="sw" style="background:#3d7048"></i>modifier</div>
+            <div class="key"><i class="sw" style="background:#9b6a19"></i>condition</div>
+            <div class="key"><i class="sw" style="background:#67508d"></i>speech/quote</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Corpus Loom</h2>
+      <div class="body stack">
+        <div class="genre-strip" id="genreToggles"></div>
+        <div class="corpus-wrap">
+          <canvas id="corpusLoom" width="1040" height="540"></canvas>
+          <div class="corpus-readout" id="corpusReadout"></div>
+        </div>
+        <div class="mini-grid">
+          <div class="reading"><h3>Distributional Witness</h3><p id="corpusSummary"></p></div>
+          <div class="reading"><h3>Drift Trail</h3><p id="driftSummary"></p></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Judgment Press</h2>
+      <div class="body stack">
+        <div class="judgment-grid">
+          <div class="stack">
+            <div class="formula-box">
+              <div class="smallcaps">compiled judgeable content</div>
+              <div id="logicalFormula" class="mono"></div>
+            </div>
+            <div class="begriff-wrap"><canvas id="begriff" width="620" height="240"></canvas></div>
+          </div>
+          <div class="dense-list"><table id="truthTable" class="truth-table"></table></div>
+        </div>
+        <div class="model-readout">
+          <div class="reading"><h3>Model Verdict</h3><p id="modelVerdict"></p></div>
+          <div class="reading"><h3>Scope Trial</h3><p id="scopeTrial"></p></div>
+          <div class="reading"><h3>World Witness</h3><p id="worldWitness"></p></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Material Tokens</h2>
+      <div class="body token-grid" id="tokens"></div>
+    </section>
+    <section class="panel">
+      <h2>Dependency Ledger</h2>
+      <div class="body dense-list"><table id="deps"></table></div>
+    </section>
+  </section>
+
+  <aside class="stack">
+    <section class="panel">
+      <h2>Frege / Saussure / Peirce Plate</h2>
+      <div class="body stack">
+        <div class="chain">
+          <div class="tri"><b>Sign Vehicle</b><div id="signVehicle"></div></div>
+          <div class="arrow">→</div>
+          <div class="tri"><b>Object / Reference</b><div id="objectRef"></div></div>
+          <div class="arrow">→</div>
+          <div class="tri"><b>Interpretant</b><div id="interpretant"></div></div>
+        </div>
+        <div class="note" id="fregeNote"></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Scoped Operator Ledger</h2>
+      <div class="body"><table id="ledger"></table></div>
+    </section>
+    <section class="panel">
+      <h2>Opposition Field</h2>
+      <div class="body dense-list"><table id="oppositions"></table></div>
+    </section>
+    <section class="panel">
+      <h2>Corpus Transposition Press</h2>
+      <div class="body stack">
+        <div class="control"><label for="targetGenre">Target genre</label><select id="targetGenre"></select></div>
+        <div id="transpositions" class="stack"></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Use Diagnostics</h2>
+      <div class="body stack" id="diagnostics"></div>
+    </section>
+    <section class="panel">
+      <h2>Pressure Cabinet</h2>
+      <div class="body"><table id="cabinet"></table></div>
+    </section>
+    <section class="panel">
+      <h2>Built-In Critique</h2>
+      <div class="body crit">
+        <div class="reading"><h3>Flat Failure</h3><p>Round 1 analyzed words as a bag. Round 2 makes structure visible: heads, scope, clauses, and attachment compete.</p></div>
+        <div class="reading"><h3>Honest Depth</h3><p>Unknown words now carry derivation provenance when possible; real unknowns remain disclosed instead of disguised.</p></div>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<script>
+const DATA = {
+  examples:[
+    ["E1","The morning star is the evening star, but the witness will not say it."],
+    ["E2","This border remembers every name we forgot."],
+    ["E3","If the archive burns, the index still accuses us."],
+    ["E4","You must not call the empty chair a throne."],
+    ["E5","The machine says I promise, and the clerk believes it."],
+    ["E6","The witness will not say it to the clerk with the archive."],
+    ["E7","The unreadable warning names the clerk and unsettles the border."]
+  ],
+  contexts:[
+    {id:"archive",name:"Archive note",bias:{reference:20,use:8,opposition:6,structure:8},formula:"stabilizes names by file, date, provenance, and missing evidence"},
+    {id:"law",name:"Legal warning",bias:{reference:18,use:24,opposition:10,structure:12},formula:"turns utterance into obligation, permission, liability, and admissible record"},
+    {id:"intimate",name:"Intimate message",bias:{sense:12,use:22,deixis:18},formula:"lets indexicals and omitted history carry unusual weight"},
+    {id:"field",name:"Field observation",bias:{reference:22,sense:8,deixis:12,structure:7},formula:"privileges demonstratives, location, visible contrast, and repeatable description"},
+    {id:"ritual",name:"Ritual instruction",bias:{use:28,metaphor:16,reference:6},formula:"makes saying count as doing under role, sequence, and authorized repetition"},
+    {id:"machine",name:"Machine log",bias:{reference:14,sense:4,use:-8,opposition:18,structure:10},formula:"treats language as trace, state change, command, and failure code"}
+  ],
+  corpusGenres:[
+    {id:"archive",name:"Archive",color:"#1f5f8b"},
+    {id:"law",name:"Legal",color:"#a33b32"},
+    {id:"intimate",name:"Intimate",color:"#8b4b73"},
+    {id:"field",name:"Field",color:"#3d7048"},
+    {id:"ritual",name:"Ritual",color:"#946513"},
+    {id:"machine",name:"Machine",color:"#267b7b"},
+    {id:"court",name:"Court",color:"#67508d"},
+    {id:"liturgy",name:"Liturgy",color:"#6d6d32"},
+    {id:"advert",name:"Advert",color:"#b5522f"},
+    {id:"street",name:"Street",color:"#4d6778"}
+  ],
+  corpusTemplates:{
+    archive:[
+      "the archive records every name beside the index",
+      "the clerk files the witness note with the date",
+      "an unreadable warning remains in the box",
+      "the border list remembers the missing family",
+      "if the ledger burns the index preserves the trace",
+      "the chair signs the inventory after the clerk checks it",
+      "no name enters the archive without a witness",
+      "this file says the promise was not delivered"
+    ],
+    law:[
+      "the witness must say the name before the clerk",
+      "you may not call the chair a throne in the notice",
+      "if the warning is ignored the border officer records liability",
+      "the promise binds the signer when the court accepts it",
+      "no clerk shall erase a name from the register",
+      "the archive is evidence unless the witness denies it",
+      "the machine log may accuse the office",
+      "every notice must state the remedy and the date"
+    ],
+    intimate:[
+      "you promised to remember my name",
+      "this chair is empty because you are gone",
+      "i will not call the silence a warning",
+      "the evening keeps what the morning forgot",
+      "if you write now the distance becomes bearable",
+      "the border between us moves when you say it",
+      "every small object remembers a touch",
+      "i believe the message even when the phone is silent"
+    ],
+    field:[
+      "this border marker leans beside the empty road",
+      "the morning star appears above the western ridge",
+      "we record the machine noise after the warning light",
+      "the chair sits outside the burned office",
+      "every name tag faces the passage",
+      "if the archive tent floods the index cards dry first",
+      "the witness points here and says the soil moved",
+      "no trace appears beyond that fence"
+    ],
+    ritual:[
+      "the chair becomes a throne when the vow is spoken",
+      "you must say the name before the door opens",
+      "the empty bowl remembers the promise",
+      "if the candle burns the witness answers amen",
+      "every hand touches the border stone",
+      "the clerk of the rite records no ordinary file",
+      "this warning is recited before the crossing",
+      "the machine is silent until the blessing names it"
+    ],
+    machine:[
+      "machine state warning index fault",
+      "archive checksum failed after clerk input",
+      "border sensor records no witness",
+      "if module burns system writes error name",
+      "chair actuator will not move",
+      "promise token rejected by policy engine",
+      "this log says empty field unknown",
+      "every event enters queue with timestamp"
+    ],
+    court:[
+      "the witness says the clerk changed the name",
+      "counsel asks whether the warning was read",
+      "the judge will not call the chair a throne",
+      "exhibit four is the archive index",
+      "if the promise was false the record accuses him",
+      "objection the answer assumes the border",
+      "the clerk believes the machine log",
+      "no juror may discuss the missing file"
+    ],
+    liturgy:[
+      "we remember every name before the altar",
+      "the empty chair awaits the promised guest",
+      "this bread is called mercy",
+      "if the candle burns the people answer",
+      "the throne is not power but service",
+      "the border opens by blessing and song",
+      "no witness stands alone in the rite",
+      "the archive of grief becomes prayer"
+    ],
+    advert:[
+      "this machine remembers every name for you",
+      "turn an empty chair into a throne",
+      "never forget the promise your archive keeps",
+      "the morning warning that protects your border",
+      "say yes and the clerk work disappears",
+      "every index becomes a clear path",
+      "believe the system that records it all",
+      "call now for a cleaner office record"
+    ],
+    street:[
+      "the border remembers who can pass",
+      "a warning is painted on the empty chair",
+      "the clerk forgot my name again",
+      "the machine says no and the line waits",
+      "we call that office a throne room",
+      "if the archive burns nobody believes us",
+      "every witness keeps a copy",
+      "this promise sounds like a lock"
+    ]
+  },
+  stances:[
+    {id:"frege",name:"Fregean: sense/reference",tilt:"sense",question:"What mode of presentation lets the reference be reached?"},
+    {id:"witt",name:"Wittgensteinian: use",tilt:"use",question:"What move does this sentence make in a form of life?"},
+    {id:"saussure",name:"Saussurean: value",tilt:"opposition",question:"Which differences make these signs count as these signs?"},
+    {id:"peirce",name:"Peircean: semiosis",tilt:"interpretant",question:"What further sign does this sign produce in a competent interpreter?"},
+    {id:"grammar",name:"Begriffsschrift: structure",tilt:"structure",question:"Which grammatical form carries the judgment and its scope?"}
+  ],
+  anchors:{
+    "a":{pos:"det",fields:["determination"],sense:"indefinite introducer of a referent",refs:["new discourse item"],opp:["the"],weight:3},
+    "an":{pos:"det",fields:["determination"],sense:"indefinite introducer of a referent",refs:["new discourse item"],opp:["the"],weight:3},
+    "the":{pos:"det",fields:["determination"],sense:"definite recovery of a referent",refs:["recoverable item"],opp:["a"],weight:3},
+    "every":{pos:"det",fields:["quantification"],sense:"universal sweep over a class",refs:["all members"],opp:["some","no"],weight:6},
+    "morning":{pos:"adj/n",fields:["time","appearance"],sense:"presentation by early visibility",refs:["phase","celestial observation"],opp:["evening","night"],weight:7},
+    "star":{pos:"n",fields:["astronomy","fame","guide"],sense:"distant bright object or elevated figure",refs:["planet Venus","celestial body","public figure"],opp:["ground","dark"],weight:8},
+    "evening":{pos:"adj/n",fields:["time","appearance"],sense:"presentation by late visibility",refs:["phase","celestial observation"],opp:["morning","dawn"],weight:7},
+    "witness":{pos:"n",fields:["law","perception"],sense:"one whose seeing can become testimony",refs:["person","legal role"],opp:["hearsay","accused"],weight:9},
+    "say":{pos:"v",fields:["speech act"],sense:"make public in words",refs:["utterance event"],opp:["silence","withhold"],weight:8},
+    "says":{pos:"v",fields:["speech act"],sense:"makes public in words",refs:["utterance event"],opp:["silence","withhold"],weight:8},
+    "call":{pos:"v",fields:["speech act","classification"],sense:"name or classify by utterance",refs:["naming act"],opp:["withhold","unnamed"],weight:8},
+    "name":{pos:"n/v",fields:["identity","reference"],sense:"linguistic handle for re-identification",refs:["person","label","proper name"],opp:["number","anonymous"],weight:9},
+    "border":{pos:"n",fields:["space","law","identity"],sense:"line that sorts movement into permitted and forbidden",refs:["territory edge","jurisdiction"],opp:["passage","commons"],weight:9},
+    "remember":{pos:"v",fields:["memory","record"],sense:"keep accessible as if minded",refs:["recall act","archive act"],opp:["forget","erase"],weight:8},
+    "remembers":{pos:"v",fields:["memory","record"],sense:"keeps accessible as if minded",refs:["archive act","personified system"],opp:["forgets","erases"],weight:8},
+    "forgot":{pos:"v",fields:["memory","ethics"],sense:"lost from active recall or duty",refs:["omission"],opp:["kept","recorded"],weight:7},
+    "forget":{pos:"v",fields:["memory","ethics"],sense:"lose from active recall or duty",refs:["omission"],opp:["keep","record"],weight:7},
+    "archive":{pos:"n",fields:["record","institution"],sense:"ordered memory under custody",refs:["repository","state memory"],opp:["ruin","rumor"],weight:9},
+    "burn":{pos:"v",fields:["destruction","material"],sense:"consume by fire",refs:["material loss"],opp:["preserve","cool"],weight:8},
+    "burns":{pos:"v",fields:["destruction","material"],sense:"is consumed by fire",refs:["material loss"],opp:["preserves","cools"],weight:8},
+    "index":{pos:"n",fields:["reference","Peirce","archive"],sense:"pointer ordered enough to find something absent",refs:["catalog","trace","deictic sign"],opp:["heap","noise"],weight:10},
+    "accuse":{pos:"v",fields:["law","ethics"],sense:"assign blame in an addressable form",refs:["charge","judgment"],opp:["absolve","hide"],weight:9},
+    "accuses":{pos:"v",fields:["law","ethics"],sense:"assigns blame in an addressable form",refs:["charge","judgment"],opp:["absolves","hides"],weight:9},
+    "empty":{pos:"adj",fields:["absence","capacity"],sense:"marked by missing occupant or content",refs:["vacancy"],opp:["occupied","full"],weight:7},
+    "chair":{pos:"n",fields:["furniture","office"],sense:"seat or institutional position",refs:["object","office"],opp:["throne","floor"],weight:8},
+    "throne":{pos:"n",fields:["sovereignty","ritual"],sense:"seat made to materialize rule",refs:["royal seat","authority"],opp:["chair","bench"],weight:9},
+    "machine":{pos:"n",fields:["automation","instrument"],sense:"rule-governed apparatus",refs:["device","system"],opp:["person","organism"],weight:8},
+    "promise":{pos:"n/v",fields:["speech act","obligation"],sense:"utterance that binds a future action when conditions hold",refs:["commitment","performative"],opp:["threat","description"],weight:10},
+    "clerk":{pos:"n",fields:["bureaucracy","record"],sense:"authorized handler of inscription",refs:["office worker"],opp:["sovereign","witness"],weight:8},
+    "believe":{pos:"v",fields:["epistemic","trust"],sense:"take as true or reliable",refs:["mental attitude"],opp:["doubt","test"],weight:8},
+    "believes":{pos:"v",fields:["epistemic","trust"],sense:"takes as true or reliable",refs:["mental attitude"],opp:["doubts","tests"],weight:8},
+    "warn":{pos:"v",fields:["speech act","risk"],sense:"mark a possible harm before it arrives",refs:["warning act"],opp:["invite","ignore"],weight:8},
+    "warning":{pos:"n",fields:["speech act","risk"],sense:"inscription or utterance that marks possible harm",refs:["notice","warning act"],opp:["invitation","silence"],weight:8},
+    "read":{pos:"v",fields:["attention","inscription"],sense:"convert marks into usable sense",refs:["reading act"],opp:["ignore","misread"],weight:7},
+    "unsettle":{pos:"v",fields:["order","disturbance"],sense:"remove from a stable arrangement",refs:["destabilizing act"],opp:["settle","stabilize"],weight:8},
+    "settle":{pos:"v",fields:["order","place"],sense:"bring to stable arrangement",refs:["resolution"],opp:["unsettle"],weight:7},
+    "it":{pos:"pron",fields:["anaphora","reference"],sense:"borrows reference from prior material",refs:["anaphoric object"],opp:["this","name"],weight:6},
+    "us":{pos:"pron",fields:["deixis","collective"],sense:"speaker's group under current utterance",refs:["speaker group"],opp:["them"],weight:7},
+    "you":{pos:"pron",fields:["deixis","address"],sense:"addressee under current utterance",refs:["hearer"],opp:["I","they"],weight:7},
+    "i":{pos:"pron",fields:["deixis","speaker"],sense:"speaker under current utterance",refs:["speaker"],opp:["you","they"],weight:7},
+    "this":{pos:"deixis",fields:["indexical","attention"],sense:"points from the speech situation",refs:["proximal object"],opp:["that","the"],weight:9},
+    "that":{pos:"deixis",fields:["indexical","distance"],sense:"points away from the immediate speaker position",refs:["distal object"],opp:["this"],weight:8},
+    "here":{pos:"adv",fields:["deixis","place"],sense:"location anchored to speech situation",refs:["speaker place"],opp:["there"],weight:7},
+    "now":{pos:"adv",fields:["deixis","time"],sense:"time anchored to speech situation",refs:["speech time"],opp:["then"],weight:7},
+    "must":{pos:"modal",fields:["modality","norm"],sense:"necessity under rule, force, or inference",refs:["obligation","logical necessity"],opp:["may","need not"],weight:10},
+    "will":{pos:"modal",fields:["modality","future"],sense:"projects predication forward or marks resolve",refs:["future commitment"],opp:["did","may not"],weight:7},
+    "may":{pos:"modal",fields:["modality","permission"],sense:"permits or marks possibility",refs:["permission","possibility"],opp:["must","cannot"],weight:8},
+    "should":{pos:"modal",fields:["modality","norm"],sense:"weak obligation or expected fit",refs:["recommendation"],opp:["must not"],weight:7},
+    "can":{pos:"modal",fields:["modality","capacity"],sense:"capacity or permission",refs:["ability","permission"],opp:["cannot"],weight:7},
+    "not":{pos:"neg",fields:["logic"],sense:"excludes a predication or move",refs:["negation operator"],opp:["is","does"],weight:10},
+    "never":{pos:"neg",fields:["logic","time"],sense:"negates across possible occasions",refs:["negative temporal quantifier"],opp:["always"],weight:9},
+    "no":{pos:"det/neg",fields:["logic","quantification"],sense:"excludes members of a class",refs:["zero quantity"],opp:["some","every"],weight:8},
+    "if":{pos:"sub",fields:["logic","condition"],sense:"opens a conditional dependency",refs:["antecedent marker"],opp:["because","although"],weight:8},
+    "unless":{pos:"sub",fields:["logic","condition"],sense:"opens a negative condition",refs:["exception marker"],opp:["if"],weight:8},
+    "when":{pos:"sub",fields:["time","condition"],sense:"binds event to occasion",refs:["temporal condition"],opp:["before","after"],weight:7},
+    "and":{pos:"conj",fields:["coordination"],sense:"joins units without ranking them",refs:["coordination"],opp:["or","but"],weight:4},
+    "but":{pos:"conj",fields:["contrast","coordination"],sense:"joins by resistance or correction",refs:["contrastive relation"],opp:["and"],weight:6},
+    "or":{pos:"conj",fields:["choice","coordination"],sense:"joins by alternative",refs:["choice relation"],opp:["and"],weight:5},
+    "is":{pos:"cop",fields:["predication","identity"],sense:"links subject to predicate or identity",refs:["copular relation"],opp:["is not"],weight:7},
+    "are":{pos:"cop",fields:["predication","identity"],sense:"links subject to predicate or identity",refs:["copular relation"],opp:["are not"],weight:7},
+    "was":{pos:"cop",fields:["predication","past"],sense:"links subject to predicate in past time",refs:["past copular relation"],opp:["was not"],weight:7},
+    "to":{pos:"prep",fields:["relation","direction"],sense:"marks direction, recipient, or infinitive relation",refs:["path","recipient"],opp:["from"],weight:5},
+    "with":{pos:"prep",fields:["relation","instrument"],sense:"marks accompaniment, instrument, or possession",refs:["association"],opp:["without"],weight:5},
+    "of":{pos:"prep",fields:["relation","genitive"],sense:"marks possession, material, or part relation",refs:["genitive relation"],opp:["outside"],weight:4},
+    "in":{pos:"prep",fields:["relation","place"],sense:"marks containment or situation",refs:["interior relation"],opp:["out"],weight:5},
+    "as":{pos:"prep",fields:["role","classification"],sense:"marks role or mode of presentation",refs:["role relation"],opp:["unlike"],weight:5}
+  },
+  suffixes:[
+    ["ability","n","capacity or condition of being able to be ","capacity",2],
+    ["able","adj","able to be ","capacity",2],
+    ["ible","adj","able to be ","capacity",2],
+    ["tion","n","act or result of ","process",2],
+    ["ment","n","result or instrument of ","process",2],
+    ["ness","n","quality of being ","quality",2],
+    ["ingly","adv","in the manner of ongoing ","manner",1],
+    ["ing","v/n","ongoing act of ","process",1],
+    ["ed","adj/v","completed or affected by ","result",1],
+    ["ly","adv","in a manner shaped by ","manner",1],
+    ["er","n","agent or instrument of ","agent",1],
+    ["s","n/v","plural or finite form of ","number",0]
+  ],
+  prefixes:[
+    ["un","negating or reversing ","inversion"],
+    ["re","again performing ","repetition"],
+    ["mis","badly or wrongly performing ","error"],
+    ["pre","before or in advance of ","time"],
+    ["post","after ","time"]
+  ],
+  cabinet:[
+    ["Frege 1879","Begriffsschrift","logical form becomes printable as scoped relation, not ornament","structure"],
+    ["Peirce 1890s","existential graphs + semiosis","marks transform under interpretation and constraint","interpretant"],
+    ["Saussure 1916","value by difference","signs gain value from opposition fields and substitution pressure","opposition"],
+    ["Wittgenstein 1953","language games","utterance force changes with practice, role, and authorized move","use"],
+    ["Modern NLP","dependency parsing + vectors","surface structure is inspectable before any opaque embedding","reference"]
+  ],
+  model:{
+    domain:{
+      venus:"Venus", witness:"Witness Ada", clerk:"Clerk Ivo", archive:"Archive house", index:"Index register",
+      border:"Border gate", chair:"Office chair", throne:"Ceremonial throne", machine:"Policy machine",
+      warning:"Written warning", name:"Filed name", promise:"Promise token", speaker:"Speaker", hearer:"Addressee",
+      us:"Speaker group", it:"Anaphoric item", file:"Case file", court:"Court"
+    },
+    constants:{
+      "morning star":"venus","evening star":"venus", star:"venus", witness:"witness", clerk:"clerk",
+      archive:"archive", index:"index", border:"border", chair:"chair", throne:"throne", machine:"machine",
+      warning:"warning", name:"name", promise:"promise", i:"speaker", you:"hearer", us:"us", it:"it",
+      this:"file", that:"border", here:"border", court:"court"
+    },
+    worlds:[
+      {
+        id:"archive",name:"Archive",note:"files survive and institutional memory is trusted",
+        access:{deontic:["law"],epistemic:["archive","court"],future:["archive","machine"],counter:["field"]},
+        unary:{
+          witness:["witness"], clerk:["clerk"], archive:["archive"], index:["index"], border:["border"],
+          chair:["chair"], throne:["throne"], machine:["machine"], warning:["warning"], name:["name"],
+          promise:["promise"], empty:["chair"], unreadable:["warning"], morning:["venus"], evening:["venus"], star:["venus"]
+        },
+        relations:{
+          remember:[["archive","name"],["border","name"],["index","name"]], forget:[["us","name"]],
+          burn:[], preserve:[["index","trace"]], accuse:[["index","us"],["warning","clerk"]],
+          say:[["witness","name"],["machine","warning"]], call:[["clerk","chair"],["speaker","chair"],["speaker","chair","chair"]],
+          believe:[["clerk","machine"],["witness","archive"]], promise:[["speaker","hearer"]],
+          name:[["warning","clerk"]], unsettle:[["warning","border"]]
+        }
+      },
+      {
+        id:"law",name:"Law",note:"authorization and prohibition dominate reference",
+        access:{deontic:["law","court"],epistemic:["court","archive"],future:["court"],counter:["ritual"]},
+        unary:{witness:["witness"], clerk:["clerk"], archive:["archive"], index:["index"], border:["border"], chair:["chair"], throne:["throne"], machine:["machine"], warning:["warning"], name:["name"], promise:["promise"], empty:["chair"], star:["venus"], morning:["venus"], evening:["venus"]},
+        relations:{
+          remember:[["archive","name"]], forget:[], burn:[], accuse:[["index","us"],["machine","office"]],
+          say:[["witness","name"],["clerk","warning"]], call:[["clerk","chair"]], believe:[["clerk","witness"]],
+          promise:[["speaker","hearer"],["promise","court"]], name:[["warning","clerk"],["notice","remedy"]], unsettle:[]
+        }
+      },
+      {
+        id:"court",name:"Court",note:"testimony is live but disputed by procedure",
+        access:{deontic:["law"],epistemic:["court","archive"],future:["court"],counter:["street"]},
+        unary:{witness:["witness"], clerk:["clerk"], archive:["archive"], index:["index"], border:["border"], chair:["chair"], throne:["throne"], machine:["machine"], warning:["warning"], name:["name"], promise:["promise"], empty:["chair"], star:["venus"], morning:["venus"], evening:["venus"]},
+        relations:{
+          remember:[["witness","name"],["archive","name"]], forget:[["clerk","name"]], burn:[],
+          accuse:[["record","clerk"],["index","us"]], say:[["witness","name"],["clerk","name"]],
+          call:[["judge","chair"]], believe:[["clerk","machine"],["juror","witness"]], promise:[["witness","court"]],
+          name:[["warning","clerk"]], unsettle:[["warning","border"]]
+        }
+      },
+      {
+        id:"field",name:"Field",note:"visible markers outrank institutional force",
+        access:{deontic:["law"],epistemic:["field"],future:["field","archive"],counter:["archive"]},
+        unary:{witness:["witness"], clerk:["clerk"], archive:["archive"], index:["index"], border:["border"], chair:["chair"], machine:["machine"], warning:["warning"], name:["name"], empty:["chair"], star:["venus"], morning:["venus"], evening:["venus"]},
+        relations:{
+          remember:[["border","name"]], forget:[["us","name"]], burn:[["archive"]], accuse:[],
+          say:[["witness","border"]], call:[["speaker","border"]], believe:[["speaker","witness"]],
+          promise:[], name:[["warning","border"]], unsettle:[["border","clerk"]]
+        }
+      },
+      {
+        id:"ritual",name:"Ritual",note:"naming changes status when the rite authorizes it",
+        access:{deontic:["ritual"],epistemic:["ritual","archive"],future:["ritual"],counter:["law"]},
+        unary:{witness:["witness"], clerk:["clerk"], archive:["archive"], index:["index"], border:["border"], chair:["chair"], throne:["chair","throne"], machine:["machine"], warning:["warning"], name:["name"], promise:["promise"], empty:["chair"], star:["venus"], morning:["venus"], evening:["venus"]},
+        relations:{
+          remember:[["chair","promise"],["border","name"]], forget:[], burn:[["candle"]],
+          accuse:[], say:[["witness","amen"],["speaker","name"]], call:[["speaker","chair"],["rite","chair"],["speaker","chair","throne"],["hearer","chair","throne"],["rite","chair","throne"]],
+          believe:[["clerk","rite"]], promise:[["speaker","rite"]], name:[["blessing","machine"]], unsettle:[]
+        }
+      },
+      {
+        id:"machine",name:"Machine",note:"events are accepted only as state transitions",
+        access:{deontic:["machine","law"],epistemic:["machine"],future:["machine"],counter:["archive"]},
+        unary:{witness:["witness"], clerk:["clerk"], archive:["archive"], index:["index"], border:["border"], chair:["chair"], machine:["machine"], warning:["warning"], name:["name"], promise:["promise"], empty:["field"], star:["venus"], morning:["venus"], evening:["venus"]},
+        relations:{
+          remember:[["machine","name"],["index","event"]], forget:[], burn:[["module"]],
+          accuse:[["machine","office"]], say:[["machine","warning"],["log","fault"]],
+          call:[], believe:[["clerk","machine"]], promise:[["token","engine"]], name:[], unsettle:[["fault","border"]]
+        }
+      },
+      {
+        id:"street",name:"Street",note:"common speech contests official reference",
+        access:{deontic:["law"],epistemic:["street","field"],future:["street"],counter:["court"]},
+        unary:{witness:["witness"], clerk:["clerk"], archive:["archive"], index:["index"], border:["border"], chair:["chair"], throne:["office"], machine:["machine"], warning:["warning"], name:["name"], promise:["promise"], empty:["chair"], star:["venus"], morning:["venus"], evening:["venus"]},
+        relations:{
+          remember:[["witness","name"],["border","passer"]], forget:[["clerk","name"]], burn:[["archive"]],
+          accuse:[["line","office"]], say:[["machine","no"],["witness","copy"]], call:[["we","office"],["speaker","chair"],["we","office","throne"]],
+          believe:[["us","witness"]], promise:[["office","us"]], name:[], unsettle:[["warning","chair"]]
+        }
+      }
+    ]
+  }
+};
+
+const $ = id => document.getElementById(id);
+let state = {example:0,inverted:false,parse:0,genres:["archive","law","ritual","machine"],hoverWord:null};
+let CORPUS = [];
+let corpusCache = new Map();
+
+function tokenize(text){
+  const out = [];
+  (text.match(/[A-Za-z']+|[.,;:!?()"]/g)||[]).forEach(raw=>{
+    if(/^[A-Za-z']+$/.test(raw)) out.push({raw,base:raw.toLowerCase().replace(/'s$/,""),i:out.length});
+  });
+  return out;
+}
+function makeCorpus(){
+  const swaps = [
+    ["archive","ledger","record"],["clerk","scribe","registrar"],["witness","observer","juror"],
+    ["warning","notice","signal"],["border","threshold","fence"],["promise","vow","undertaking"],
+    ["chair","seat","office"],["throne","crown","authority"],["machine","system","engine"],
+    ["name","mark","signature"],["remember","record","keep"],["say","state","declare"],
+    ["burns","fails","vanishes"],["empty","vacant","missing"],["index","catalog","pointer"]
+  ];
+  const by = new Map(swaps.flatMap(r=>r.map(x=>[x,r])));
+  const out = [];
+  Object.entries(DATA.corpusTemplates).forEach(([genre,rows])=>{
+    rows.forEach((text,i)=>{
+      out.push({genre,text});
+      const words = text.split(/\s+/);
+      const idx = words.map((w,j)=>by.has(w.toLowerCase())?j:-1).filter(j=>j>=0).slice(0,3);
+      idx.forEach((j,k)=>{
+        const alt = by.get(words[j].toLowerCase())[(k+i+1)%by.get(words[j].toLowerCase()).length];
+        const copy = words.slice(); copy[j]=alt; out.push({genre,text:copy.join(" ")});
+      });
+      if(idx.length>1){
+        const copy = words.slice();
+        idx.slice(0,2).forEach((j,k)=>copy[j]=by.get(words[j].toLowerCase())[(i+k+2)%by.get(words[j].toLowerCase()).length]);
+        out.push({genre,text:copy.join(" ")});
+      }
+    });
+  });
+  return out;
+}
+function corpusTokens(text){
+  return tokenize(text).map(t=>t.base).filter(w=>!["the","a","an","and","or","but","to","of","in","with","by","for","as","is","are","was","be"].includes(w));
+}
+function corpusKey(genres){return genres.slice().sort().join("|")}
+function corpusModel(genres){
+  const key = corpusKey(genres);
+  if(corpusCache.has(key)) return corpusCache.get(key);
+  const docs = CORPUS.filter(d=>genres.includes(d.genre));
+  const freq = {}, pairs = {}, totals = {};
+  docs.forEach(d=>{
+    const w = corpusTokens(d.text);
+    w.forEach(x=>freq[x]=(freq[x]||0)+1);
+    for(let i=0;i<w.length;i++){
+      totals[w[i]]=(totals[w[i]]||0)+1;
+      for(let j=Math.max(0,i-3);j<=Math.min(w.length-1,i+3);j++){
+        if(i===j || w[i]===w[j]) continue;
+        const k=w[i]+"|"+w[j]; pairs[k]=(pairs[k]||0)+1;
+      }
+    }
+  });
+  const vocab = Object.keys(freq).filter(w=>freq[w]>1).sort((a,b)=>freq[b]-freq[a]||a.localeCompare(b)).slice(0,150);
+  const vset = new Set(vocab), totalPairs = Object.values(pairs).reduce((a,b)=>a+b,0)||1;
+  const vectors = {};
+  vocab.forEach(w=>vectors[w]={});
+  Object.entries(pairs).forEach(([k,c])=>{
+    const [a,b]=k.split("|"); if(!vset.has(a)||!vset.has(b)) return;
+    const expected = (totals[a]||1)*(totals[b]||1)/totalPairs;
+    const ppmi = Math.max(0,Math.log2(c/Math.max(.0001,expected)));
+    if(ppmi>0) vectors[a][b]=ppmi;
+  });
+  const norms = {}; vocab.forEach(w=>norms[w]=Math.sqrt(Object.values(vectors[w]).reduce((s,x)=>s+x*x,0))||1);
+  const cos = (a,b)=>{
+    if(!vectors[a]||!vectors[b]) return 0;
+    let s=0, va=vectors[a], vb=vectors[b], small=Object.keys(va).length<Object.keys(vb).length?va:vb, other=small===va?vb:va;
+    Object.entries(small).forEach(([k,v])=>{if(other[k])s+=v*other[k];});
+    return s/(norms[a]*norms[b]);
+  };
+  const n=vocab.length, mat=Array.from({length:n},()=>Array(n).fill(0));
+  for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){ const c=cos(vocab[i],vocab[j]); mat[i][j]=mat[j][i]=c; }
+  const pc1 = powerVector(mat,null), pc2 = powerVector(mat,pc1);
+  const coords = {};
+  vocab.forEach((w,i)=>coords[w]={x:pc1[i]||0,y:pc2[i]||0,f:freq[w]||1});
+  normalizeCoords(coords);
+  const model = {genres,docs,vocab,freq,vectors,cos,coords};
+  corpusCache.set(key,model);
+  return model;
+}
+function powerVector(mat,orth){
+  const n=mat.length; let v=Array.from({length:n},(_,i)=>Math.sin((i+1)*12.9898));
+  for(let it=0;it<42;it++){
+    let nv=Array(n).fill(0);
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) nv[i]+=mat[i][j]*v[j];
+    if(orth){ const dot=nv.reduce((s,x,i)=>s+x*orth[i],0); nv=nv.map((x,i)=>x-dot*orth[i]); }
+    const norm=Math.sqrt(nv.reduce((s,x)=>s+x*x,0))||1; v=nv.map(x=>x/norm);
+  }
+  return v;
+}
+function normalizeCoords(coords){
+  const xs=Object.values(coords).map(p=>p.x), ys=Object.values(coords).map(p=>p.y);
+  const minx=Math.min(...xs), maxx=Math.max(...xs), miny=Math.min(...ys), maxy=Math.max(...ys);
+  Object.values(coords).forEach(p=>{p.x=(p.x-minx)/Math.max(.0001,maxx-minx); p.y=(p.y-miny)/Math.max(.0001,maxy-miny);});
+}
+function neighbors(model,word,n=6){
+  return model.vocab.filter(w=>w!==word).map(w=>[w,model.cos(word,w)]).filter(x=>x[1]>.01).sort((a,b)=>b[1]-a[1]).slice(0,n);
+}
+function oppositionFidelity(model,t){
+  if(!t.info.opp.length || !model.vocab.includes(t.base)) return {label:"silent",why:"no corpus vector"};
+  const near = neighbors(model,t.base,10).map(x=>x[0]);
+  const opp = t.info.opp.map(x=>x.toLowerCase());
+  const hit = near.find(w=>opp.includes(w));
+  if(hit) return {label:"conflict",why:`curated opposite "${hit}" is distributionally near`};
+  const linked = near.some(w=>(DATA.anchors[w]?.opp||[]).map(x=>x.toLowerCase()).includes(t.base));
+  return linked ? {label:"agree",why:"nearest field points back by curated contrast"} : {label:"silent",why:"nearest field neither confirms nor refutes"};
+}
+function genreModel(id){return corpusModel([id])}
+function driftFor(word){
+  return state.genres.map(g=>({g,p:genreModel(g).coords[word]})).filter(x=>x.p);
+}
+function cloneInfo(x){return {pos:x.pos,fields:x.fields.slice(),sense:x.sense,refs:x.refs.slice(),opp:x.opp.slice(),weight:x.weight,source:x.source||"anchor"}}
+function lookup(base){
+  if(DATA.anchors[base]) return cloneInfo(DATA.anchors[base]);
+  for(const [pre,gloss,field] of DATA.prefixes){
+    if(base.startsWith(pre) && base.length>pre.length+2){
+      const root = base.slice(pre.length), r = lookupRoot(root);
+      if(r) return derive(base,r,{kind:"prefix",affix:pre,gloss,field});
+    }
+  }
+  for(const [suf,pos,gloss,field,bonus] of DATA.suffixes){
+    if(base.endsWith(suf) && base.length>suf.length+2){
+      const stem = base.slice(0,-suf.length), r = lookupRoot(stem) || lookupRoot(stem+"e") || lookupRoot(stem.replace(/(.)\1$/,"$1"));
+      if(r) return derive(base,r,{kind:"suffix",affix:suf,pos,gloss,field,bonus});
+    }
+  }
+  if(/^[A-Z]/.test(base)) return unknown(base,"proper?");
+  return unknown(base,"term");
+}
+function lookupRoot(root){ return DATA.anchors[root] ? cloneInfo(DATA.anchors[root]) : null; }
+function derive(word,root,rule){
+  const neg = rule.kind==="prefix" && ["un","mis"].includes(rule.affix);
+  const fields = Array.from(new Set([rule.field].concat(root.fields)));
+  const opp = neg ? [root.raw||root.sense.split(" ")[0]].concat(root.opp).slice(0,4) : root.opp.slice(0,4);
+  return {
+    pos:rule.pos || root.pos, fields,
+    sense:(rule.gloss + root.sense).replace(/\s+/g," "),
+    refs:root.refs.slice(0,2).concat(rule.field+" form"),
+    opp:opp.length?opp:["unmarked contrast"],
+    weight:clamp(root.weight + (rule.bonus||0) + (neg?1:0),3,10),
+    source:`derived ${word} = ${rule.affix} + ${root.source==="anchor"?"anchor":root.source}`
+  };
+}
+function unknown(w,pos){
+  return {pos,fields:["unregistered"],sense:"unregistered material; no derivation rule matched",refs:["unknown referent"],opp:["silence"],weight:3,source:"fallback"};
+}
+function enrich(text){return tokenize(text).map(t=>({...t,info:lookup(t.base)}));}
+function isN(t){return t && (/^n(\/|$)/.test(t.info.pos) || /pron|deixis/.test(t.info.pos))}
+function isV(t){return t && /(v|cop|modal)/.test(t.info.pos)}
+function isLexV(t){return t && /(v|cop)/.test(t.info.pos)}
+function isPrep(t){return t && t.info.pos==="prep"}
+function isDet(t){return t && /(det|deixis)/.test(t.info.pos)}
+function isAdj(t){return t && /(adj|adj\/n)/.test(t.info.pos)}
+function isConj(t){return t && t.info.pos==="conj"}
+
+function parseTokens(toks){
+  if(!toks.length) return [emptyParse()];
+  const parses = [];
+  const base = buildParse(toks,{ppAttach:"verb",coord:"split"});
+  parses.push(base);
+  if(toks.some(t=>isPrep(t))) parses.push(buildParse(toks,{ppAttach:"noun",coord:"split"}));
+  if(toks.some(t=>["and","but","or"].includes(t.base))) parses.push(buildParse(toks,{ppAttach:"verb",coord:"chain"}));
+  if(toks.some(t=>t.base==="not")) parses.push(buildParse(toks,{ppAttach:"verb",coord:"split",negWide:true}));
+  const seen = new Set();
+  return parses.filter(p=>{
+    const sig = p.deps.map(d=>`${d.type}:${d.from}->${d.to}`).sort().join("|");
+    if(seen.has(sig)) return false; seen.add(sig); return true;
+  }).sort((a,b)=>b.score-a.score).slice(0,4);
+}
+function emptyParse(){return {name:"empty",score:0,root:-1,deps:[],phrases:[],operators:[],summary:"no material",tree:"S(empty)"}}
+function buildParse(toks,opt){
+  const deps=[], phrases=[], operators=[];
+  const add=(type,from,to,note)=>{ if(from>=0 && to>=0 && from!==to) deps.push({type,from,to,note:note||""}); };
+  let root = findRoot(toks);
+  const clauseBreaks = toks.map((t,i)=>["and","but","or"].includes(t.base)?i:-1).filter(i=>i>=0);
+  const ifAt = toks.findIndex(t=>t.base==="if"||t.base==="unless"||t.base==="when");
+  let consequentStart = -1;
+  if(ifAt>=0){
+    consequentStart = findConsequent(toks,ifAt);
+    if(consequentStart>=0) root = findRoot(toks.slice(consequentStart)) + consequentStart;
+    const antRoot = findRoot(toks.slice(ifAt+1,consequentStart<0?toks.length:consequentStart));
+    const ant = antRoot>=0 ? antRoot + ifAt + 1 : ifAt;
+    add("mark",ant,ifAt,"conditional marker");
+    if(consequentStart>=0){ const conRoot = findRoot(toks.slice(consequentStart)); add("condition",conRoot+consequentStart,ant,"antecedent licenses consequent"); }
+    operators.push({name:"condition",trigger:toks[ifAt].raw,scope:spanText(toks,ifAt,consequentStart<0?toks.length:consequentStart),effect:"antecedent clause binds a consequent rather than merely adding a keyword"});
+    phrases.push({type:"Antecedent",head:ant,span:[ifAt,consequentStart<0?toks.length-1:consequentStart-1],note:"conditional plate"});
+  }
+  toks.forEach((t,i)=>{
+    if(isDet(t)){ const h = nextIndex(toks,i,x=>isN(x)||isAdj(x)); add("det",h,i,"determination"); }
+    if(isAdj(t)){ const h = nextIndex(toks,i,x=>isN(x)); add("amod",h,i,"value modifier"); }
+    if(t.info.pos==="modal"){ const h = nextIndex(toks,i,isLexV); add("aux",h,i,"modal scope"); operators.push({name:"modality",trigger:t.raw,scope:scopeFrom(toks,h,opt.negWide),effect:"modal auxiliary takes propositional scope"}); }
+    if(t.info.pos==="neg"){ const h = nextIndex(toks,i,isLexV) || prevIndex(toks,i,isLexV); add("neg",h,i,opt.negWide?"wide negation over predicate frame":"negation scopes over nearest predicate"); operators.push({name:"negation",trigger:t.raw,scope:scopeFrom(toks,h,opt.negWide),effect:opt.negWide?"wide propositional denial":"local predicate denial"}); }
+    if(isPrep(t)){
+      const obj = nextIndex(toks,i,isN);
+      const prevN = prevIndex(toks,i,isN), prevV = prevIndex(toks,i,isLexV);
+      const head = opt.ppAttach==="noun" && prevN>=0 ? prevN : (prevV>=0 ? prevV : prevN);
+      add("prep",head,i,opt.ppAttach==="noun"?"nominal attachment":"verbal attachment");
+      add("pobj",i,obj,"prepositional object");
+      phrases.push({type:"PP",head,span:[i,obj],note:`${t.raw} attaches to ${toks[head]?.raw||"?"}`});
+    }
+    if(isConj(t)){
+      const left = prevIndex(toks,i,x=>isLexV(x)||isN(x));
+      const right = nextIndex(toks,i,x=>isLexV(x)||isN(x));
+      add(opt.coord==="chain"?"conj-chain":"conj",left,right,`${t.raw} coordination`);
+      add("cc",right,t.i,"coordinator");
+      operators.push({name:"coordination",trigger:t.raw,scope:spanText(toks,Math.max(0,left-2),Math.min(toks.length,right+3)),effect:opt.coord==="chain"?"second unit chained to first head":"two units kept as coordinated alternatives"});
+    }
+    if(["say","says","call","name","names","promise"].includes(t.base)){
+      const obj = nextIndex(toks,i,x=>isN(x)||x.info.pos==="pron");
+      if(obj>=0) add("speech-object",i,obj,"mentioned or performed object");
+      operators.push({name:"quotation/mention",trigger:t.raw,scope:scopeFrom(toks,i,false),effect:"speech verb can turn following material into an object of mention"});
+    }
+    if(["this","that","here","now","you","i","us","it"].includes(t.base)){
+      operators.push({name:t.base==="it"?"anaphora":"deixis",trigger:t.raw,scope:t.raw,effect:t.base==="it"?"reference borrowed from prior discourse or nearby NP":"reference requires speech situation"});
+    }
+    if(t.info.fields.includes("law")||t.info.fields.includes("bureaucracy")||t.info.fields.includes("institution")){
+      operators.push({name:"institution",trigger:t.raw,scope:npAround(toks,i),effect:"role-bearing term changes force and admissible reference"});
+    }
+    if(["remembers","burns","throne","machine","border"].includes(t.base)){
+      operators.push({name:"metaphor",trigger:t.raw,scope:npAround(toks,i),effect:"field transfer creates nonliteral structural pressure"});
+    }
+  });
+  for(let i=0;i<toks.length;i++){
+    if(isLexV(toks[i])){
+      const subj = prevIndex(toks,i,isN), obj = nextIndex(toks,i,isN);
+      add("nsubj",i,subj,"subject of predication");
+      if(obj>=0 && !["is","are","was"].includes(toks[i].base)) add("obj",i,obj,"object/complement");
+      if(["is","are","was"].includes(toks[i].base) && obj>=0) add("xcomp",i,obj,"copular predicate or identity complement");
+      phrases.push({type:"VP",head:i,span:[Math.max(0,subj),Math.min(toks.length-1,obj>=0?obj:i+1)],note:verbFrame(toks,i,subj,obj)});
+    }
+  }
+  collectNPs(toks).forEach(p=>phrases.push(p));
+  const score = 60 + deps.length*3 + phrases.length*2 - (opt.ppAttach==="noun"?2:0) - (opt.negWide?3:0);
+  return {
+    name:(opt.ppAttach==="noun"?"nominal PP":"verbal PP") + (opt.negWide?" / wide neg":"") + (opt.coord==="chain"?" / chained coord":""),
+    score,root,deps,phrases,operators:dedupeOps(operators),
+    summary:summarizeParse(toks,root,deps,opt),
+    tree:treeString(toks,root,deps)
+  };
+}
+function findRoot(toks){
+  let r = toks.findIndex(t=>isLexV(t) && !["is","are","was"].includes(t.base));
+  if(r<0) r = toks.findIndex(t=>isLexV(t));
+  if(r<0) r = toks.findIndex(isV);
+  return r>=0?r:0;
+}
+function findConsequent(toks,ifAt){
+  const comma = toks.findIndex((t,i)=>i>ifAt && t.raw===",");
+  if(comma>=0) return comma+1;
+  const then = toks.findIndex((t,i)=>i>ifAt && t.base==="then");
+  if(then>=0) return then+1;
+  const firstV = nextIndex(toks,ifAt,isLexV);
+  if(firstV<0) return -1;
+  for(let i=firstV+1;i<toks.length;i++){
+    if(isLexV(toks[i])){
+      const subj = prevIndex(toks,i,isN);
+      if(subj>firstV) return subj;
+    }
+  }
+  return -1;
+}
+function nextIndex(toks,i,pred){for(let j=i+1;j<toks.length;j++) if(pred(toks[j],j)) return j; return -1}
+function prevIndex(toks,i,pred){for(let j=i-1;j>=0;j--) if(pred(toks[j],j)) return j; return -1}
+function collectNPs(toks){
+  const out=[]; let i=0;
+  while(i<toks.length){
+    const start=i;
+    while(i<toks.length && (isDet(toks[i])||isAdj(toks[i]))) i++;
+    if(i<toks.length && isN(toks[i]) && i>start) out.push({type:"NP",head:i,span:[start,i],note:"determined nominal phrase"});
+    i++;
+  }
+  return out;
+}
+function scopeFrom(toks,h,wide){
+  if(h<0) return "unattached scope";
+  const s = wide ? Math.max(0,prevIndex(toks,h,isN)) : h;
+  const e = wide ? Math.min(toks.length-1,nextIndex(toks,h,isConj)>0?nextIndex(toks,h,isConj)-1:h+3) : Math.min(toks.length-1,h+2);
+  return spanText(toks,s<0?h:s,e+1);
+}
+function npAround(toks,i){return spanText(toks,Math.max(0,i-2),Math.min(toks.length,i+3))}
+function spanText(toks,a,b){return toks.slice(clamp(a,0,toks.length),clamp(b,0,toks.length)).map(t=>t.raw).join(" ")}
+function verbFrame(toks,i,subj,obj){return `${subj>=0?toks[subj].raw:"?"} -> ${toks[i].raw}${obj>=0?" -> "+toks[obj].raw:""}`}
+function dedupeOps(ops){const s=new Set();return ops.filter(o=>{const k=o.name+o.trigger+o.scope;if(s.has(k))return false;s.add(k);return true})}
+function summarizeParse(toks,root,deps,opt){
+  const subs = deps.filter(d=>d.type==="nsubj").map(d=>toks[d.to]?.raw).join(", ") || "unfixed subject";
+  const objs = deps.filter(d=>["obj","xcomp","speech-object"].includes(d.type)).map(d=>toks[d.to]?.raw).join(", ") || "unfixed object";
+  return `${toks[root]?.raw||"no root"} governs subject ${subs} and complement ${objs}; ${opt.ppAttach==="noun"?"PPs bind to nearby nouns":"PPs bind to predicate heads"}.`;
+}
+function treeString(toks,root,deps){
+  const kids = deps.filter(d=>d.from===root).map(d=>`${d.type}:${toks[d.to]?.raw}`).join(" ");
+  return `S(ROOT ${toks[root]?.raw||"?"} ${kids})`;
+}
+
+function compileLF(toks,parse){
+  if(!toks.length) return {type:"undef",why:"no utterance"};
+  const condition = parse.deps.find(d=>d.type==="condition");
+  let formula;
+  if(condition){
+    const marker = parse.deps.find(d=>d.type==="mark");
+    const antHead = condition.to, conHead = condition.from;
+    const conStart = prevIndexIn(toks,conHead,isN,0,conHead+1);
+    const antEnd = conStart>=0 ? conStart : conHead;
+    const ant = compileClause(toks,parse,antHead,marker ? marker.to : 0, antEnd);
+    const con = compileClause(toks,parse,conHead,antEnd,toks.length);
+    formula = {type:"implies",left:ant,right:con};
+  }else{
+    const conjuncts = splitConjuncts(toks,parse).map(([s,e])=>compileClause(toks,parse,findRoot(toks.slice(s,e))+s,s,e)).filter(Boolean);
+    formula = conjuncts.length>1 ? conjuncts.reduce((left,right)=>({type:"and",left,right})) : compileClause(toks,parse,parse.root,0,toks.length);
+  }
+  return formula || {type:"undef",why:"no compiled predicate"};
+}
+function splitConjuncts(toks,parse){
+  const cuts = toks.map((t,i)=>isConj(t)?i:-1).filter(i=>i>=0);
+  if(!cuts.length) return [[0,toks.length]];
+  const out=[]; let start=0;
+  cuts.forEach(c=>{if(c>start) out.push([start,c]); start=c+1;});
+  if(start<toks.length) out.push([start,toks.length]);
+  return out.filter(x=>x[1]>x[0]);
+}
+function compileClause(toks,parse,root,start,end){
+  if(root<start || root>=end || !toks[root]) root = findRoot(toks.slice(start,end))+start;
+  const rootTok = toks[root];
+  if(!rootTok) return {type:"undef",why:"no root"};
+  const subjDep = nearestDep(parse,"nsubj",root,start,end);
+  const objDep = parse.deps.find(d=>["obj","xcomp","speech-object"].includes(d.type) && d.from===root && d.to>=start && d.to<end);
+  const subj = termFor(toks,subjDep?.to ?? prevIndexIn(toks,root,isN,start,end));
+  const obj = objDep ? termFor(toks,objDep.to) : null;
+  let body;
+  if(["is","are","was"].includes(rootTok.base) && subj && obj){
+    body = likelyIdentity(toks,subjDep?.to,objDep.to) ? {type:"eq",left:subj,right:obj} : {type:"atom",pred:obj.name,args:[subj]};
+  }else if(subj && obj){
+    const classObj = ["call","called"].includes(rootTok.base) ? termFor(toks,nextIndexIn(toks,objDep.to,isN,objDep.to+1,end)) : null;
+    body = {type:"atom",pred:predicateName(rootTok.base),args:classObj?[subj,obj,classObj]:[subj,obj]};
+  }else if(subj){
+    body = {type:"atom",pred:predicateName(rootTok.base),args:[subj]};
+  }else{
+    body = {type:"atom",pred:predicateName(rootTok.base),args:obj?[obj]:[]};
+  }
+  const localNeg = parse.deps.find(d=>d.type==="neg" && d.from===root && d.to>=start && d.to<end);
+  if(localNeg) body = {type:"not",body};
+  const localModal = parse.deps.find(d=>d.type==="aux" && d.from===root && d.to>=start && d.to<end);
+  if(localModal){
+    const flavor = modalFlavor(toks[localModal.to]?.base);
+    body = {type:"modal",mode:flavor,op:toks[localModal.to]?.base==="may"?"◇":"□",body};
+  }
+  const q = quantifierFor(toks,subjDep?.to ?? -1,start);
+  if(q && subj){
+    const v = {type:"var",name:"x"};
+    body = replaceTerm(body,subj,v);
+    const restrict = {type:"atom",pred:predicateName(subj.name),args:[v]};
+    if(q==="every") body = {type:"quant",q:"∀",v:"x",restrict,body};
+    if(q==="no") body = {type:"not",body:{type:"quant",q:"∃",v:"x",restrict,body}};
+    if(q==="some" || q==="a" || q==="an") body = {type:"quant",q:"∃",v:"x",restrict,body};
+  }
+  return body;
+}
+function nearestDep(parse,type,root,start,end){
+  return parse.deps.find(d=>d.type===type && d.from===root && d.to>=start && d.to<end);
+}
+function prevIndexIn(toks,i,pred,start,end){for(let j=i-1;j>=start;j--) if(j<end && pred(toks[j],j)) return j; return -1}
+function nextIndexIn(toks,i,pred,start,end){for(let j=Math.max(i+1,start);j<end;j++) if(pred(toks[j],j)) return j; return -1}
+function termFor(toks,i){
+  if(i<0 || !toks[i]) return null;
+  const multi = multiName(toks,i);
+  return {type:"const",name:multi || toks[i].base,raw:toks[i].raw};
+}
+function multiName(toks,i){
+  const pairs = [["morning","star"],["evening","star"]];
+  for(const [a,b] of pairs){
+    if(toks[i]?.base===b && toks[i-1]?.base===a) return `${a} ${b}`;
+    if(toks[i]?.base===a && toks[i+1]?.base===b) return `${a} ${b}`;
+  }
+  return "";
+}
+function predicateName(base){
+  const map = {remembers:"remember",forgot:"forget",forgets:"forget",burns:"burn",accuses:"accuse",says:"say",names:"name",believes:"believe",unsettles:"unsettle",called:"call",records:"remember",preserves:"preserve"};
+  return map[base] || base;
+}
+function quantifierFor(toks,head,start){
+  if(head<0) return "";
+  for(let i=head-1;i>=Math.max(start,head-3);i--){
+    if(["every","no","some","a","an"].includes(toks[i]?.base)) return toks[i].base;
+  }
+  return "";
+}
+function likelyIdentity(toks,left,right){
+  const l = multiName(toks,left) || toks[left]?.base, r = multiName(toks,right) || toks[right]?.base;
+  return l===r || ["star","morning star","evening star"].includes(l) && ["star","morning star","evening star"].includes(r);
+}
+function modalFlavor(base){
+  if(base==="must" || base==="should") return "deontic";
+  if(base==="may" || base==="can") return "epistemic";
+  if(base==="will") return "future";
+  return "epistemic";
+}
+function containsLocalNeg(f){
+  return f && f.type==="not" && f.body && f.body.type==="atom";
+}
+function replaceTerm(f,from,to){
+  if(!f || typeof f!=="object") return f;
+  if(f.type==="const" && f.name===from.name) return to;
+  if(f.args) return {...f,args:f.args.map(a=>replaceTerm(a,from,to))};
+  if(f.left || f.right || f.body || f.restrict) return {...f,left:replaceTerm(f.left,from,to),right:replaceTerm(f.right,from,to),body:replaceTerm(f.body,from,to),restrict:replaceTerm(f.restrict,from,to)};
+  return f;
+}
+function evalLF(f,world,env={}){
+  if(!f) return null;
+  if(f.type==="undef") return null;
+  if(f.type==="atom"){
+    const args = f.args.map(a=>resolveTerm(a,env));
+    if(args.some(a=>!a)) return null;
+    if(args.length===1){
+      const ext = world.unary[f.pred];
+      if(!ext) return null;
+      return ext.includes(args[0]);
+    }
+    const rel = world.relations[f.pred];
+    if(!rel) return null;
+    return rel.some(row=>row.length===args.length && row.every((x,i)=>x===args[i]));
+  }
+  if(f.type==="eq"){
+    const l=resolveTerm(f.left,env), r=resolveTerm(f.right,env);
+    return l && r ? l===r : null;
+  }
+  if(f.type==="not"){
+    const v=evalLF(f.body,world,env);
+    return v==null ? null : !v;
+  }
+  if(f.type==="and") return logicAnd(evalLF(f.left,world,env),evalLF(f.right,world,env));
+  if(f.type==="implies"){
+    const l=evalLF(f.left,world,env), r=evalLF(f.right,world,env);
+    if(l===false) return true;
+    if(l===true) return r;
+    return r===true ? true : null;
+  }
+  if(f.type==="modal"){
+    const ids = world.access[f.mode] || [];
+    const worlds = ids.map(id=>DATA.model.worlds.find(w=>w.id===id)).filter(Boolean);
+    if(!worlds.length) return null;
+    const vals = worlds.map(w=>evalLF(f.body,w,env));
+    if(f.op==="□"){
+      if(vals.every(v=>v===true)) return true;
+      if(vals.some(v=>v===false)) return false;
+      return null;
+    }
+    if(vals.some(v=>v===true)) return true;
+    if(vals.every(v=>v===false)) return false;
+    return null;
+  }
+  if(f.type==="quant"){
+    const vals = Object.keys(DATA.model.domain).map(id=>{
+      const next = {...env,[f.v]:id};
+      const r = evalLF(f.restrict,world,next);
+      if(r!==true) return f.q==="∀" ? true : false;
+      return evalLF(f.body,world,next);
+    });
+    if(f.q==="∀"){
+      if(vals.some(v=>v===false)) return false;
+      if(vals.every(v=>v===true)) return true;
+      return null;
+    }
+    if(vals.some(v=>v===true)) return true;
+    if(vals.every(v=>v===false)) return false;
+    return null;
+  }
+  return null;
+}
+function resolveTerm(t,env){
+  if(!t) return null;
+  if(t.type==="var") return env[t.name] || null;
+  return DATA.model.constants[t.name] || t.name;
+}
+function logicAnd(a,b){
+  if(a===false || b===false) return false;
+  if(a===true && b===true) return true;
+  return null;
+}
+function truthMark(v){return v===true?"✓":v===false?"✗":"—"}
+function truthClass(v){return v===true?"truth-true":v===false?"truth-false":"truth-undef"}
+function formulaText(f){
+  if(!f) return "∅";
+  if(f.type==="undef") return "⊥?";
+  if(f.type==="atom") return `${f.pred}(${f.args.map(termText).join(", ")})`;
+  if(f.type==="eq") return `${termText(f.left)} = ${termText(f.right)}`;
+  if(f.type==="not") return `¬${paren(f.body)}`;
+  if(f.type==="and") return `${paren(f.left)} ∧ ${paren(f.right)}`;
+  if(f.type==="implies") return `${paren(f.left)} → ${paren(f.right)}`;
+  if(f.type==="modal") return `${f.op}${subscript(f.mode)} ${paren(f.body)}`;
+  if(f.type==="quant") return `${f.q}${f.v}[${formulaText(f.restrict)}] ${paren(f.body)}`;
+  return "?";
+}
+function paren(f){return f && ["atom","eq","quant","modal"].includes(f.type) ? formulaText(f) : `(${formulaText(f)})`}
+function termText(t){return t?.type==="var" ? t.name : String(t?.name||"?").replace(/\s+/g,"_")}
+function subscript(s){return `{${s.slice(0,3)}}`}
+function compareTruths(a,b){
+  let entails=true, contradicts=true, breaker="";
+  DATA.model.worlds.forEach(w=>{
+    const av=evalLF(a,w), bv=evalLF(b,w);
+    if(av===true && bv!==true){entails=false; if(!breaker) breaker=w.name;}
+    if(!(av===true && bv===false) && !(av===false && bv===true)) contradicts=false;
+  });
+  if(entails) return "ENTAILS across every defined true case.";
+  if(contradicts) return "CONTRADICTS across the shared worlds.";
+  return `INDEPENDENT; ${breaker || "some undefined world"} breaks entailment.`;
+}
+
+function analyze(){
+  const text = $("utterance").value.trim();
+  const toks = enrich(text);
+  const parses = parseTokens(toks);
+  state.parse = clamp(state.parse,0,parses.length-1);
+  const parse = parses[state.parse] || parses[0];
+  const ctx = DATA.contexts.find(c=>c.id===$("context").value) || DATA.contexts[0];
+  const stance = DATA.stances.find(s=>s.id===$("stance").value) || DATA.stances[0];
+  const vals = {modality:+$("modality").value,deixis:+$("deixis").value,institution:+$("institution").value,metaphor:+$("metaphor").value};
+  const fields = {};
+  toks.forEach(t=>t.info.fields.forEach(f=>fields[f]=(fields[f]||0)+1));
+  const registered = toks.filter(t=>t.info.source!=="fallback").length;
+  const derived = toks.filter(t=>String(t.info.source).startsWith("derived")).length;
+  const scores = {sense:18,reference:16,use:14,opposition:12,interpretant:15,deixis:0,modality:0,institution:0,metaphor:0,structure:12};
+  toks.forEach(t=>{
+    scores.sense += t.info.weight + (t.info.source!=="fallback"?2:0);
+    scores.reference += t.info.refs.length*4 + (isN(t)?3:0);
+    scores.opposition += t.info.opp.length*4;
+    if(isLexV(t)||t.info.pos==="modal") scores.use += 5;
+    if(t.info.fields.includes("unregistered")) scores.sense -= 2;
+  });
+  parse.deps.forEach(d=>{scores.structure+=5; if(["nsubj","obj","xcomp"].includes(d.type)) scores.reference+=3; if(["neg","condition","aux"].includes(d.type)) scores.use+=4;});
+  parse.operators.forEach(o=>{scores[o.name]=(scores[o.name]||0)+14; if(o.name==="quotation/mention") scores.interpretant+=10; if(o.name==="condition") scores.modality+=8;});
+  scores.modality += vals.modality/3; scores.deixis += vals.deixis/3; scores.institution += vals.institution/3; scores.metaphor += vals.metaphor/3;
+  Object.entries(ctx.bias).forEach(([k,v])=>scores[k]=(scores[k]||0)+v);
+  scores[stance.tilt]=(scores[stance.tilt]||0)+22;
+  scores.registration = Math.round(100*registered/Math.max(1,toks.length));
+  scores.derivation = Math.round(100*derived/Math.max(1,toks.length));
+  return {text,toks,parses,parse,ctx,stance,vals,fields,scores};
+}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
+function score(a,k){return Math.round(clamp(a.scores[k]||0,0,100))}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+
+function render(){
+  const a = analyze();
+  $("plateTitle").textContent = a.text || "empty plate";
+  const cm = corpusModel(state.genres);
+  renderMetrics(a); renderParses(a); renderTokens(a); renderDeps(a); renderLedger(a); renderTriad(a); renderOppositions(a,cm); renderCorpus(a,cm); renderJudgment(a); renderTranspositions(a); renderDiagnostics(a); renderReadings(a); renderCabinet(a); drawLoom(a);
+}
+function renderMetrics(a){
+  const keys = [["structure","Structure"],["sense","Sense"],["reference","Reference"],["use","Use"],["opposition","Value"],["interpretant","Semiosis"],["registration","Lexicon"]];
+  $("metrics").innerHTML = keys.map(([k,l])=>`<div class="metric"><b>${score(a,k)}</b><span>${l}</span></div>`).join("");
+}
+function renderParses(a){
+  $("parseOptions").innerHTML = a.parses.map((p,i)=>`<button class="parse-option ${i===state.parse?"active":""}" data-i="${i}"><b>P${i+1}</b><span>${esc(p.name)}<br><span class="tiny">${esc(p.summary)}</span></span><code>${p.score}</code></button>`).join("");
+  document.querySelectorAll(".parse-option").forEach(b=>b.onclick=()=>{state.parse=+b.dataset.i; render();});
+  $("phraseTable").innerHTML = `<tr><th>unit</th><th>head</th><th>span</th><th>note</th></tr>` + a.parse.phrases.slice(0,14).map(p=>`<tr><td>${esc(p.type)}</td><td>${esc(a.toks[p.head]?.raw||"?")}</td><td>${esc(spanText(a.toks,p.span[0],p.span[1]+1))}</td><td>${esc(p.note)}</td></tr>`).join("");
+}
+function renderTokens(a){
+  $("tokens").innerHTML = a.toks.map(t=>`<div class="tok"><span class="pos">${esc(t.info.pos)}</span><strong>${esc(t.raw)}</strong><div class="tiny">${esc(t.info.sense)}</div><ul><li>${esc(t.info.fields.slice(0,3).join(" / "))}</li><li>${esc(t.info.source)}</li></ul></div>`).join("");
+}
+function renderDeps(a){
+  $("deps").innerHTML = `<tr><th>relation</th><th>head</th><th>dependent</th><th>scope / note</th></tr>` + a.parse.deps.map(d=>`<tr><td class="mono">${esc(d.type)}</td><td>${esc(a.toks[d.from]?.raw||"?")}</td><td>${esc(a.toks[d.to]?.raw||"?")}</td><td>${esc(d.note)}</td></tr>`).join("");
+}
+function renderLedger(a){
+  $("ledger").innerHTML = `<tr><th>operator</th><th>trigger</th><th>scoped constituent</th><th>effect</th></tr>` + a.parse.operators.map(o=>`<tr><td class="mono">${esc(o.name)}</td><td><b>${esc(o.trigger)}</b></td><td>${esc(o.scope)}</td><td>${esc(o.effect)}</td></tr>`).join("") || `<tr><td colspan="4">No scoped operators.</td></tr>`;
+}
+function renderTriad(a){
+  const root = a.toks[a.parse.root];
+  const subj = a.parse.deps.find(d=>d.type==="nsubj");
+  const obj = a.parse.deps.find(d=>["obj","xcomp","speech-object"].includes(d.type));
+  const top = [subj&&a.toks[subj.to],root,obj&&a.toks[obj.to]].filter(Boolean);
+  $("signVehicle").innerHTML = `<div class="mono">${esc(a.parse.tree)}</div>` + top.map(t=>`<span class="tag blue">${esc(t.raw)}</span>`).join("");
+  $("objectRef").innerHTML = top.flatMap(t=>t.info.refs.slice(0,2)).slice(0,7).map(r=>`<span class="tag">${esc(r)}</span>`).join("");
+  $("interpretant").innerHTML = `<b style="display:inline;color:var(--ink);text-transform:none;letter-spacing:0">${esc(a.stance.question)}</b><p class="tiny">${esc(a.ctx.formula)}</p>`;
+  const id = a.toks.findIndex((t,i)=>["is","are","was"].includes(t.base) && prevIndex(a.toks,i,isN)>=0 && nextIndex(a.toks,i,isN)>=0);
+  const lf = compileLF(a.toks,a.parse), archiveVerdict = truthMark(evalLF(lf,DATA.model.worlds[0]));
+  $("fregeNote").innerHTML = id>=0 ? `<b>Fregean judgment:</b> identity compiles as ${esc(formulaText(lf))}; Archive world verdict ${archiveVerdict}. The two presentations keep separate sense fields while the model tests shared reference.` : `<b>Fregean judgment:</b> ${esc(formulaText(lf))} is evaluated in the Judgment Press. The chosen parse makes ${esc(root?.raw||"no root")} the judgment hinge rather than flattening all tokens into one semantic score.`;
+}
+function renderOppositions(a,cm){
+  const rows = a.toks.filter(t=>t.info.opp.length).slice(0,13).map(t=>{
+    const opp = state.inverted ? t.info.opp.slice().reverse() : t.info.opp;
+    const f = oppositionFidelity(cm,t);
+    return `<tr><td><b>${esc(t.raw)}</b><div class="tiny">${esc(t.info.fields.join(" / "))}</div><span class="badge ${f.label}">${f.label}</span></td><td>${opp.map(o=>`<span class="tag">${esc(o)}</span>`).join("")}<div class="tiny">${esc(f.why)}</div></td></tr>`;
+  }).join("");
+  $("oppositions").innerHTML = `<tr><th>term</th><th>curated difference / corpus check</th></tr>${rows || `<tr><td colspan="2">No registered opposition field.</td></tr>`}`;
+}
+function renderDiagnostics(a){
+  const scoped = a.parse.operators.filter(o=>["negation","modality","condition"].includes(o.name)).length;
+  const ppAmb = a.parses.length>1 ? 82 : 18;
+  const items = [
+    ["Parse density", score(a,"structure")],
+    ["Attachment ambiguity", ppAmb],
+    ["Scoped logical force", clamp(score(a,"modality")+scoped*8,0,100)],
+    ["Reference instability", score(a,"deixis") + a.toks.filter(t=>["pron","deixis"].includes(t.info.pos)).length*8],
+    ["Institutional performativity", score(a,"institution") + a.toks.filter(t=>t.info.fields.includes("law")||t.info.fields.includes("bureaucracy")).length*9],
+    ["Derivational coverage", score(a,"derivation")]
+  ];
+  $("diagnostics").innerHTML = items.map(([label,val])=>`<div><div class="smallcaps">${label} <b>${clamp(Math.round(val),0,100)}</b></div><div class="heat"><i style="width:${clamp(val,0,100)}%"></i></div></div>`).join("");
+}
+function renderReadings(a){
+  const fieldList = Object.entries(a.fields).sort((x,y)=>y[1]-x[1]).slice(0,5).map(x=>x[0]);
+  const neg = a.parse.operators.find(o=>o.name==="negation");
+  const cond = a.parse.operators.find(o=>o.name==="condition");
+  const readings = [
+    ["Structural plate", `${a.parse.summary} The visible reading is parse P${state.parse+1}; choosing another parse reties the loom and changes scope/attachment.`],
+    ["Sense plate", `The utterance presents its object through ${fieldList.join(", ") || "thin local material"}. Derivations are cited on token cards rather than hidden as generic guesses.`],
+    ["Use plate", `${a.ctx.name} reading: ${neg?`negation scopes "${neg.scope}"`:"no explicit negation dominates the predicate"}${cond?`; condition binds "${cond.scope}"`:""}.`]
+  ];
+  $("readings").innerHTML = readings.map(r=>`<div class="reading"><h3>${esc(r[0])}</h3><p>${esc(r[1])}</p></div>`).join("");
+}
+function renderCorpus(a,cm){
+  const pins = a.toks.map(t=>t.base).filter((w,i,arr)=>arr.indexOf(w)===i && cm.vocab.includes(w));
+  const focus = state.hoverWord || pins[0] || cm.vocab[0];
+  const ns = focus ? neighbors(cm,focus,7) : [];
+  $("corpusReadout").innerHTML = `<h3>${esc(focus||"corpus")}</h3><div class="neighbor-list">${ns.map(n=>`<div class="neighbor"><span>${esc(n[0])}</span><code>${Math.round(n[1]*100)}</code></div>`).join("") || `<div class="tiny">No vector neighbors in selected genres.</div>`}</div>`;
+  $("corpusSummary").textContent = `${cm.docs.length} local sentences, ${cm.vocab.length} vectorized terms, ${state.genres.length} active genres. Pinned terms: ${pins.join(", ") || "none in corpus"}.`;
+  const drift = pins.flatMap(w=>driftFor(w).length>1?[`${w}: ${driftFor(w).map(x=>x.g).join(" -> ")}`]:[]).slice(0,3);
+  $("driftSummary").textContent = drift.length ? drift.join(" | ") : "Select several genres with overlapping utterance terms to expose movement across language games.";
+  drawCorpusLoom(a,cm,pins);
+}
+function renderJudgment(a){
+  const lf = compileLF(a.toks,a.parse);
+  $("logicalFormula").textContent = formulaText(lf);
+  const rows = DATA.model.worlds.map(w=>({w,v:evalLF(lf,w)}));
+  $("truthTable").innerHTML = `<tr><th>world</th><th>truth</th><th>access</th><th>witness extension</th></tr>` + rows.map(r=>{
+    const access = Object.entries(r.w.access).map(([k,v])=>`${k}:${v.join("/")}`).join(" ");
+    const witness = witnessExtension(lf,r.w);
+    return `<tr><td><b>${esc(r.w.name)}</b><div class="tiny">${esc(r.w.note)}</div></td><td class="${truthClass(r.v)}"><b>${truthMark(r.v)}</b></td><td class="mono">${esc(access)}</td><td>${esc(witness)}</td></tr>`;
+  }).join("");
+  const counts = rows.reduce((m,r)=>{m[r.v===true?"t":r.v===false?"f":"u"]++; return m;},{t:0,f:0,u:0});
+  $("modelVerdict").textContent = `${counts.t} true, ${counts.f} false, ${counts.u} undefined across ${rows.length} worlds. Undefined means the model lacks the needed predicate or reference extension.`;
+  const alt = a.parses[(state.parse+1)%a.parses.length];
+  const altLF = alt && alt!==a.parse ? compileLF(a.toks,alt) : null;
+  $("scopeTrial").textContent = altLF ? `P${state.parse+1} vs P${((state.parse+1)%a.parses.length)+1}: ${compareTruths(lf,altLF)} Alternate: ${formulaText(altLF)}` : "Only one parse is available, so there is no competing formula to test.";
+  const firstTrue = rows.find(r=>r.v===true), firstFalse = rows.find(r=>r.v===false), firstU = rows.find(r=>r.v==null);
+  $("worldWitness").textContent = [firstTrue&&`true in ${firstTrue.w.name}`, firstFalse&&`false in ${firstFalse.w.name}`, firstU&&`silent in ${firstU.w.name}`].filter(Boolean).join("; ") || "No world produces a determinate contrast.";
+  drawBegriff(lf,rows);
+}
+function witnessExtension(lf,w){
+  const atom = firstAtom(lf);
+  if(!atom) return "no atomic predicate";
+  if(atom.args.length===1) return `${atom.pred}: ${(w.unary[atom.pred]||[]).slice(0,4).join(", ") || "silent"}`;
+  return `${atom.pred}: ${(w.relations[atom.pred]||[]).slice(0,3).map(r=>r.join("-")).join(", ") || "silent"}`;
+}
+function firstAtom(f){
+  if(!f) return null;
+  if(f.type==="atom") return f;
+  return firstAtom(f.body) || firstAtom(f.left) || firstAtom(f.right) || firstAtom(f.restrict);
+}
+function drawBegriff(lf,rows){
+  const c=$("begriff"), dpr=window.devicePixelRatio||1, rect=c.getBoundingClientRect();
+  c.width=Math.max(520,Math.floor(rect.width*dpr)); c.height=Math.max(180,Math.floor(rect.height*dpr));
+  const ctx=c.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w=rect.width,h=rect.height; ctx.clearRect(0,0,w,h); ctx.fillStyle="#fffdf7"; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#2d2922"; ctx.lineWidth=2;
+  const y=58; line(ctx,44,y,w-22,y); line(ctx,44,y-28,44,y+48); line(ctx,28,y-28,44,y-28);
+  ctx.font="12px ui-monospace,monospace"; ctx.fillStyle="#161513"; fitText(ctx,formulaText(lf),58,y-10,w-92);
+  drawFormulaGlyph(ctx,lf,72,y+38,w-110,76);
+  const x0=24, by=h-28, bw=(w-48)/rows.length;
+  rows.forEach((r,i)=>{
+    ctx.fillStyle=r.v===true?"#dfeee4":r.v===false?"#efd9d5":"#eee8d8";
+    ctx.fillRect(x0+i*bw,by-24,bw-2,24);
+    ctx.strokeStyle="#c6bda9"; ctx.lineWidth=1; ctx.strokeRect(x0+i*bw,by-24,bw-2,24);
+    ctx.fillStyle="#161513"; ctx.font="700 12px ui-monospace,monospace"; ctx.fillText(truthMark(r.v),x0+i*bw+6,by-8);
+    ctx.font="9px ui-monospace,monospace"; fitText(ctx,r.w.id,x0+i*bw+20,by-8,bw-24);
+  });
+  ctx.strokeStyle="#2e2b25"; round(ctx,8,8,w-16,h-16,2); ctx.stroke();
+}
+function drawFormulaGlyph(ctx,f,x,y,w,h){
+  if(!f) return;
+  ctx.save(); ctx.strokeStyle="#7f735d"; ctx.fillStyle="#2d2922"; ctx.lineWidth=1.4; ctx.font="11px ui-monospace,monospace";
+  if(f.type==="not"){ ctx.beginPath(); ctx.moveTo(x,y-12); ctx.quadraticCurveTo(x+14,y,x,y+12); ctx.stroke(); drawFormulaGlyph(ctx,f.body,x+24,y,w-24,h); }
+  else if(f.type==="implies"){ line(ctx,x,y,x+w,y,"#946513"); line(ctx,x+w*.42,y-16,x+w*.42,y+16,"#946513"); ctx.fillText("if",x+4,y-6); drawFormulaGlyph(ctx,f.left,x+28,y-18,w*.36,28); drawFormulaGlyph(ctx,f.right,x+w*.48,y+12,w*.46,28); }
+  else if(f.type==="and"){ line(ctx,x,y,x+w,y,"#67508d"); line(ctx,x+w*.5,y-15,x+w*.5,y+15,"#67508d"); ctx.fillText("&",x+w*.5-4,y-18); drawFormulaGlyph(ctx,f.left,x+4,y-10,w*.45,28); drawFormulaGlyph(ctx,f.right,x+w*.55,y+14,w*.4,28); }
+  else if(f.type==="modal"){ ctx.strokeRect(x,y-14,18,18); ctx.fillText(f.op,x+5,y); drawFormulaGlyph(ctx,f.body,x+28,y,w-30,h); }
+  else if(f.type==="quant"){ ctx.beginPath(); ctx.arc(x+10,y-2,10,Math.PI*.5,Math.PI*1.5); ctx.stroke(); ctx.fillText(f.q+f.v,x+2,y+18); drawFormulaGlyph(ctx,f.body,x+30,y,w-32,h); }
+  else { line(ctx,x,y,x+w,y,"#1f5f8b"); ctx.fillText(formulaText(f),x+4,y-8); }
+  ctx.restore();
+}
+function drawCorpusLoom(a,cm,pins){
+  const c=$("corpusLoom"), dpr=window.devicePixelRatio||1, rect=c.getBoundingClientRect();
+  c.width=Math.max(620,Math.floor(rect.width*dpr)); c.height=Math.max(350,Math.floor(rect.height*dpr));
+  const ctx=c.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w=rect.width,h=rect.height,pad=26; ctx.clearRect(0,0,w,h); ctx.fillStyle="#fffdf7"; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#ddd5c2"; ctx.lineWidth=1;
+  for(let x=pad;x<w-pad;x+=32) line(ctx,x,pad,x,h-pad);
+  for(let y=pad;y<h-pad;y+=26) line(ctx,pad,y,w-pad,y);
+  const px=p=>pad+p.x*(w-pad*2), py=p=>pad+p.y*(h-pad*2);
+  const pinSet=new Set(pins);
+  cm.vocab.forEach(word=>{
+    const p=cm.coords[word], x=px(p), y=py(p), pinned=pinSet.has(word);
+    ctx.globalAlpha=pinned?1:.54; ctx.fillStyle=pinned?"#a33b32":"#5d5a52";
+    ctx.beginPath(); ctx.arc(x,y,pinned?4.2:Math.min(3,1+Math.log(p.f)),0,Math.PI*2); ctx.fill();
+    if(pinned || cm.freq[word]>5){
+      ctx.font=pinned?"700 11px ui-monospace,monospace":"10px ui-monospace,monospace"; ctx.fillStyle=pinned?"#221":"#5d5a52";
+      fitText(ctx,word,x+5,y-4,pinned?70:52);
+    }
+    ctx.globalAlpha=1;
+  });
+  pins.forEach((word,pi)=>{
+    const p=cm.coords[word]; if(!p) return;
+    const x=px(p), y=py(p);
+    neighbors(cm,word,5).forEach(([nw,sim],j)=>{
+      const q=cm.coords[nw]; if(!q) return;
+      ctx.strokeStyle=["#1f5f8b","#a33b32","#3d7048","#946513","#67508d"][pi%5]; ctx.globalAlpha=.2+sim*.55; ctx.lineWidth=1+sim*2;
+      line(ctx,x,y,px(q),py(q)); ctx.globalAlpha=1;
+      ctx.fillStyle="#332"; ctx.font="9px ui-monospace,monospace"; if(j<2) ctx.fillText(Math.round(sim*100),(x+px(q))/2,(y+py(q))/2);
+    });
+    const trail=driftFor(word);
+    if(trail.length>1){
+      ctx.strokeStyle="#2d2922"; ctx.lineWidth=1.2; ctx.setLineDash([3,3]); ctx.beginPath();
+      trail.forEach((d,i)=>{const tx=px(d.p),ty=py(d.p); if(i)ctx.lineTo(tx,ty); else ctx.moveTo(tx,ty);});
+      ctx.stroke(); ctx.setLineDash([]);
+      trail.forEach(d=>{const g=DATA.corpusGenres.find(x=>x.id===d.g); ctx.fillStyle=g?.color||"#333"; ctx.fillRect(px(d.p)-3,py(d.p)-3,6,6);});
+    }
+  });
+  ctx.strokeStyle="#2e2b25"; round(ctx,8,8,w-16,h-16,2); ctx.stroke();
+}
+function renderTranspositions(a){
+  const target = $("targetGenre").value || state.genres[0] || "archive";
+  const tm = corpusModel([target]);
+  const rows = a.toks.map(t=>{
+    const ns = tm.vocab.includes(t.base) ? neighbors(tm,t.base,4).map(x=>x[0]) : [];
+    const candidate = ns.find(w=>DATA.anchors[w] && DATA.anchors[w].pos===t.info.pos) || ns[0] || t.base;
+    return {from:t.raw,to:candidate,changed:candidate!==t.base,why:ns.slice(0,3).join(", ")};
+  });
+  const rewritten = rows.map(r=>r.changed ? preserveCase(r.from,r.to) : r.from).join(" ");
+  $("transpositions").innerHTML = `<div class="rewrite"><b>${esc(DATA.corpusGenres.find(g=>g.id===target)?.name||target)} pressure:</b> ${esc(rewritten)}</div>` +
+    `<table><tr><th>token</th><th>substitution</th><th>nearest evidence</th></tr>${rows.filter(r=>r.changed).slice(0,8).map(r=>`<tr><td>${esc(r.from)}</td><td><b>${esc(r.to)}</b></td><td>${esc(r.why)}</td></tr>`).join("") || `<tr><td colspan="3">No corpus-backed substitutions for this target.</td></tr>`}</table>`;
+}
+function preserveCase(a,b){return /^[A-Z]/.test(a) ? b.charAt(0).toUpperCase()+b.slice(1) : b}
+function renderCabinet(a){
+  const hot = a.stance.tilt;
+  $("cabinet").innerHTML = `<tr><th>source</th><th>unfinished instruction</th><th>active plate</th></tr>` + DATA.cabinet.map(r=>{
+    const active = r[3]===hot || (hot==="sense" && r[3]==="reference");
+    return `<tr><td><b>${esc(r[0])}</b><div class="tiny">${esc(r[1])}</div></td><td>${esc(r[2])}</td><td>${active?"<b>now stressed</b>":esc(r[3])}</td></tr>`;
+  }).join("");
+}
+
+function drawLoom(a){
+  const c = $("loom"), dpr = window.devicePixelRatio || 1, rect = c.getBoundingClientRect();
+  c.width = Math.max(620,Math.floor(rect.width*dpr)); c.height = Math.max(420,Math.floor(rect.height*dpr));
+  const ctx = c.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w=rect.width,h=rect.height; ctx.clearRect(0,0,w,h); ctx.fillStyle="#fffdf7"; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#ddd5c2"; ctx.lineWidth=1;
+  for(let x=18;x<w;x+=26) line(ctx,x,18,x,h-22);
+  for(let y=24;y<h;y+=24) line(ctx,18,y,w-18,y);
+  const n=Math.max(1,a.toks.length), left=48, right=w-34, base=h-86, step=(right-left)/n, xs=[];
+  ctx.font="11px ui-monospace,monospace"; ctx.textBaseline="middle";
+  a.toks.forEach((t,i)=>{
+    const x=left+step*i+step*.5; xs[i]=x;
+    ctx.fillStyle=i===a.parse.root?"#f2dfba":"#f7f0df"; ctx.strokeStyle="#7f745e"; ctx.lineWidth=1;
+    round(ctx,x-step*.42,base,step*.84,42,3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle="#191713"; fitText(ctx,t.raw,x-step*.36,base+15,step*.72);
+    ctx.fillStyle="#5b5549"; fitText(ctx,t.info.pos,x-step*.36,base+30,step*.72);
+  });
+  const colors={nsubj:"#1f5f8b",obj:"#a33b32",xcomp:"#a33b32",neg:"#a33b32",aux:"#267b7b",amod:"#3d7048",det:"#81745e",prep:"#3d7048",pobj:"#3d7048",condition:"#9b6a19",mark:"#9b6a19",conj:"#67508d","conj-chain":"#67508d",cc:"#67508d","speech-object":"#67508d"};
+  a.parse.deps.forEach((d,idx)=>{
+    const x1=xs[d.from], x2=xs[d.to]; if(x1==null||x2==null) return;
+    const dist=Math.abs(x2-x1), lift=42+Math.min(250,dist*.52)+idx%3*10, y=base-lift;
+    ctx.strokeStyle=colors[d.type]||"#2d2922"; ctx.lineWidth=["neg","condition","nsubj","obj"].includes(d.type)?2.2:1.35;
+    ctx.beginPath(); ctx.moveTo(x1,base); ctx.bezierCurveTo(x1,y,x2,y,x2,base); ctx.stroke();
+    ctx.fillStyle=ctx.strokeStyle; ctx.globalAlpha=.95; ctx.beginPath(); ctx.arc(x2,base,3.5,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
+    ctx.font="10px ui-monospace,monospace"; ctx.fillStyle=colors[d.type]||"#2d2922"; fitText(ctx,d.type,(x1+x2)/2-22,y-5,52);
+  });
+  const lanes=[["sense","#1f5f8b",34],["reference","#a33b32",58],["use","#3d7048",82],["opposition","#9b6a19",106],["interpretant","#67508d",130]];
+  ctx.font="11px Georgia,serif";
+  lanes.forEach(([k,col,y])=>{
+    ctx.fillStyle=col; ctx.fillText(k,14,y); line(ctx,88,y,w-24,y,col,.35);
+    const width=clamp(score(a,k)/100*(w-130),8,w-130); ctx.globalAlpha=.16; ctx.fillRect(88,y-4,width,8); ctx.globalAlpha=1;
+  });
+  a.parse.operators.slice(0,8).forEach((o,j)=>{
+    const y=h-30-j*15; if(y<150) return;
+    ctx.fillStyle=["#267b7b","#a33b32","#3d7048","#9b6a19","#67508d"][j%5];
+    ctx.fillRect(52,y,clamp(60+o.scope.length*4,70,w-110),7);
+    ctx.fillStyle="#332"; ctx.font="10px ui-monospace,monospace"; fitText(ctx,o.name+" :: "+o.trigger+" => "+o.scope,56,y-4,w-90);
+  });
+  ctx.strokeStyle="#2e2b25"; ctx.lineWidth=1.5; round(ctx,8,8,w-16,h-16,2); ctx.stroke();
+}
+function line(ctx,x1,y1,x2,y2,col,alpha){ctx.save();if(col)ctx.strokeStyle=col;if(alpha)ctx.globalAlpha=alpha;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore()}
+function round(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y)}
+function fitText(ctx,text,x,y,max){let s=String(text);while(ctx.measureText(s).width>max&&s.length>2)s=s.slice(0,-2)+".";ctx.fillText(s,x,y)}
+
+function init(){
+  CORPUS = makeCorpus();
+  $("utterance").value = DATA.examples[0][1];
+  $("context").innerHTML = DATA.contexts.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  $("stance").innerHTML = DATA.stances.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+  $("targetGenre").innerHTML = DATA.corpusGenres.map(g=>`<option value="${g.id}">${g.name}</option>`).join("");
+  $("targetGenre").value = "court";
+  $("genreToggles").innerHTML = DATA.corpusGenres.map(g=>`<button data-g="${g.id}" class="${state.genres.includes(g.id)?"active":""}"><span class="badge" style="border-color:${g.color};background:#fffdf7">${g.name}</span></button>`).join("");
+  document.querySelectorAll("#genreToggles button").forEach(b=>b.onclick=()=>{
+    const g=b.dataset.g;
+    if(state.genres.includes(g) && state.genres.length>1) state.genres=state.genres.filter(x=>x!==g);
+    else if(!state.genres.includes(g)) state.genres.push(g);
+    document.querySelectorAll("#genreToggles button").forEach(x=>x.classList.toggle("active",state.genres.includes(x.dataset.g)));
+    state.hoverWord=null; render();
+  });
+  $("examples").innerHTML = DATA.examples.map((e,i)=>`<button class="ex ${i===0?"active":""}" data-i="${i}"><code>${e[0]}</code><span>${esc(e[1])}</span></button>`).join("");
+  document.querySelectorAll(".ex").forEach(b=>b.onclick=()=>{state.example=+b.dataset.i; state.parse=0; $("utterance").value=DATA.examples[state.example][1]; document.querySelectorAll(".ex").forEach(x=>x.classList.toggle("active",x===b)); render();});
+  ["utterance","context","stance","targetGenre","modality","deixis","institution","metaphor"].forEach(id=>$(id).addEventListener("input",()=>{if(id==="utterance")state.parse=0;render();}));
+  $("corpusLoom").addEventListener("mousemove",e=>{
+    const cm=corpusModel(state.genres), r=$("corpusLoom").getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top, pad=26;
+    let best=null, bd=1e9;
+    cm.vocab.forEach(w=>{const p=cm.coords[w], dx=x-(pad+p.x*(r.width-pad*2)), dy=y-(pad+p.y*(r.height-pad*2)), d=dx*dx+dy*dy; if(d<bd){bd=d;best=w;}});
+    if(best && bd<400 && best!==state.hoverWord){state.hoverWord=best; renderCorpus(analyze(),cm);}
+  });
+  $("pressBtn").onclick=render;
+  $("invertBtn").onclick=()=>{state.inverted=!state.inverted; $("invertBtn").classList.toggle("active",state.inverted); render();};
+  window.addEventListener("resize",render);
+  render();
+}
+init();
+</script>
+</body>
+</html>

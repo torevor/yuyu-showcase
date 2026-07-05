@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounding Atlas</title>
+<style>
+:root{--ink:#171717;--muted:#5e6266;--rule:#b7b1a4;--paper:#f6f4ec;--panel:#fffdf7;--panel2:#ece7db;--blue:#175d99;--red:#b5362d;--amber:#a36a00;--green:#24724a;--violet:#694a91}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:12px/1.31 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+.app{min-height:100vh;display:grid;grid-template-rows:auto 1fr}header{border-bottom:2px solid var(--ink);background:#fbfaf5;display:grid;grid-template-columns:280px 1fr auto;gap:9px;padding:8px 9px 7px;align-items:end}h1{margin:0;font-size:23px;line-height:1;font-weight:850;letter-spacing:0}.subtitle{margin-top:4px;color:var(--muted);font-size:11px}
+.method{display:grid;grid-template-columns:repeat(6,minmax(96px,1fr));gap:4px}.method div{border:1px solid var(--rule);background:var(--panel);padding:5px 6px;min-height:42px}.method b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.tabs{display:flex;border:1px solid var(--ink);align-self:stretch}.tabs button{border:0;border-right:1px solid var(--ink);background:#e5dfd0;padding:0 11px;font-weight:760}.tabs button:last-child{border-right:0}.tabs button.active{background:var(--ink);color:white}
+main{padding:7px;min-width:0}.view{display:none}.view.active{display:grid}.probe{grid-template-columns:280px minmax(440px,1.22fr) minmax(365px,.98fr);gap:7px}.atlas{grid-template-columns:315px minmax(530px,1fr) 365px;gap:7px}.extract{grid-template-columns:300px minmax(520px,1fr) 390px;gap:7px}.compare{grid-template-columns:315px minmax(560px,1fr) 390px;gap:7px}.bootstrap{grid-template-columns:330px minmax(560px,1fr) 410px;gap:7px}
+.panel{background:var(--panel);border:1px solid var(--ink);min-width:0}.panel h2{margin:0;padding:6px 7px;border-bottom:1px solid var(--ink);background:var(--panel2);font-size:11px;line-height:1;text-transform:uppercase;letter-spacing:.06em}.pad{padding:7px}.scroll{overflow:auto;min-height:0}
+.controls{display:grid;grid-template-columns:1fr auto;gap:5px;margin-bottom:7px}input,select{width:100%;border:1px solid var(--ink);background:white;padding:5px 6px}button{border:1px solid var(--ink);background:#e6e0d2;padding:5px 8px}button:hover{background:#d7cfbc}
+.word-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;margin-bottom:7px;max-height:246px;overflow:auto}.word-list button{text-align:left;padding:4px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.word-list button.active{background:var(--blue);color:white}
+.entry{border-top:1px solid var(--rule);padding-top:7px}.termline{display:flex;align-items:baseline;justify-content:space-between;gap:7px;border-bottom:1px solid var(--rule);margin-bottom:6px;padding-bottom:4px}.term{font-size:21px;font-weight:850}.pos{color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.06em}.gloss{font-family:ui-serif,Georgia,serif;font-size:14px;line-height:1.27;margin-bottom:7px}.small{font-size:10.5px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:3px}.chip{border:1px solid var(--rule);background:#f1eee4;padding:2px 5px;font-size:10.5px}.chip.kernel{border-color:var(--red);color:var(--red);font-weight:800}.chip.scc{border-color:var(--blue);color:var(--blue)}.chip.bound{color:var(--muted)}.chip.assume{border-color:var(--amber);color:var(--amber)}
+.metrics,.score-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-top:7px}.score-grid{grid-template-columns:repeat(3,1fr)}.metric,.score{border:1px solid var(--rule);padding:5px;background:#fbfaf5}.metric b,.score b{display:block;font-size:18px;line-height:1.05}.metric span,.score span{font-size:10.5px;color:var(--muted)}
+.graph-wrap{height:calc(100vh - 88px);min-height:625px;display:grid;grid-template-rows:auto minmax(380px,1fr) 138px}svg{width:100%;height:100%;display:block;background:linear-gradient(#e5dfd0 1px,transparent 1px),linear-gradient(90deg,#e5dfd0 1px,transparent 1px);background-size:24px 24px}
+.node circle{fill:#fffdf7;stroke:#171717;stroke-width:1.4}.node.root circle{fill:#171717}.node.root text{fill:white;font-weight:800}.node.kernel circle{stroke:var(--red);stroke-width:3}.node.scc circle{stroke:var(--blue);stroke-width:2.4}.node.leaf circle{stroke:var(--green)}.edge{stroke:#555;stroke-width:1.1;fill:none;marker-end:url(#arrow)}.edge.back{stroke:var(--red);stroke-width:2;stroke-dasharray:4 3}.edge.scc{stroke:var(--blue);stroke-width:1.7}.node text{font-size:9.4px;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+.graph-status{position:absolute;right:9px;top:9px;background:#fffdf7;border:1px solid var(--ink);padding:4px 6px;font-size:10.5px}.seismo{border-top:1px solid var(--ink);padding:7px}.seismo-title{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}.bars{height:72px;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;align-items:end;gap:3px;border-left:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:3px 3px 0}.bar{background:var(--green);min-height:5px;position:relative}.bar.warn{background:var(--amber)}.bar.hot{background:var(--red)}.bar span{position:absolute;left:50%;bottom:-17px;transform:translateX(-50%);font-size:10px;color:var(--muted)}
+.ledger,.atlas-side,.atlas-right,.extract-left,.extract-right{height:calc(100vh - 88px);min-height:625px;display:grid;grid-template-rows:auto 1fr 1fr}.atlas-side,.extract-left{grid-template-rows:auto auto 1fr}.atlas-right,.extract-right{grid-template-rows:auto 1fr 1fr}table{width:100%;border-collapse:collapse;font-size:11.4px}th,td{border-bottom:1px solid var(--rule);padding:4px 5px;text-align:left;vertical-align:top}th{background:var(--panel2);font-size:10px;text-transform:uppercase;letter-spacing:.05em}.finding{display:grid;grid-template-columns:88px 1fr;border-bottom:1px solid var(--rule)}.finding b{padding:5px;background:#f0ede4;border-right:1px solid var(--rule);font-size:10.5px}.finding span{padding:5px}
+.atlas-canvas,.extract-main{height:calc(100vh - 88px);min-height:625px;display:grid;grid-template-rows:auto 1fr 118px}.toolbar{display:grid;grid-template-columns:1fr 90px 90px;gap:5px;margin-bottom:7px}.switchline{display:grid;grid-template-columns:1fr 1fr;gap:5px}.switchline button.active{background:var(--ink);color:white}.canvasbox{position:relative;min-height:0;background:linear-gradient(#e5dfd0 1px,transparent 1px),linear-gradient(90deg,#e5dfd0 1px,transparent 1px);background-size:22px 22px}.canvasbox canvas{display:block;width:100%;height:100%}.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;border-top:1px solid var(--ink);padding:7px}.key{border:1px solid var(--rule);background:#fbfaf5;padding:5px}.sw{display:inline-block;width:10px;height:10px;border:1px solid var(--ink);margin-right:5px;vertical-align:-1px}.cert{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px}.dense-list button{width:100%;text-align:left;margin:0;border-width:0 0 1px 0;background:transparent;padding:5px}.dense-list button:hover{background:#eee8da}.hotword{color:var(--red);font-weight:800}
+.tokens{padding:8px;min-height:0;overflow:auto}.tok{display:inline-block;border:1px solid var(--rule);background:#f7f4e9;margin:2px;padding:3px 5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;vertical-align:top}.tok.keep{background:#e6eff7;border-color:var(--blue)}.tok.assume{background:#fff0cf;border-color:var(--amber)}.tok.stop{color:#808080;background:#eeece5}.tok.bound{background:#e8f1ea;border-color:var(--green)}.tok.self{background:#f7e1de;border-color:var(--red)}.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;border-top:1px solid var(--ink);padding:7px}.pipe{border:1px solid var(--rule);background:#fbfaf5;padding:5px}.pipe b{display:block;text-transform:uppercase;font-size:10px;letter-spacing:.05em}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.warnline{color:var(--amber);font-weight:760}
+.compare-left,.compare-right{height:calc(100vh - 88px);min-height:625px;display:grid;grid-template-rows:auto auto 1fr}.compare-main{height:calc(100vh - 88px);min-height:625px;display:grid;grid-template-rows:auto 192px 1fr}.matrix{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;border-bottom:1px solid var(--ink)}.cell{border:1px solid var(--rule);background:#fbfaf5;padding:6px;min-height:54px}.cell b{display:block;font-size:20px;line-height:1}.cell span{font-size:10.5px;color:var(--muted)}.bars2{padding:7px;display:grid;grid-template-columns:1fr;gap:3px;overflow:auto}.pair{display:grid;grid-template-columns:116px 1fr 48px;gap:5px;align-items:center;font-size:10.8px}.pair label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rail{height:14px;border:1px solid var(--rule);background:#f4f1e8;position:relative}.rail i{display:block;height:100%;background:var(--blue)}.rail em{display:block;height:100%;background:var(--green);position:absolute;left:0;top:0;opacity:.72}.badge{display:inline-block;border:1px solid var(--rule);padding:1px 4px;font-size:10px}.badge.rescue{border-color:var(--green);color:var(--green)}.badge.stuck{border-color:var(--red);color:var(--red)}.badge.cyclic{border-color:var(--blue);color:var(--blue)}.badge.tax{border-color:var(--amber);color:var(--amber)}
+.boot-left,.boot-right{height:calc(100vh - 88px);min-height:625px;display:grid;grid-template-rows:auto auto 1fr}.boot-main{height:calc(100vh - 88px);min-height:625px;display:grid;grid-template-rows:auto 126px 1fr}.seedline{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px}.seedline button.active{background:var(--ink);color:white}.seedbox{width:100%;height:58px;resize:vertical;border:1px solid var(--ink);padding:5px;background:white;font:11px/1.25 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.toggles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;max-height:185px;overflow:auto}.toggles label{border:1px solid var(--rule);background:#fbfaf5;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.toggles input{width:auto;margin-right:4px;vertical-align:-2px}.timeline{padding:7px;border-bottom:1px solid var(--ink);display:grid;grid-auto-flow:column;grid-auto-columns:minmax(13px,1fr);gap:3px;align-items:end}.tbar{min-height:4px;background:var(--blue);border:1px solid rgba(23,93,153,.35);position:relative}.tbar.seed{background:var(--red);border-color:var(--red)}.tbar.fail{background:transparent;border:2px solid var(--red)}.tbar span{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted)}.transport{display:grid;grid-template-columns:58px 58px 58px 1fr;gap:5px;padding:7px;border-top:1px solid var(--ink)}.boot-canvasbox{position:relative;min-height:0;background:linear-gradient(#e5dfd0 1px,transparent 1px),linear-gradient(90deg,#e5dfd0 1px,transparent 1px);background-size:22px 22px}.boot-canvasbox canvas{display:block;width:100%;height:100%}.impact{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}
+@media(max-width:1080px){header{grid-template-columns:1fr}.method{grid-template-columns:repeat(2,1fr)}.tabs{height:34px}.probe,.atlas,.extract,.compare,.bootstrap{grid-template-columns:1fr}.graph-wrap,.ledger,.atlas-side,.atlas-right,.atlas-canvas,.extract-left,.extract-main,.extract-right,.compare-left,.compare-main,.compare-right,.boot-left,.boot-main,.boot-right{height:auto;min-height:620px}.graph-status{position:static;margin:4px 7px}.toolbar{grid-template-columns:1fr 1fr 1fr}.pipeline{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><h1>Grounding Atlas</h1><div class="subtitle">Offline lexical circularity instrument with auditable extraction.</div></div>
+    <div class="method">
+      <div><b>1 Parse</b>Glosses become edges through visible token, stem, stopword, and headword rules.</div>
+      <div><b>2 Audit</b>Every token is classified: edge, stopword, boundary, self-link, or assumed sense.</div>
+      <div><b>3 Traverse</b>Probe descends locally; Atlas runs the entire extracted graph.</div>
+      <div><b>4 Detect</b>Tarjan SCCs, back-edges, cyclic pressure, exact or bounded kernels.</div>
+      <div><b>5 Compare</b>Definition graph vs explicit corpus taxonomy, without network calls.</div>
+      <div><b>6 Bootstrap</b>AND-closure tests whether assumed primitives actually acquire the corpus.</div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="mode">
+      <button id="tabProbe" class="active">Probe</button><button id="tabAtlas">Atlas</button><button id="tabExtract">Extract</button><button id="tabCompare">Compare</button><button id="tabBootstrap">Bootstrap</button>
+    </div>
+  </header>
+  <main>
+    <section id="probeView" class="view probe active">
+      <section class="panel">
+        <h2>Lexical Probe</h2>
+        <div class="pad">
+          <div class="controls"><input id="query" autocomplete="off" spellcheck="false" aria-label="word query"><button id="go">Trace</button></div>
+          <div id="wordList" class="word-list"></div>
+          <div class="entry">
+            <div class="termline"><div id="term" class="term"></div><div id="pos" class="pos"></div></div>
+            <div id="gloss" class="gloss"></div>
+            <div class="small">Extracted definition edges:</div><div id="deps" class="chips"></div>
+            <div class="metrics">
+              <div class="metric"><b id="mNodes">0</b><span>visible terms</span></div><div class="metric"><b id="mEdges">0</b><span>definition links</span></div>
+              <div class="metric"><b id="mScc">0</b><span>cyclic components</span></div><div class="metric"><b id="mKernel">0</b><span>kernel terms</span></div>
+              <div class="metric"><b id="mKept">0</b><span>kept tokens</span></div><div class="metric"><b id="mBoundary">0</b><span>boundary tokens</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="panel graph-wrap">
+        <h2>Definition Graph</h2>
+        <div style="position:relative;min-height:0"><div id="graphStatus" class="graph-status"></div><svg id="graph" role="img" aria-label="definition graph"></svg></div>
+        <div class="seismo"><div class="seismo-title"><span>Semantic Seismograph</span><span id="seismoNote"></span></div><div id="bars" class="bars"></div></div>
+      </section>
+      <section class="panel ledger">
+        <div><h2>Mechanical Findings</h2><div id="findings"></div></div>
+        <div class="scroll"><h2>Traversal Trace</h2><table><thead><tr><th>Depth</th><th>Term</th><th>Extracted Through</th></tr></thead><tbody id="trace"></tbody></table></div>
+        <div class="scroll"><h2>Cycle Ledger</h2><table><thead><tr><th>Component</th><th>Terms</th><th>Kernel Certificate</th></tr></thead><tbody id="cycles"></tbody></table></div>
+      </section>
+    </section>
+    <section id="atlasView" class="view atlas">
+      <section class="panel atlas-side">
+        <div><h2>Atlas Controls</h2><div class="pad">
+          <div class="toolbar"><input id="atlasSearch" autocomplete="off" spellcheck="false" aria-label="atlas search"><button id="atlasFind">Find</button><button id="atlasProbe">Probe</button></div>
+          <div class="switchline"><button id="senseBtn" class="active">Sense graph</button><button id="mergeBtn">Merge words</button></div>
+          <div class="score-grid">
+            <div class="score"><b id="aNodes">0</b><span>nodes</span></div><div class="score"><b id="aEdges">0</b><span>links</span></div><div class="score"><b id="aScc">0</b><span>SCCs</span></div>
+            <div class="score"><b id="aKernel">0</b><span>kernel</span></div><div class="score"><b id="aExact">0</b><span>certified</span></div><div class="score"><b id="aBounded">0</b><span>bounded</span></div>
+          </div>
+        </div></div>
+        <div><h2>Global Finding</h2><div id="atlasFindings"></div></div>
+        <div class="scroll"><h2>Kernel Certificate</h2><table><thead><tr><th>SCC</th><th>Size</th><th>Result</th><th>Search</th></tr></thead><tbody id="certRows"></tbody></table></div>
+      </section>
+      <section class="panel atlas-canvas">
+        <h2>Whole-Lexicon Atlas</h2>
+        <div class="canvasbox"><canvas id="atlasCanvas"></canvas><div id="atlasStatus" class="graph-status"></div></div>
+        <div class="legend"><div class="key"><span class="sw" style="background:#171717"></span>selected</div><div class="key"><span class="sw" style="background:#b5362d"></span>kernel</div><div class="key"><span class="sw" style="background:#175d99"></span>cyclic</div><div class="key"><span class="sw" style="background:#24724a"></span>parsed edge</div></div>
+      </section>
+      <section class="panel atlas-right">
+        <div><h2>Selected Node</h2><div id="nodeCard"></div></div>
+        <div class="scroll"><h2>Largest Components</h2><div id="componentList" class="dense-list"></div></div>
+        <div class="scroll"><h2>Definition Ledger</h2><table><thead><tr><th>Node</th><th>Out</th><th>In</th></tr></thead><tbody id="degreeRows"></tbody></table></div>
+      </section>
+    </section>
+    <section id="extractView" class="view extract">
+      <section class="panel extract-left">
+        <div><h2>Extraction Inspector</h2><div class="pad">
+          <div class="controls"><input id="extractQuery" autocomplete="off" spellcheck="false" aria-label="extract query"><button id="extractGo">Audit</button></div>
+          <div class="switchline"><button id="fromProbe">Use probe</button><button id="extractProbe">Probe term</button></div>
+          <div class="score-grid">
+            <div class="score"><b id="xRaw">0</b><span>raw tokens</span></div><div class="score"><b id="xKeep">0</b><span>edges kept</span></div><div class="score"><b id="xStop">0</b><span>stopwords</span></div>
+            <div class="score"><b id="xBound">0</b><span>boundary</span></div><div class="score"><b id="xAssume">0</b><span>assumed</span></div><div class="score"><b id="xSelf">0</b><span>self-links</span></div>
+          </div>
+        </div></div>
+        <div><h2>Selected Gloss</h2><div id="extractCard"></div></div>
+        <div class="scroll"><h2>Pipeline Rules</h2><table><tbody id="ruleRows"></tbody></table></div>
+      </section>
+      <section class="panel extract-main">
+        <h2>Token Audit Stream</h2>
+        <div id="tokenStream" class="tokens"></div>
+        <div class="pipeline">
+          <div class="pipe"><b>Tokenize</b><span id="pipeToken"></span></div><div class="pipe"><b>Stem</b><span id="pipeStem"></span></div><div class="pipe"><b>Filter</b><span id="pipeStop"></span></div><div class="pipe"><b>Match</b><span id="pipeMatch"></span></div><div class="pipe"><b>Certify</b><span id="pipeCert"></span></div>
+        </div>
+      </section>
+      <section class="panel extract-right">
+        <div><h2>Extraction Finding</h2><div id="extractFindings"></div></div>
+        <div class="scroll"><h2>Extracted Edges</h2><table><thead><tr><th>Token</th><th>Edge</th><th>Basis</th></tr></thead><tbody id="edgeRows"></tbody></table></div>
+        <div class="scroll"><h2>Rejected Tokens</h2><table><thead><tr><th>Token</th><th>Class</th><th>Reason</th></tr></thead><tbody id="rejectRows"></tbody></table></div>
+      </section>
+    </section>
+    <section id="compareView" class="view compare">
+      <section class="panel compare-left">
+        <div><h2>Relation Comparator</h2><div class="pad">
+          <div class="toolbar"><input id="compareSearch" autocomplete="off" spellcheck="false" aria-label="compare search"><button id="compareFind">Find</button><button id="compareProbe">Probe</button></div>
+          <div class="switchline"><button id="compareSense" class="active">Sense graph</button><button id="compareMerge">Merge words</button></div>
+          <div class="score-grid">
+            <div class="score"><b id="cDefCyc">0</b><span>definition-cyclic</span></div><div class="score"><b id="cTaxCyc">0</b><span>taxonomy-cyclic</span></div><div class="score"><b id="cRescue">0</b><span>rescued</span></div>
+            <div class="score"><b id="cStuck">0</b><span>doubly stuck</span></div><div class="score"><b id="cDiverge">0</b><span>divergent</span></div><div class="score"><b id="cRooted">0</b><span>tax-rooted</span></div>
+          </div>
+        </div></div>
+        <div><h2>Comparator Finding</h2><div id="compareFindings"></div></div>
+        <div class="scroll"><h2>Selected Term</h2><div id="compareCard"></div></div>
+      </section>
+      <section class="panel compare-main">
+        <h2>Paired Grounding Profile</h2>
+        <div class="matrix">
+          <div class="cell"><b id="cNodes">0</b><span>shared nodes</span></div><div class="cell"><b id="cDefEdges">0</b><span>definition edges</span></div><div class="cell"><b id="cTaxEdges">0</b><span>taxonomy edges</span></div><div class="cell"><b id="cKernelShare">0%</b><span>kernel fraction</span></div>
+          <div class="cell"><b id="cRootDepth">0</b><span>median tax depth</span></div><div class="cell"><b id="cMaxScc">0</b><span>largest def SCC</span></div><div class="cell"><b id="cTaxMax">0</b><span>largest tax SCC</span></div><div class="cell"><b id="cCert">0</b><span>certified components</span></div>
+        </div>
+        <div id="pairedBars" class="bars2"></div>
+      </section>
+      <section class="panel compare-right">
+        <div><h2>Divergence Ledger</h2><div id="divergenceSummary"></div></div>
+        <div class="scroll"><h2>Rescued By Taxonomy</h2><table><thead><tr><th>Node</th><th>Def SCC</th><th>Tax Path</th></tr></thead><tbody id="rescuedRows"></tbody></table></div>
+        <div class="scroll"><h2>All Compared Nodes</h2><table><thead><tr><th>Node</th><th>Status</th><th>Depth</th><th>Def SCC</th></tr></thead><tbody id="compareRows"></tbody></table></div>
+      </section>
+    </section>
+    <section id="bootstrapView" class="view bootstrap">
+      <section class="panel boot-left">
+        <div><h2>Bootstrap Controls</h2><div class="pad">
+          <div class="seedline"><button id="seedKernel" class="active">Kernel</button><button id="seedEmpty">Empty</button><button id="seedCore">Core-only</button><button id="seedCustom">Custom</button></div>
+          <textarea id="customSeed" class="seedbox" spellcheck="false" aria-label="custom seed words"></textarea>
+          <div class="switchline" style="margin-top:6px"><button id="bootSense" class="active">Sense graph</button><button id="bootMerge">Merge words</button></div>
+          <div class="score-grid">
+            <div class="score"><b id="bSeed">0</b><span>seed terms</span></div><div class="score"><b id="bKnown">0</b><span>acquired</span></div><div class="score"><b id="bResidue">0</b><span>residue</span></div>
+            <div class="score"><b id="bEpochs">0</b><span>epochs</span></div><div class="score"><b id="bBoundary">0</b><span>boundary tokens</span></div><div class="score"><b id="bSuff">0%</b><span>sufficiency</span></div>
+          </div>
+        </div></div>
+        <div><h2>Kernel Toggles</h2><div id="kernelToggles" class="toggles pad"></div></div>
+        <div class="scroll"><h2>Primitive Ablation</h2><table><thead><tr><th>Held Out</th><th>Lost</th><th>Residue Sample</th></tr></thead><tbody id="impactRows"></tbody></table></div>
+      </section>
+      <section class="panel boot-main">
+        <h2>Acquisition Timeline</h2>
+        <div id="bootTimeline" class="timeline"></div>
+        <div class="boot-canvasbox"><canvas id="bootCanvas"></canvas><div id="bootStatus" class="graph-status"></div></div>
+        <div class="transport"><button id="bootReset">Reset</button><button id="bootStep">Step</button><button id="bootPlay">Play</button><button id="bootEnd">Converged End State</button></div>
+      </section>
+      <section class="panel boot-right">
+        <div><h2>Proof Check</h2><div id="bootFindings"></div></div>
+        <div class="scroll"><h2>Residue Ledger</h2><table><thead><tr><th>Word</th><th>Unmet Dependency</th><th>Shortest Block</th></tr></thead><tbody id="residueRows"></tbody></table></div>
+        <div class="scroll"><h2>Acquisition Order</h2><table><thead><tr><th>Epoch</th><th>Newly Acquired</th></tr></thead><tbody id="epochRows"></tbody></table></div>
+      </section>
+    </section>
+  </main>
+</div>
+<script>
+const CORE=[
+["meaning","noun","What a sign, word, or expression is understood to convey in a particular use."],
+["word","noun","A conventional linguistic sign used as a repeatable unit of expression in a language."],
+["definition","noun","A statement that explains the meaning of a word by using other words."],
+["sign","noun","Something that stands for or indicates another thing to an interpreter."],
+["language","noun","A conventional system of signs used by a community for expression and interpretation."],
+["expression","noun","A form that presents meaning in speech, writing, gesture, or another sign system."],
+["understand","verb","To grasp the meaning, use, or force of a sign or statement."],
+["use","noun","The practical employment of a word, sign, or tool in an activity."],
+["interpretation","noun","An act of assigning meaning to a sign, statement, event, or pattern."],
+["statement","noun","An expression that presents a claim as assertable or reportable."],
+["claim","noun","A statement offered as true, acceptable, or supported by reasons."],
+["truth","noun","The status of a claim or statement as fitting how things are."],
+["reason","noun","A consideration offered to support, explain, or justify a claim or action."],
+["cause","noun","A factor or event that helps bring about another event or state."],
+["ground","noun","A basis that supports a claim, reason, definition, or practice."],
+["support","verb","To provide a ground, reason, evidence, or structure that holds up a claim."],
+["explain","verb","To make a meaning, cause, reason, or relation intelligible."],
+["convention","noun","A regular practice accepted by a community as a rule or norm."],
+["practice","noun","A repeated activity governed by use, skill, rule, or convention."],
+["rule","noun","A norm that guides or constrains an activity, practice, or interpretation."],
+["norm","noun","A standard accepted within a community for judging conduct, use, or form."],
+["community","noun","A group whose members share practices, signs, norms, or forms of life."],
+["form","noun","The perceptible arrangement or shape through which an expression appears."],
+["system","noun","A set of related parts whose arrangement constrains how each part functions."],
+["thing","noun","An entity treated as identifiable for reference or discussion."],
+["interpreter","noun","An agent or system that interprets signs under some context."],
+["evidence","noun","Material offered to support a claim or reduce uncertainty about it."],
+["reference","noun","The relation by which an expression, sign, or term picks out an entity."],
+["relation","noun","A connection or ordered dependence between terms, things, or events."],
+["term","noun","A word or expression considered as a unit in a vocabulary or argument."],
+["argument","noun","A structured set of claims and reasons offered to support a conclusion."],
+["basis","noun","A supporting ground on which a reason, claim, practice, or structure depends."],
+["warrant","noun","A reason that authorizes a claim by linking evidence to conclusion."],
+["context","noun","A surrounding situation that constrains the use and interpretation of a sign."],
+["model","noun","A structured representation used to explain, test, or compare a pattern."],
+["data","noun","Recorded material used as evidence in inquiry, measurement, or argument."],
+["method","noun","A rule-governed way of using means to reach an end in inquiry or practice."],
+["uncertainty","noun","A state in which evidence, reason, or interpretation does not settle a claim."],
+["knowledge","noun","A warranted state of understanding supported by evidence, practice, and truth."],
+["belief","noun","A commitment to a claim or interpretation held by an agent or community."],
+["value","noun","A standard by which a community judges importance, risk, benefit, or cost."],
+["risk","noun","A possible harm or loss considered under uncertainty and action."],
+["measure","noun","A rule or standard used to compare quantity, quality, value, or evidence."],
+["identity","noun","The relation by which a thing is treated as the same through difference."],
+["boundary","noun","A limit that separates one region, class, role, or interpretation from another."],
+["class","noun","A set of members grouped by a rule, property, use, or convention."],
+["member","noun","A part or agent included in a class, group, set, or community."],
+["authority","noun","A social role or rule that permits a claim, action, or command to count."],
+["record","noun","A sign or statement preserved as evidence for later interpretation."],
+["promise","noun","A commitment expressed by an agent under a rule or convention."],
+["image","noun","A perceptible form that presents a thing, pattern, or event to perception."],
+["quality","noun","A feature through which a thing, sign, or experience is distinguished."],
+["experience","noun","An event of perception, action, or understanding undergone by an agent."],
+["body","noun","A material thing with form, surface, capacity, and position in space."],
+["surface","noun","The boundary form of a body or region where contact or perception occurs."],
+["space","noun","A system of relations among positions, regions, paths, and boundaries."],
+["time","noun","An ordered relation of before, after, duration, event, and change."],
+["change","noun","A difference in state, form, relation, or position over time."],
+["function","noun","The role a part, sign, or practice has within a system."],
+["structure","noun","An arrangement of related parts that constrains function and interpretation."],
+["pattern","noun","An ordered form or repeated relation recognized across events or signs."],
+["action","noun","An event done by an agent under some intention, reason, or rule."],
+["agent","noun","A system or person capable of action, interpretation, choice, or commitment."],
+["choice","noun","An action of selecting among possible means, ends, or interpretations."],
+["goal","noun","An end toward which action, method, or practice is directed."],
+["tool","noun","A thing or method used by an agent as a means in an activity."],
+["skill","noun","A learned capacity for rule-governed action within a practice."],
+["habit","noun","A repeated pattern of action or attention acquired through practice."],
+["attention","noun","A directed capacity to select a sign, event, pattern, or task."],
+["capacity","noun","A power or ability of an agent, body, system, or tool to function."],
+["role","noun","A position or function defined by a rule, relation, or community practice."],
+["public","adj","Available to a community for shared use, judgment, or record."],
+["private","adj","Limited to an agent, group, context, or restricted practice."],
+["proof","noun","A structured argument or test offered to settle a claim under a rule."],
+["test","noun","A method of using evidence to check a claim, model, or interpretation."],
+["error","noun","A difference between a claim, measure, model, or action and a relevant standard."],
+["source","noun","A record, agent, event, or material from which evidence or a claim is drawn."],
+["sample","noun","A selected member or set used as evidence for a larger class or pattern."]
+];
+const SENSE_SEEDS=[
+["ground#basis","ground","noun","A justificatory basis that supports a claim, reason, or definition."],
+["ground#surface","ground","noun","The surface or place on which a body stands or moves."],
+["sign#mark","sign","noun","A perceptible mark or event that indicates something to an interpreter."],
+["sign#act","sign","verb","To produce a mark or expression that conveys commitment."],
+["use#practice","use","noun","A practical role a term has inside a rule-governed activity."],
+["use#employ","use","verb","To employ a tool, word, or method for an end."],
+["sense#meaning","sense","noun","A mode of meaning by which an expression presents a reference."],
+["sense#perception","sense","noun","A capacity for perceiving qualities through a body."]
+];
+const DOMAINS=[
+["perception",["perceive","observe","notice","image","sound","mark","quality","experience","body","surface","color","shape","attention","appearance","contrast","sensation","focus","scene"],["meaning","sign","interpretation","reference","thing","form"]],
+["logic",["one","many","same","different","equal","true","false","if","not","and","or","set","class","member","whole","part","identity","order"],["truth","claim","statement","relation","system","rule"]],
+["space",["place","space","before","after","near","far","inside","outside","move","rest","path","position","boundary","region","surface","body","arrangement","distance"],["ground","thing","relation","form","system"]],
+["agency",["agent","act","action","choice","want","intend","plan","goal","end","means","skill","habit","attention","capacity","commitment","role","tool","task"],["practice","rule","reason","support","community","use"]],
+["social",["group","member","authority","permission","obligation","right","role","institution","custom","law","public","private","trust","record","promise","exchange","office","status"],["community","norm","convention","rule","claim","evidence"]],
+["value",["good","bad","better","harm","benefit","value","care","need","risk","safe","worthy","prefer","judge","standard","measure","cost","loss","gain"],["norm","reason","claim","practice","support"]],
+["inquiry",["question","answer","doubt","proof","test","method","model","data","sample","source","measure","error","uncertainty","knowledge","belief","evidence","record","inference"],["truth","reason","explain","claim","definition","system"]],
+["text",["letter","sentence","paragraph","title","index","gloss","quote","caption","script","label","token","phrase","syntax","grammar","style","voice","genre","edition"],["word","definition","expression","statement","meaning","reference"]],
+["argument",["premise","conclusion","objection","reply","warrant","burden","support","defeat","rebuttal","case","issue","thesis","counterclaim","analogy","example","criterion","appeal","inference"],["argument","reason","claim","evidence","truth","support"]],
+["measurement",["scale","unit","count","ratio","limit","threshold","signal","noise","sample","score","rank","index","variance","error","baseline","change","calibration","estimate"],["measure","data","model","evidence","uncertainty","method"]],
+["memory",["trace","recall","record","archive","forget","recognize","habit","history","sequence","episode","source","witness","testimony","retention","revision","copy","storage","cue"],["record","experience","evidence","identity","time","interpretation"]],
+["law",["rule","right","duty","claim","authority","office","public","private","record","warrant","permission","liability","violation","remedy","case","statute","custom","judgment"],["authority","rule","community","claim","evidence","norm"]],
+["craft",["tool","material","surface","pattern","skill","habit","method","measure","finish","joint","part","whole","fit","repair","model","template","work","standard"],["tool","practice","skill","form","measure","function"]],
+["computation",["state","input","output","process","memory","program","model","data","token","parse","graph","node","edge","search","index","cache","error","result"],["system","data","method","model","structure","rule"]]
+];
+const TAXONOMY={
+  perception:"embodied-field",space:"embodied-field",memory:"temporal-field",
+  logic:"formal-field",measurement:"formal-field",computation:"formal-field",
+  agency:"practical-field",craft:"practical-field",value:"practical-field",
+  social:"institutional-field",law:"institutional-field",argument:"discursive-field",
+  inquiry:"discursive-field",text:"discursive-field",sense:"lexical-sense",core:"core-vocabulary"
+};
+const TAXA=[
+["entity","root","A root class used by the bundled metadata taxonomy; not a dictionary gloss."],
+["lexical-field","taxon","A corpus metadata class grouping entries by domain rather than by gloss words."],
+["core-vocabulary","taxon","A metadata class for curated seed terms that organize the corpus."],
+["lexical-sense","taxon","A metadata class for explicitly split senses of an ambiguous base word."],
+["embodied-field","taxon","A metadata class for entries grounded in body, perception, space, and time."],
+["temporal-field","taxon","A metadata class for entries organized by record, sequence, and recall."],
+["formal-field","taxon","A metadata class for logic, measure, and computation entries."],
+["practical-field","taxon","A metadata class for agency, craft, action, and value entries."],
+["institutional-field","taxon","A metadata class for social and legal entries."],
+["discursive-field","taxon","A metadata class for text, inquiry, and argument entries."]
+];
+const STOPWORDS="a an the and or but if then else when while of for from to in on under over through by with without within as at into onto is are was were be being been do does did done has have had having that this these those it its itself he she they them their we you I me my our your his her not no nor so than too very can could should would may might must shall will about across after before between during each few more most other some such own same just only also either neither both any all every per via".split(" ");
+const STOP=new Set(STOPWORDS);
+const STEM_RULES=[["ational","ate"],["ization","ize"],["iveness","ive"],["fulness","ful"],["tional","tion"],["ously","ous"],["ingly","ing"],["ation","ate"],["ment",""],["ness",""],["ingly",""],["edly",""],["ing",""],["ers","er"],["ies","y"],["ied","y"],["ed",""],["es",""],["s",""],["ly",""]];
+const byId=id=>document.getElementById(id);let current="meaning",mode="probe",graphMode="sense",compareMode="sense",bootMode="sense",bootPreset="kernel",bootFrame=999,bootTimer=null,selectedAtlas="meaning",selectedCompare="meaning",extractWord="meaning",atlasCache=null,compareCache=null,bootCache=null,bootHeld=new Set(),headIndex=null,stemIndex=null,LEXICON={};
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function baseOf(w){return (LEXICON[w]&&LEXICON[w].base)||w.split("#")[0]}function entry(w){return LEXICON[w]||{pos:"boundary",gloss:"No local definition. Treated as a boundary token in this offline corpus.",deps:[],analysis:{tokens:[]},source:"boundary"}}
+function tokenize(s){const out=[];String(s).replace(/[A-Za-z][A-Za-z'-]*/g,(raw,at)=>{out.push({raw,token:raw.toLowerCase().replace(/'/g,""),at})});return out}
+function stem(w){let s=w.toLowerCase();for(const[r,to]of STEM_RULES){if(s.length>r.length+2&&s.endsWith(r)){s=s.slice(0,-r.length)+to;break}}return s}
+function rawEntries(){
+  const out={};CORE.forEach(([word,pos,gloss])=>out[word]={word,pos,gloss,base:word,domain:"core",source:"curated core gloss"});
+  TAXA.forEach(([word,pos,gloss])=>out[word]={word,pos,gloss,base:word,domain:"taxonomy",source:"explicit metadata taxonomy"});
+  SENSE_SEEDS.forEach(([word,base,pos,gloss])=>out[word]={word,base,pos,gloss,domain:"sense",source:"curated sense gloss"});
+  DOMAINS.forEach(([domain,words,anchors])=>{
+    if(!out[domain]) out[domain]={word:domain,pos:"domain",base:domain,domain,source:"field hub",gloss:`A lexical field whose entries define one another through ${anchors.slice(0,4).join(", ")} and through the words ${words.slice(0,4).join(", ")}.`};
+    words.forEach((w,i)=>{if(!out[w]){const p=words[(i+words.length-1)%words.length],n=words[(i+1)%words.length],a=anchors[i%anchors.length],b=anchors[(i+2)%anchors.length];out[w]={word:w,pos:"term",base:w,domain,source:"field gloss",gloss:`A ${domain} term understood by contrast with ${p}, relation to ${n}, and use through ${a}, ${b}, and ${domain}.`}}});
+  });
+  const facets=["role","basis","limit","signal","record","method","error","pattern"];
+  DOMAINS.forEach(([domain,words,anchors])=>words.forEach((w,i)=>facets.forEach((facet,j)=>{
+    const id=`${w}#${facet}`, p=words[(i+j+1)%words.length], n=words[(i+j+5)%words.length], a=anchors[(i+j)%anchors.length], b=anchors[(i+j+2)%anchors.length];
+    out[id]={word:id,base:w,pos:"sense",domain,source:"generated closed stress gloss",gloss:`The ${facet} sense of ${w} in ${domain}: a ${facet} linking ${w}, ${p}, ${n}, ${a}, ${b}, rule, use, and interpretation within a closed lexical system.`};
+  })));
+  return out;
+}
+function buildIndexes(raw){
+  headIndex={},stemIndex={};Object.keys(raw).forEach(id=>{const b=raw[id].base||id.split("#")[0];[id,b].forEach(k=>{if(!headIndex[k])headIndex[k]=[];if(!headIndex[k].includes(id))headIndex[k].push(id)});const st=stem(b);if(!stemIndex[st])stemIndex[st]=[];if(!stemIndex[st].includes(id))stemIndex[st].push(id)});
+}
+function chooseCandidate(tok,from,cands){
+  const exact=cands.filter(c=>baseOfRaw(c)===tok||c===tok), same=exact.filter(c=>rawData[c]&&rawData[c].domain===from.domain), base=exact.find(c=>c===tok);
+  const pick=same[0]||base||exact[0]||cands[0], assumed=cands.length>1&&pick!==tok;
+  return {pick,assumed,candidates:cands.length};
+}
+function baseOfRaw(id){return(rawData[id]&&rawData[id].base)||id.split("#")[0]}
+let rawData=rawEntries();buildIndexes(rawData);
+function analyzeGloss(id,raw){
+  const seen=new Set(),deps=[],tokens=tokenize(raw.gloss).map(t=>{const st=stem(t.token);if(STOP.has(t.token))return{...t,stem:st,kind:"stop",reason:"closed-class stopword"};
+    const cands=(headIndex[t.token]||stemIndex[st]||[]).filter(c=>rawData[c]);if(!cands.length)return{...t,stem:st,kind:"bound",reason:"no headword match in bundled corpus"};
+    const ch=chooseCandidate(t.token,raw,cands), self=ch.pick===id;if(!seen.has(ch.pick)){seen.add(ch.pick);deps.push(ch.pick)}
+    return{...t,stem:st,kind:self?"self":ch.assumed?"assume":"keep",edge:ch.pick,reason:self?"matched current entry":ch.assumed?`assumed among ${ch.candidates} senses`:"exact or stem headword match"};
+  });
+  return{tokens,deps};
+}
+function buildLexicon(){
+  const out={};Object.entries(rawData).forEach(([id,r])=>out[id]={...r,deps:[],analysis:{tokens:[]}});LEXICON=out;
+  Object.entries(rawData).forEach(([id,r])=>{const a=analyzeGloss(id,r);out[id].deps=a.deps;out[id].analysis=a});
+  return out;
+}
+buildLexicon();
+function normalize(v){const s=String(v||"").trim().toLowerCase();if(LEXICON[s])return s;const bare=s.replace(/[^a-z#-]/g,"");if(LEXICON[bare])return bare;return Object.keys(LEXICON).find(k=>baseOf(k)===bare)||"meaning"}
+function nodesForMode(m){return m==="merge"?[...new Set(Object.keys(LEXICON).map(baseOf))].sort():Object.keys(LEXICON).sort()}
+function graphForMode(m){const names=nodesForMode(m),known=new Set(names),edgeSet=new Set(),edges=[];Object.entries(LEXICON).forEach(([from,e])=>e.deps.forEach(d=>{const a=m==="merge"?baseOf(from):from,b=m==="merge"?baseOf(d):d;if(a!==b&&known.has(a)&&known.has(b)){const key=a+"|"+b;if(!edgeSet.has(key)){edgeSet.add(key);edges.push({from:a,to:b})}}}));return{nodes:names.map(word=>({word,depth:0})),edges}}
+function addEdge(edges,seen,known,a,b){if(!a||!b||a===b||!known.has(a)||!known.has(b))return;const k=a+"|"+b;if(!seen.has(k)){seen.add(k);edges.push({from:a,to:b})}}
+function taxonomyGraphForMode(m){
+  const names=nodesForMode(m),known=new Set(names),seen=new Set(),edges=[];
+  Object.entries(LEXICON).forEach(([id,e])=>{
+    const a=m==="merge"?baseOf(id):id,base=m==="merge"?baseOf(id):baseOf(id),domain=e.domain||"core",parent=TAXONOMY[domain]||"lexical-field";
+    if(id.includes("#"))addEdge(edges,seen,known,a,base);
+    if(domain==="taxonomy")addEdge(edges,seen,known,a,a==="entity"?"":a.endsWith("-field")||a==="core-vocabulary"||a==="lexical-sense"?"lexical-field":"entity");
+    else {addEdge(edges,seen,known,a,domain);addEdge(edges,seen,known,domain,parent)}
+  });
+  Object.values(TAXONOMY).forEach(t=>addEdge(edges,seen,known,t,"lexical-field"));
+  addEdge(edges,seen,known,"lexical-field","entity");
+  addEdge(edges,seen,known,"core-vocabulary","lexical-field");
+  addEdge(edges,seen,known,"lexical-sense","lexical-field");
+  return{nodes:names.map(word=>({word,depth:0})),edges};
+}
+function componentMap(comps){const map={};comps.forEach((c,i)=>c.forEach(v=>map[v]={index:i,size:c.length,terms:c}));return map}
+function rootDepths(nodes,edges,root="entity"){
+  const rev={};nodes.forEach(n=>rev[n.word]=[]);edges.forEach(e=>{if(rev[e.to])rev[e.to].push(e.from)});
+  const depth={},q=[root];if(rev[root])depth[root]=0;while(q.length){const v=q.shift();rev[v].forEach(w=>{if(depth[w]===undefined){depth[w]=depth[v]+1;q.push(w)}})}
+  return depth;
+}
+function buildVisible(start,maxDepth=4){const nodes=new Map(),edges=[],q=[{word:start,depth:0,parent:null}];while(q.length){const item=q.shift(),word=item.word;if(!nodes.has(word))nodes.set(word,{word,depth:item.depth,parents:new Set()});const n=nodes.get(word);n.depth=Math.min(n.depth,item.depth);if(item.parent)n.parents.add(item.parent);if(item.depth>=maxDepth)continue;entry(word).deps.forEach(dep=>{edges.push({from:word,to:dep});if(!nodes.has(dep)||nodes.get(dep).depth>item.depth+1)q.push({word:dep,depth:item.depth+1,parent:word});else nodes.get(dep).parents.add(word)})}return{nodes:[...nodes.values()],edges}}
+function tarjan(nodes,edges){const names=nodes.map(n=>n.word),adj=Object.fromEntries(names.map(n=>[n,[]]));edges.forEach(e=>{if(adj[e.from]&&adj[e.to])adj[e.from].push(e.to)});let idx=0;const st=[],on=new Set(),meta=new Map(),comps=[];function strong(v){meta.set(v,{index:idx,low:idx});idx++;st.push(v);on.add(v);adj[v].forEach(w=>{if(!meta.has(w)){strong(w);meta.get(v).low=Math.min(meta.get(v).low,meta.get(w).low)}else if(on.has(w))meta.get(v).low=Math.min(meta.get(v).low,meta.get(w).index)});if(meta.get(v).low===meta.get(v).index){const c=[];let w;do{w=st.pop();on.delete(w);c.push(w)}while(w!==v);const self=c.length===1&&edges.some(e=>e.from===v&&e.to===v);if(c.length>1||self)comps.push(c.sort())}}names.forEach(n=>{if(!meta.has(n))strong(n)});return comps.sort((a,b)=>b.length-a.length||a[0].localeCompare(b[0]))}
+function isAcyclic(vertices,edges,removed){const keep=vertices.filter(v=>!removed.has(v)),indeg=Object.fromEntries(keep.map(v=>[v,0])),adj=Object.fromEntries(keep.map(v=>[v,[]]));edges.forEach(e=>{if(indeg[e.from]!==undefined&&indeg[e.to]!==undefined){adj[e.from].push(e.to);indeg[e.to]++}});const q=keep.filter(v=>indeg[v]===0);let seen=0;while(q.length){const v=q.pop();seen++;adj[v].forEach(w=>{if(--indeg[w]===0)q.push(w)})}return seen===keep.length}
+function cycleIn(vertices,edges,removed){const keep=new Set(vertices.filter(v=>!removed.has(v))),adj=Object.fromEntries([...keep].map(v=>[v,[]]));edges.forEach(e=>{if(keep.has(e.from)&&keep.has(e.to))adj[e.from].push(e.to)});const color={};let cyc=null;function dfs(v,path){color[v]=1;path.push(v);for(const w of adj[v]){if(color[w]===1){cyc=path.slice(path.indexOf(w));return true}if(!color[w]&&dfs(w,path))return true}path.pop();color[v]=2;return false}[...keep].some(v=>!color[v]&&dfs(v,[]));return cyc||[]}
+function greedyFVS(vertices,edges,limit=120){const rem=new Set(),deg={};vertices.forEach(v=>deg[v]=0);edges.forEach(e=>{if(deg[e.from]!=null)deg[e.from]++;if(deg[e.to]!=null)deg[e.to]++});if(vertices.length>limit)return vertices.slice().sort((a,b)=>deg[b]-deg[a]).slice(0,Math.ceil(Math.sqrt(vertices.length))).sort();while(!isAcyclic(vertices,edges,rem)){const cyc=cycleIn(vertices,edges,rem);let best=cyc[0],score=-1;cyc.forEach(v=>{const s=deg[v]||0;if(s>score){score=s;best=v}});rem.add(best)}return[...rem].sort()}
+function solveFVS(vertices,allEdges,budget=42000){const set=new Set(vertices),edges=allEdges.filter(e=>set.has(e.from)&&set.has(e.to));let best=greedyFVS(vertices,edges),branches=0,exact=true;if(vertices.length>16)return{picks:best,exact:false,branches:0,budget,gap:"<= "+best.length};function search(removed){branches++;if(branches>budget){exact=false;return}if(removed.size>=best.length)return;if(isAcyclic(vertices,edges,removed)){best=[...removed].sort();return}const cyc=cycleIn(vertices,edges,removed).sort((a,b)=>degree(b)-degree(a));for(const v of cyc){const n=new Set(removed);n.add(v);search(n);if(!exact)return}}const deg={};function degree(v){return deg[v]??(deg[v]=edges.filter(e=>e.from===v||e.to===v).length)}search(new Set());return{picks:best,exact,branches,budget,gap:exact?0:"<= "+best.length}}
+function kernelFor(comps,edges){const certs=comps.map(c=>({comp:c,...solveFVS(c,edges)}));return{picks:[...new Set(certs.flatMap(c=>c.picks))].sort(),certs}}
+function layout(nodes){const groups={};nodes.forEach(n=>(groups[n.depth]||=[]).push(n));const max=Math.max(...nodes.map(n=>n.depth),0),width=900,height=560,pos={};Object.entries(groups).forEach(([d,g])=>{g.sort((a,b)=>a.word.localeCompare(b.word));const lanes=Math.ceil(g.length/10);g.forEach((n,i)=>{const lane=i%lanes,row=Math.floor(i/lanes),rows=Math.ceil(g.length/lanes);pos[n.word]={x:70+(Number(d)/Math.max(max,1))*(width-140)+(lane-(lanes-1)/2)*36,y:((row+1)/(rows+1))*(height-72)+36,r:g.length>20?14:g.length>10?18:23}})});return{positions:pos,width,height}}
+function renderGraph(state,comps,kernel){const svg=byId("graph"),compSet=new Set(comps.flat()),kernelSet=new Set(kernel.picks),{positions,width,height}=layout(state.nodes);svg.setAttribute("viewBox",`0 0 ${width} ${height}`);const nodeDepth=Object.fromEntries(state.nodes.map(n=>[n.word,n.depth])),compKey=w=>comps.findIndex(c=>c.includes(w));const edgeEls=state.edges.filter(e=>positions[e.from]&&positions[e.to]).map(e=>{const a=positions[e.from],b=positions[e.to],back=nodeDepth[e.to]<=nodeDepth[e.from],same=compKey(e.from)>=0&&compKey(e.from)===compKey(e.to),dx=b.x-a.x,path=`M ${a.x} ${a.y} C ${a.x+dx*.45} ${a.y+(back?-42:28)}, ${b.x-dx*.35} ${b.y-(back?-42:28)}, ${b.x} ${b.y}`;return`<path class="edge ${back?"back":""} ${same?"scc":""}" d="${path}"><title>${esc(e.from)} -> ${esc(e.to)}</title></path>`}).join("");const nodeEls=state.nodes.map(n=>{const cls=["node"];if(n.word===current)cls.push("root");if(kernelSet.has(n.word))cls.push("kernel");else if(compSet.has(n.word))cls.push("scc");if(entry(n.word).deps.length===0)cls.push("leaf");const p=positions[n.word],label=n.word.length>13?n.word.slice(0,12)+".":n.word;return`<g class="${cls.join(" ")}" transform="translate(${p.x},${p.y})"><circle r="${p.r}"></circle><text>${esc(label)}</text><title>${esc(n.word+": "+entry(n.word).gloss)}</title></g>`}).join("");svg.innerHTML=`<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#555"></path></marker></defs>${edgeEls}${nodeEls}`}
+function renderSeismo(state,comps){const byDepth={};state.nodes.forEach(n=>(byDepth[n.depth]||={nodes:0,cyclic:0,backs:0}).nodes++);const compSet=new Set(comps.flat());state.nodes.forEach(n=>{if(compSet.has(n.word))byDepth[n.depth].cyclic++});const nd=Object.fromEntries(state.nodes.map(n=>[n.word,n.depth]));state.edges.forEach(e=>{if(nd[e.to]!==undefined&&nd[e.from]!==undefined&&nd[e.to]<=nd[e.from])(byDepth[nd[e.from]]||={nodes:0,cyclic:0,backs:0}).backs++});const max=Math.max(...Object.values(byDepth).map(d=>d.nodes+d.cyclic+d.backs),1);byId("bars").innerHTML=Object.entries(byDepth).sort((a,b)=>a[0]-b[0]).map(([depth,d])=>{const heat=d.cyclic+d.backs,h=8+((d.nodes+heat*2)/max)*58;return`<div class="bar ${heat>2?"hot":heat?"warn":""}" style="height:${h}px" title="depth ${depth}: ${d.nodes} terms, ${d.cyclic} cyclic terms, ${d.backs} back-edges"><span>${depth}</span></div>`}).join("");const first=Object.entries(byDepth).find(([,d])=>d.cyclic||d.backs);byId("seismoNote").textContent=first?`first circular pressure at depth ${first[0]}`:"no circular pressure in visible depth"}
+function renderProbe(){renderWords();const state=buildVisible(current,4),comps=tarjan(state.nodes,state.edges),kernel=kernelFor(comps,state.edges),e=entry(current),compSet=new Set(comps.flat()),kSet=new Set(kernel.picks),toks=e.analysis.tokens;byId("term").textContent=current;byId("pos").textContent=e.pos;byId("gloss").textContent=e.gloss;byId("deps").innerHTML=e.deps.map(d=>{const tok=toks.find(t=>t.edge===d);return`<span class="chip ${kSet.has(d)?"kernel":compSet.has(d)?"scc":tok&&tok.kind==="assume"?"assume":LEXICON[d]?"":"bound"}">${esc(d)}</span>`}).join("")||`<span class="chip">no extracted edge</span>`;renderGraph(state,comps,kernel);renderSeismo(state,comps);renderLedger(state,comps,kernel);byId("mNodes").textContent=state.nodes.length;byId("mEdges").textContent=state.edges.length;byId("mScc").textContent=comps.length;byId("mKernel").textContent=kernel.picks.length;byId("mKept").textContent=toks.filter(t=>["keep","assume","self"].includes(t.kind)).length;byId("mBoundary").textContent=toks.filter(t=>t.kind==="bound").length;byId("graphStatus").textContent=`${current}: parsed depth 4 graph, ${state.nodes.length} terms, ${state.edges.length} links`}
+function renderLedger(state,comps,kernel){const nd=Object.fromEntries(state.nodes.map(n=>[n.word,n.depth])),back=state.edges.filter(e=>nd[e.to]!==undefined&&nd[e.from]!==undefined&&nd[e.to]<=nd[e.from]);byId("findings").innerHTML=[["root",current],["source",entry(current).source],["definition",entry(current).gloss],["SCC count",`${comps.length} cyclic component${comps.length===1?"":"s"}`],["back-edges",back.length?back.slice(0,18).map(e=>`${e.from}->${e.to}`).join(", "):"none in visible graph"],["kernel",kernel.picks.length?kernel.picks.join(", "):"empty for visible graph"],["extraction",`${entry(current).analysis.tokens.length} raw tokens parsed into ${entry(current).deps.length} unique edges`]].map(([k,v])=>`<div class="finding"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("");byId("trace").innerHTML=state.nodes.slice().sort((a,b)=>a.depth-b.depth||a.word.localeCompare(b.word)).map(n=>`<tr><td>${n.depth}</td><td>${esc(n.word)}</td><td>${entry(n.word).deps.filter(d=>state.nodes.some(x=>x.word===d)).map(esc).join(", ")||"<span class='small'>no visible edge</span>"}</td></tr>`).join("");byId("cycles").innerHTML=comps.length?kernel.certs.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.comp.slice(0,30).join(", "))}${c.comp.length>30?" ...":""}</td><td><span class="cert">${c.exact?"exact":"bounded"} k=${c.picks.length}; ${esc(c.picks.slice(0,18).join(", "))}${c.picks.length>18?" ...":""}; ${c.branches} branches</span></td></tr>`).join(""):`<tr><td colspan="3"><span class="small">No strongly connected component found in the visible graph.</span></td></tr>`}
+function renderWords(){const q=(byId("query").value||"").toLowerCase(),words=Object.keys(LEXICON).filter(w=>!q||w.includes(q)||baseOf(w).includes(q)).sort().slice(0,220);byId("wordList").innerHTML=words.map(w=>`<button class="${w===current?"active":""}" data-word="${esc(w)}" title="${esc(LEXICON[w].gloss)}">${esc(w)}</button>`).join("");byId("wordList").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>select(b.dataset.word)))}
+function select(word){current=normalize(word);extractWord=current;byId("query").value=current;byId("extractQuery").value=current;selectedAtlas=current;selectedCompare=current;renderProbe();if(mode==="extract")renderExtract();if(mode==="compare")renderCompare()}
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0)/4294967295}
+function atlasState(){const g=graphForMode(graphMode),comps=tarjan(g.nodes,g.edges),kernel=kernelFor(comps,g.edges),compSet=new Set(comps.flat()),kSet=new Set(kernel.picks),domains=[...new Set(Object.values(LEXICON).map(e=>e.domain||"core"))],nodes=g.nodes.map(n=>{const e=entry(n.word),di=Math.max(0,domains.indexOf(e.domain)),a=(di/domains.length)*Math.PI*2+hash(n.word)*.38,r=.13+hash(n.word+"r")*.68;return{...n,x:.5+Math.cos(a)*r*.49,y:.5+Math.sin(a)*r*.43,vx:0,vy:0,cyclic:compSet.has(n.word),kernel:kSet.has(n.word),domain:e.domain||"core"}}),idx=Object.fromEntries(nodes.map((n,i)=>[n.word,i]));for(let t=0;t<26;t++){const tree=quad(nodes);nodes.forEach(n=>repel(n,tree,.0009));g.edges.forEach(e=>{const a=nodes[idx[e.from]],b=nodes[idx[e.to]];if(!a||!b)return;const dx=b.x-a.x,dy=b.y-a.y;a.vx+=dx*.0042;a.vy+=dy*.0042;b.vx-=dx*.0028;b.vy-=dy*.0028});nodes.forEach(n=>{n.x=Math.max(.025,Math.min(.975,n.x+n.vx));n.y=Math.max(.035,Math.min(.965,n.y+n.vy));n.vx*=.62;n.vy*=.62})}return{nodes,edges:g.edges,idx,comps,kernel,domains}}
+function quad(nodes){function make(x,y,w,h,items,depth=0){let m=0,cx=0,cy=0;items.forEach(n=>{m++;cx+=n.x;cy+=n.y});const q={x,y,w,h,m,cx:m?cx/m:x+w/2,cy:m?cy/m:y+h/2,items:null,kids:null};if(items.length<=10||depth>10){q.items=items;return q}q.kids=[];for(let yy=0;yy<2;yy++)for(let xx=0;xx<2;xx++){const nx=x+xx*w/2,ny=y+yy*h/2;q.kids.push(make(nx,ny,w/2,h/2,items.filter(n=>n.x>=nx&&n.x<nx+w/2&&n.y>=ny&&n.y<ny+h/2),depth+1))}return q}return make(0,0,1,1,nodes)}
+function repel(n,q,k){if(!q.m)return;const dx=n.x-q.cx,dy=n.y-q.cy,d2=dx*dx+dy*dy+.0008;if(q.items||q.w/Math.sqrt(d2)<.72){const f=k*q.m/d2;n.vx+=dx*f;n.vy+=dy*f}else q.kids.forEach(ch=>repel(n,ch,k))}
+function renderAtlas(recalc=true){if(recalc||!atlasCache)atlasCache=atlasState();const st=atlasCache,canvas=byId("atlasCanvas"),box=canvas.parentElement,dpr=window.devicePixelRatio||1,w=box.clientWidth||800,h=box.clientHeight||560;canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const compSet=new Set(st.comps.flat());st.edges.forEach(e=>{const a=st.nodes[st.idx[e.from]],b=st.nodes[st.idx[e.to]];if(!a||!b)return;ctx.beginPath();ctx.strokeStyle=a.kernel||b.kernel?"rgba(181,54,45,.34)":(compSet.has(e.from)&&compSet.has(e.to)?"rgba(23,93,153,.22)":"rgba(60,60,60,.075)");ctx.lineWidth=a.kernel||b.kernel?1.1:.55;ctx.moveTo(a.x*w,a.y*h);ctx.lineTo(b.x*w,b.y*h);ctx.stroke()});st.nodes.forEach(n=>{const x=n.x*w,y=n.y*h,r=n.word===selectedAtlas?6:n.kernel?4.7:n.cyclic?3.6:2.15;ctx.beginPath();ctx.fillStyle=n.word===selectedAtlas?"#171717":n.kernel?"#b5362d":n.cyclic?"#175d99":"#fffdf7";ctx.strokeStyle="#171717";ctx.lineWidth=n.word===selectedAtlas?1.6:.65;ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.stroke();if(n.kernel||n.word===selectedAtlas){ctx.font="10px ui-sans-serif,system-ui";ctx.fillStyle="#171717";ctx.fillText(n.word,x+7,y+3)}});const exact=st.kernel.certs.filter(c=>c.exact).length,bounded=st.kernel.certs.length-exact;byId("aNodes").textContent=st.nodes.length;byId("aEdges").textContent=st.edges.length;byId("aScc").textContent=st.comps.length;byId("aKernel").textContent=st.kernel.picks.length;byId("aExact").textContent=exact;byId("aBounded").textContent=bounded;byId("atlasStatus").textContent=`${graphMode}: ${st.nodes.length} parsed nodes, ${st.edges.length} extracted links`;byId("atlasFindings").innerHTML=[["mode",graphMode==="sense"?"sense-disambiguated entries":"merged word forms"],["corpus",`${Object.keys(LEXICON).length} entries; synthetic closed stress layer is explicitly labeled`],["global kernel",st.kernel.picks.slice(0,18).join(", ")+(st.kernel.picks.length>18?" ...":"")],["certificate",bounded?`${exact} exact SCCs; ${bounded} bounded SCCs`:`all ${exact} cyclic components certified`],["selected",selectedAtlas]].map(([k,v])=>`<div class="finding"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("");byId("certRows").innerHTML=st.kernel.certs.map((c,i)=>`<tr><td>${i+1}</td><td>${c.comp.length}</td><td>${c.exact?"exact":"bounded"} k=${c.picks.length}<br><span class="small">${esc(c.picks.slice(0,18).join(", "))}${c.picks.length>18?" ...":""}</span></td><td><span class="cert">${c.branches}/${c.budget}</span></td></tr>`).join("")||`<tr><td colspan="4"><span class="small">No cyclic component.</span></td></tr>`;byId("componentList").innerHTML=st.comps.slice(0,28).map((c,i)=>`<button data-node="${esc(c[0])}"><b>${i+1}. ${c.length}</b> ${esc(c.slice(0,8).join(", "))}${c.length>8?" ...":""}</button>`).join("");byId("componentList").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{selectedAtlas=b.dataset.node;renderAtlas(false)}));const indeg={},outdeg={};st.nodes.forEach(n=>{indeg[n.word]=0;outdeg[n.word]=0});st.edges.forEach(e=>{outdeg[e.from]++;indeg[e.to]++});byId("degreeRows").innerHTML=st.nodes.slice().sort((a,b)=>(outdeg[b.word]+indeg[b.word])-(outdeg[a.word]+indeg[a.word])).slice(0,54).map(n=>`<tr><td class="${n.kernel?"hotword":""}">${esc(n.word)}</td><td>${outdeg[n.word]}</td><td>${indeg[n.word]}</td></tr>`).join("");const e=entry(selectedAtlas);byId("nodeCard").innerHTML=`<div class="finding"><b>node</b><span>${esc(selectedAtlas)}</span></div><div class="finding"><b>source</b><span>${esc(e.source)}</span></div><div class="finding"><b>gloss</b><span>${esc(e.gloss)}</span></div><div class="finding"><b>edges</b><span>${e.deps.slice(0,24).map(esc).join(", ")||"none"}</span></div>`}
+function renderExtract(){extractWord=normalize(byId("extractQuery").value||extractWord);const e=entry(extractWord),t=e.analysis.tokens||[],kept=t.filter(x=>["keep","assume","self"].includes(x.kind)),stops=t.filter(x=>x.kind==="stop"),bounds=t.filter(x=>x.kind==="bound"),ass=t.filter(x=>x.kind==="assume"),self=t.filter(x=>x.kind==="self");byId("extractQuery").value=extractWord;byId("xRaw").textContent=t.length;byId("xKeep").textContent=kept.length;byId("xStop").textContent=stops.length;byId("xBound").textContent=bounds.length;byId("xAssume").textContent=ass.length;byId("xSelf").textContent=self.length;byId("extractCard").innerHTML=`<div class="finding"><b>entry</b><span>${esc(extractWord)}</span></div><div class="finding"><b>source</b><span>${esc(e.source)}</span></div><div class="finding"><b>gloss</b><span>${esc(e.gloss)}</span></div><div class="finding"><b>deps</b><span>${e.deps.map(esc).join(", ")||"none"}</span></div>`;byId("tokenStream").innerHTML=t.map(x=>`<span class="tok ${x.kind}" title="${esc(x.reason+(x.edge?" -> "+x.edge:""))}">${esc(x.raw)}<br><span class="small">${esc(x.stem)}${x.edge?" -> "+esc(x.edge):""}</span></span>`).join("");byId("edgeRows").innerHTML=kept.map(x=>`<tr><td>${esc(x.raw)}</td><td>${esc(x.edge)}</td><td>${esc(x.reason)}</td></tr>`).join("")||`<tr><td colspan="3"><span class="small">No extracted edges.</span></td></tr>`;byId("rejectRows").innerHTML=t.filter(x=>x.kind==="stop"||x.kind==="bound").map(x=>`<tr><td>${esc(x.raw)}</td><td>${x.kind}</td><td>${esc(x.reason)}</td></tr>`).join("")||`<tr><td colspan="3"><span class="small">No rejected tokens.</span></td></tr>`;byId("extractFindings").innerHTML=[["result",`${kept.length} edge tokens, ${e.deps.length} unique edges`],["assumption",ass.length?`${ass.length} tokens required sense choice`:"no ambiguous sense choice"],["boundary",bounds.length?`${bounds.length} lexical tokens outside corpus`:"closed for this gloss"],["warning",e.source.includes("generated")?"Synthetic stress entry: useful for scale and algorithm audit, not a public dictionary citation.":"Curated seed gloss."]].map(([k,v])=>`<div class="finding"><b>${esc(k)}</b><span class="${k==="warning"?"warnline":""}">${esc(v)}</span></div>`).join("");byId("pipeToken").textContent=`${t.length} alphabetic tokens`;byId("pipeStem").textContent=`${new Set(t.map(x=>x.stem)).size} stems`;byId("pipeStop").textContent=`${stops.length} structural drops`;byId("pipeMatch").textContent=`${kept.length} matched tokens`;byId("pipeCert").textContent=ass.length?`${ass.length} assumed senses`:"all kept edges direct";byId("ruleRows").innerHTML=[["Stopwords",STOPWORDS.slice(0,44).join(", ")+" ..."],["Stem rules",STEM_RULES.map(r=>r[0]+" -> "+(r[1]||"drop")).join("; ")],["Headword match","exact token, then stemmed base-form index"],["Sense choice","prefer same domain/base, otherwise first deterministic candidate"],["Corpus",`${Object.keys(LEXICON).length} entries: curated core plus generated closed stress senses`]].map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td></tr>`).join("")}
+function compareState(recalc=true){
+  if(compareCache&&!recalc&&compareCache.mode===compareMode)return compareCache;
+  const def=graphForMode(compareMode),tax=taxonomyGraphForMode(compareMode),defComps=tarjan(def.nodes,def.edges),taxComps=tarjan(tax.nodes,tax.edges),defMap=componentMap(defComps),taxMap=componentMap(taxComps),kernel=kernelFor(defComps,def.edges),depth=rootDepths(tax.nodes,tax.edges),kSet=new Set(kernel.picks);
+  const rows=def.nodes.map(n=>{const d=defMap[n.word],t=taxMap[n.word],rooted=depth[n.word]!==undefined,defCyc=!!d,taxCyc=!!t,rescue=defCyc&&rooted&&!taxCyc,stuck=defCyc&&taxCyc,diverge=(defCyc&&!taxCyc)||(kSet.has(n.word)&&rooted&&depth[n.word]<=3)||(!defCyc&&taxCyc);return{word:n.word,defCyc,taxCyc,rooted,rescue,stuck,diverge,defSize:d?d.size:0,taxSize:t?t.size:0,depth:rooted?depth[n.word]:Infinity,kernel:kSet.has(n.word)}}).sort((a,b)=>(b.stuck-a.stuck)||(b.rescue-a.rescue)||(b.diverge-a.diverge)||(b.defSize-a.defSize)||(a.depth-b.depth)||a.word.localeCompare(b.word));
+  compareCache={mode:compareMode,def,tax,defComps,taxComps,kernel,depth,rows};return compareCache;
+}
+function taxPath(word,depth,edges){
+  if(depth[word]===undefined)return "unrooted";
+  const out=[word];let v=word,guard=0;while(v!=="entity"&&guard++<12){const next=edges.filter(e=>e.from===v&&depth[e.to]===depth[v]-1).map(e=>e.to).sort()[0];if(!next)break;out.push(next);v=next}return out.join(" -> ");
+}
+function renderCompare(recalc=true){
+  selectedCompare=normalize(byId("compareSearch").value||selectedCompare);if(compareMode==="merge")selectedCompare=baseOf(selectedCompare);byId("compareSearch").value=selectedCompare;const st=compareState(recalc),rows=st.rows,defCyc=rows.filter(r=>r.defCyc),taxCyc=rows.filter(r=>r.taxCyc),rescued=rows.filter(r=>r.rescue),stuck=rows.filter(r=>r.stuck),div=rows.filter(r=>r.diverge),rooted=rows.filter(r=>r.rooted),depths=rooted.map(r=>r.depth).sort((a,b)=>a-b),median=depths.length?depths[Math.floor(depths.length/2)]:0,cert=st.kernel.certs.filter(c=>c.exact).length,sel=rows.find(r=>r.word===selectedCompare)||rows[0],maxDef=Math.max(1,...rows.map(r=>r.defSize)),maxDepth=Math.max(1,...rooted.map(r=>r.depth));
+  byId("cDefCyc").textContent=defCyc.length;byId("cTaxCyc").textContent=taxCyc.length;byId("cRescue").textContent=rescued.length;byId("cStuck").textContent=stuck.length;byId("cDiverge").textContent=div.length;byId("cRooted").textContent=rooted.length;
+  byId("cNodes").textContent=st.def.nodes.length;byId("cDefEdges").textContent=st.def.edges.length;byId("cTaxEdges").textContent=st.tax.edges.length;byId("cKernelShare").textContent=Math.round(st.kernel.picks.length/st.def.nodes.length*1000)/10+"%";byId("cRootDepth").textContent=median;byId("cMaxScc").textContent=Math.max(0,...st.defComps.map(c=>c.length));byId("cTaxMax").textContent=Math.max(0,...st.taxComps.map(c=>c.length));byId("cCert").textContent=cert+"/"+st.kernel.certs.length;
+  byId("compareFindings").innerHTML=[["vision","Merged Claude's two-graph leap with data this file can honestly support."],["definition graph","Edges are parsed from gloss text through the visible extractor."],["taxonomy graph","Edges are explicit from sense -> base -> domain -> metadata class -> entity."],["result",`${rescued.length} definition-cyclic nodes terminate in taxonomy; ${stuck.length} are cyclic in both relations.`],["limit","This is not WordNet; it is a bundled corpus taxonomy used as a second deterministic relation."]].map(([k,v])=>`<div class="finding"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("");
+  byId("compareCard").innerHTML=sel?`<div class="finding"><b>node</b><span>${esc(sel.word)}</span></div><div class="finding"><b>status</b><span>${statusBadge(sel)}</span></div><div class="finding"><b>def SCC</b><span>${sel.defSize||"acyclic"}</span></div><div class="finding"><b>tax path</b><span>${esc(taxPath(sel.word,st.depth,st.tax.edges))}</span></div><div class="finding"><b>gloss</b><span>${esc(entry(sel.word).gloss)}</span></div>`:"";
+  byId("pairedBars").innerHTML=rows.slice(0,90).map(r=>`<div class="pair" title="${esc(r.word)}"><label>${esc(r.word)}</label><div class="rail"><i style="width:${Math.max(2,r.defSize/maxDef*100)}%"></i><em style="width:${r.rooted?Math.max(2,(maxDepth-r.depth+1)/maxDepth*100):0}%"></em></div><span>${r.defSize}/${r.rooted?r.depth:"-"}</span></div>`).join("");
+  byId("divergenceSummary").innerHTML=[["selected",selectedCompare],["rescued sample",rescued.slice(0,10).map(r=>r.word).join(", ")||"none"],["kernel",st.kernel.picks.slice(0,14).join(", ")||"empty"],["taxonomy cycles",taxCyc.length?taxCyc.slice(0,8).map(r=>r.word).join(", "):"none; metadata taxonomy is a rooted DAG in this corpus"]].map(([k,v])=>`<div class="finding"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("");
+  byId("rescuedRows").innerHTML=rescued.slice(0,80).map(r=>`<tr><td>${esc(r.word)}</td><td>${r.defSize}</td><td>${esc(taxPath(r.word,st.depth,st.tax.edges))}</td></tr>`).join("")||`<tr><td colspan="3"><span class="small">No rescued nodes in this mode.</span></td></tr>`;
+  byId("compareRows").innerHTML=rows.slice(0,170).map(r=>`<tr><td class="${r.kernel?"hotword":""}">${esc(r.word)}</td><td>${statusBadge(r)}</td><td>${r.rooted?r.depth:"-"}</td><td>${r.defSize||"-"}</td></tr>`).join("");
+}
+function statusBadge(r){const cls=r.stuck?"stuck":r.rescue?"rescue":r.taxCyc?"tax":r.defCyc?"cyclic":"";const text=r.stuck?"doubly stuck":r.rescue?"rescued":r.taxCyc?"tax cyclic":r.defCyc?"def cyclic":r.rooted?"rooted":"unrooted";return`<span class="badge ${cls}">${esc(text)}</span>`}
+function depsForMode(m){const g=graphForMode(m),deps=Object.fromEntries(g.nodes.map(n=>[n.word,[]]));g.edges.forEach(e=>deps[e.from].push(e.to));Object.keys(deps).forEach(k=>deps[k].sort());return{...g,deps}}
+function acquire(known0,nodes,depsByWord){
+  const known=new Set(known0),epoch={},order=[],cohorts={0:[...known].sort()};known.forEach(w=>epoch[w]=0);
+  let frontier=true,t=0;while(frontier){frontier=false;t++;nodes.forEach(n=>{const w=n.word;if(known.has(w))return;const deps=depsByWord[w]||[];if(deps.every(d=>known.has(d))){known.add(w);epoch[w]=t;order.push(w);(cohorts[t]||=[]).push(w);frontier=true}})}
+  Object.keys(cohorts).forEach(k=>cohorts[k].sort());const residue=nodes.map(n=>n.word).filter(w=>!known.has(w)).sort();return{epoch,order,residue,known,cohorts,epochs:Math.max(0,...Object.keys(cohorts).map(Number))};
+}
+function bootAtlasState(m){const old=graphMode;graphMode=m;const st=atlasState();graphMode=old;return st}
+function bootSeedFor(preset,m,kernel){
+  const names=new Set(nodesForMode(m)),norm=w=>m==="merge"?baseOf(normalize(w)):normalize(w);let seed=[];
+  if(preset==="kernel")seed=kernel.picks.filter(w=>!bootHeld.has(w));
+  else if(preset==="core")seed=CORE.map(r=>m==="merge"?r[0]:r[0]).filter(w=>names.has(w));
+  else if(preset==="custom")seed=(byId("customSeed").value||"").split(/[\s,]+/).map(norm).filter(w=>names.has(w));
+  return[...new Set(seed)].sort();
+}
+function boundaryTokenCount(m){const names=new Set(nodesForMode(m));const toks=new Set();Object.entries(LEXICON).forEach(([id,e])=>{const w=m==="merge"?baseOf(id):id;if(names.has(w))(e.analysis.tokens||[]).filter(t=>t.kind==="bound").forEach(t=>toks.add(t.token))});return toks.size}
+function bootState(recalc=true){
+  if(bootCache&&!recalc&&bootCache.mode===bootMode&&bootCache.preset===bootPreset)return bootCache;
+  const graph=depsForMode(bootMode),atlas=bootAtlasState(bootMode),seed=bootSeedFor(bootPreset,bootMode,atlas.kernel),run=acquire(seed,graph.nodes,graph.deps);
+  bootCache={mode:bootMode,preset:bootPreset,graph,atlas,seed,run,boundary:boundaryTokenCount(bootMode)};return bootCache;
+}
+function missingChain(word,deps,known){
+  const chain=[word];let v=word,guard=0;while(guard++<8){const miss=(deps[v]||[]).filter(d=>!known.has(d)).sort()[0];if(!miss)break;chain.push(miss);v=miss;if(chain.indexOf(v)!==chain.length-1){chain.push("cycle");break}}return chain.join(" -> ");
+}
+function setBootPreset(p){bootPreset=p;["Kernel","Empty","Core","Custom"].forEach(x=>byId("seed"+x).classList.toggle("active",p===x.toLowerCase()));bootFrame=999;bootCache=null;renderBootstrap(true)}
+function renderBootstrap(recalc=true){
+  const st=bootState(recalc),run=st.run,total=st.graph.nodes.length,maxEpoch=run.epochs,endFrame=Math.min(bootFrame,maxEpoch),knownAtFrame=new Set(Object.entries(run.epoch).filter(([,e])=>e<=endFrame).map(([w])=>w)),residueSet=new Set(run.residue),epochCounts=Object.keys(run.cohorts).map(Number).sort((a,b)=>a-b),maxCount=Math.max(1,...epochCounts.map(e=>run.cohorts[e].length)),pct=Math.round(run.known.size/total*1000)/10;
+  byId("bSeed").textContent=st.seed.length;byId("bKnown").textContent=run.known.size;byId("bResidue").textContent=run.residue.length;byId("bEpochs").textContent=maxEpoch;byId("bBoundary").textContent=st.boundary;byId("bSuff").textContent=pct+"%";
+  byId("kernelToggles").innerHTML=st.atlas.kernel.picks.map(w=>`<label title="${esc(entry(w).gloss)}"><input type="checkbox" value="${esc(w)}" ${bootHeld.has(w)?"":"checked"}>${esc(w)}</label>`).join("")||`<span class="small">No cyclic kernel in this mode.</span>`;
+  byId("kernelToggles").querySelectorAll("input").forEach(x=>x.addEventListener("change",()=>{if(x.checked)bootHeld.delete(x.value);else bootHeld.add(x.value);bootCache=null;bootFrame=999;renderBootstrap(true)}));
+  byId("bootTimeline").innerHTML=epochCounts.map(e=>{const c=run.cohorts[e].length,h=10+c/maxCount*78,cls=e===0?"seed":"";return`<div class="tbar ${cls}" style="height:${h}px" title="epoch ${e}: ${c} words"><span>${e}</span></div>`}).join("")+(run.residue.length?`<div class="tbar fail" style="height:86px" title="${run.residue.length} residue"><span>x</span></div>`:"");
+  byId("bootFindings").innerHTML=[["vision","Merged Claude Bootstrap with a primitive-ablation proof audit."],["operator","AND-closure: a word is acquired only after every extracted dependency is known."],["seed",st.seed.slice(0,18).join(", ")+(st.seed.length>18?" ...":"")||"empty"],["result",run.residue.length?`${run.residue.length} words resist acquisition; kernel claim is insufficient under this seed.`:"all bundled nodes acquire; kernel is sufficient for this extracted graph."],["boundary",`${st.boundary} lexical tokens are outside the bundled corpus and counted separately from residue.`]].map(([k,v])=>`<div class="finding"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("");
+  byId("residueRows").innerHTML=run.residue.slice(0,120).map(w=>{const miss=(st.graph.deps[w]||[]).filter(d=>!run.known.has(d)).sort()[0]||"none";return`<tr><td>${esc(w)}</td><td>${esc(miss)}</td><td>${esc(missingChain(w,st.graph.deps,run.known))}</td></tr>`}).join("")||`<tr><td colspan="3"><span class="small">No residue: every bundled node is acquired by the current seed.</span></td></tr>`;
+  byId("epochRows").innerHTML=epochCounts.map(e=>`<tr><td>${e}</td><td>${esc(run.cohorts[e].slice(0,42).join(", "))}${run.cohorts[e].length>42?" ...":""}</td></tr>`).join("");
+  const baseKnown=run.known.size,imp=st.seed.map(w=>{const seed=st.seed.filter(x=>x!==w),r=acquire(seed,st.graph.nodes,st.graph.deps),lost=baseKnown-r.known.size;return{w,lost,res:r.residue.slice(0,8)}}).sort((a,b)=>b.lost-a.lost||a.w.localeCompare(b.w));
+  byId("impactRows").innerHTML=imp.map(r=>`<tr><td>${esc(r.w)}</td><td class="impact">${r.lost}</td><td>${esc(r.res.join(", "))}</td></tr>`).join("")||`<tr><td colspan="3"><span class="small">Ablation requires a non-empty seed.</span></td></tr>`;
+  renderBootCanvas(st,knownAtFrame,residueSet,endFrame,maxEpoch);
+}
+function renderBootCanvas(st,knownAtFrame,residueSet,frame,maxEpoch){
+  const canvas=byId("bootCanvas"),box=canvas.parentElement,dpr=window.devicePixelRatio||1,w=box.clientWidth||800,h=box.clientHeight||560;canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const idx=st.atlas.idx,nodes=st.atlas.nodes,seedSet=new Set(st.seed);
+  st.graph.edges.forEach(e=>{const a=nodes[idx[e.from]],b=nodes[idx[e.to]];if(!a||!b)return;const lit=knownAtFrame.has(e.from)&&knownAtFrame.has(e.to);ctx.beginPath();ctx.strokeStyle=lit?"rgba(36,114,74,.28)":"rgba(50,50,50,.045)";ctx.lineWidth=lit?1:.45;ctx.moveTo(a.x*w,a.y*h);ctx.lineTo(b.x*w,b.y*h);ctx.stroke()});
+  nodes.forEach(n=>{const x=n.x*w,y=n.y*h,known=knownAtFrame.has(n.word),seed=seedSet.has(n.word),res=residueSet.has(n.word)&&frame>=maxEpoch,r=seed?5.3:known?3.9:res?5:2.2;ctx.beginPath();ctx.fillStyle=seed?"#b5362d":known?epochColor(st.run.epoch[n.word],maxEpoch):"#fffdf7";ctx.strokeStyle=res?"#b5362d":known?"#171717":"rgba(23,23,23,.35)";ctx.lineWidth=res?2.2:known?.8:.55;ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.stroke();if(seed||res||(known&&st.run.epoch[n.word]===frame)){ctx.font="10px ui-sans-serif,system-ui";ctx.fillStyle="#171717";ctx.fillText(n.word,x+7,y+3)}});
+  byId("bootStatus").textContent=`${bootMode}: frame ${frame}/${maxEpoch}; ${knownAtFrame.size}/${st.graph.nodes.length} visible as acquired`;
+}
+function epochColor(e,max){if(e===0)return"#b5362d";const t=max?e/max:1,r=Math.round(224-(224-23)*t),g=Math.round(239-(239-93)*t),b=Math.round(247-(247-153)*t);return`rgb(${r},${g},${b})`}
+function setMode(next){mode=next;["probe","atlas","extract","compare","bootstrap"].forEach(m=>{byId(m+"View").classList.toggle("active",mode===m);byId("tab"+m[0].toUpperCase()+m.slice(1)).classList.toggle("active",mode===m)});if(mode==="atlas")renderAtlas(!atlasCache);if(mode==="extract")renderExtract();if(mode==="compare")renderCompare(!compareCache);if(mode==="bootstrap")renderBootstrap(!bootCache)}
+byId("go").addEventListener("click",()=>select(byId("query").value));byId("query").addEventListener("input",renderWords);byId("query").addEventListener("keydown",e=>{if(e.key==="Enter")select(e.currentTarget.value)});byId("tabProbe").addEventListener("click",()=>setMode("probe"));byId("tabAtlas").addEventListener("click",()=>setMode("atlas"));byId("tabExtract").addEventListener("click",()=>setMode("extract"));byId("tabCompare").addEventListener("click",()=>setMode("compare"));byId("tabBootstrap").addEventListener("click",()=>setMode("bootstrap"));byId("senseBtn").addEventListener("click",()=>{graphMode="sense";atlasCache=null;byId("senseBtn").classList.add("active");byId("mergeBtn").classList.remove("active");renderAtlas(true)});byId("mergeBtn").addEventListener("click",()=>{graphMode="merge";atlasCache=null;byId("mergeBtn").classList.add("active");byId("senseBtn").classList.remove("active");renderAtlas(true)});byId("atlasFind").addEventListener("click",()=>{selectedAtlas=normalize(byId("atlasSearch").value);renderAtlas(false)});byId("atlasSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){selectedAtlas=normalize(e.currentTarget.value);renderAtlas(false)}});byId("atlasProbe").addEventListener("click",()=>{select(selectedAtlas);setMode("probe")});byId("atlasCanvas").addEventListener("click",e=>{const st=atlasCache;if(!st)return;const r=e.currentTarget.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let best=null,bd=1e9;st.nodes.forEach(n=>{const dx=n.x*r.width-x,dy=n.y*r.height-y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=n}});if(best&&bd<260){selectedAtlas=best.word;byId("atlasSearch").value=best.word;renderAtlas(false)}});byId("extractGo").addEventListener("click",renderExtract);byId("extractQuery").addEventListener("keydown",e=>{if(e.key==="Enter")renderExtract()});byId("fromProbe").addEventListener("click",()=>{extractWord=current;byId("extractQuery").value=current;renderExtract()});byId("extractProbe").addEventListener("click",()=>{select(extractWord);setMode("probe")});byId("compareFind").addEventListener("click",()=>renderCompare(false));byId("compareSearch").addEventListener("keydown",e=>{if(e.key==="Enter")renderCompare(false)});byId("compareProbe").addEventListener("click",()=>{select(selectedCompare);setMode("probe")});byId("compareSense").addEventListener("click",()=>{compareMode="sense";compareCache=null;byId("compareSense").classList.add("active");byId("compareMerge").classList.remove("active");renderCompare(true)});byId("compareMerge").addEventListener("click",()=>{compareMode="merge";compareCache=null;byId("compareMerge").classList.add("active");byId("compareSense").classList.remove("active");renderCompare(true)});byId("seedKernel").addEventListener("click",()=>setBootPreset("kernel"));byId("seedEmpty").addEventListener("click",()=>setBootPreset("empty"));byId("seedCore").addEventListener("click",()=>setBootPreset("core"));byId("seedCustom").addEventListener("click",()=>setBootPreset("custom"));byId("customSeed").addEventListener("input",()=>{bootPreset="custom";setBootPreset("custom")});byId("bootSense").addEventListener("click",()=>{bootMode="sense";bootCache=null;bootFrame=999;byId("bootSense").classList.add("active");byId("bootMerge").classList.remove("active");renderBootstrap(true)});byId("bootMerge").addEventListener("click",()=>{bootMode="merge";bootCache=null;bootFrame=999;byId("bootMerge").classList.add("active");byId("bootSense").classList.remove("active");renderBootstrap(true)});byId("bootReset").addEventListener("click",()=>{bootFrame=0;renderBootstrap(false)});byId("bootStep").addEventListener("click",()=>{const st=bootState(false);bootFrame=Math.min(st.run.epochs,bootFrame+1);renderBootstrap(false)});byId("bootEnd").addEventListener("click",()=>{bootFrame=999;renderBootstrap(false)});byId("bootPlay").addEventListener("click",()=>{if(bootTimer){clearInterval(bootTimer);bootTimer=null;byId("bootPlay").textContent="Play";return}bootFrame=0;byId("bootPlay").textContent="Stop";bootTimer=setInterval(()=>{const st=bootState(false);bootFrame++;if(bootFrame>=st.run.epochs){clearInterval(bootTimer);bootTimer=null;byId("bootPlay").textContent="Play"}renderBootstrap(false)},520)});window.addEventListener("resize",()=>{if(mode==="atlas")renderAtlas(false);if(mode==="bootstrap")renderBootstrap(false)});select("meaning");
+</script>
+</body>
+</html>

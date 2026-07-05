@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etymon Loom</title>
+<style>
+:root{
+  --paper:#f8f6ef; --ink:#171615; --muted:#615d55; --hair:#c9c1b3; --hair2:#ded8cd;
+  --panel:#fffdf8; --blue:#245e9a; --red:#a44332; --green:#327352; --gold:#9a6a1f;
+  --violet:#6653a3; --cyan:#287982; --shadow:rgba(45,35,20,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{font-size:13px;line-height:1.25}
+button,input,select{font:inherit;color:inherit}
+.app{min-height:100vh;display:grid;grid-template-rows:auto 1fr;background:
+  linear-gradient(90deg,rgba(0,0,0,.025) 1px,transparent 1px) 0 0/24px 24px,
+  linear-gradient(0deg,rgba(0,0,0,.018) 1px,transparent 1px) 0 0/24px 24px,var(--paper)}
+header{display:grid;grid-template-columns:280px 1fr 340px;gap:8px;align-items:stretch;border-bottom:1px solid var(--hair);background:#fbfaf5;padding:7px 8px}
+h1{font-size:18px;line-height:1;margin:0;letter-spacing:0;font-weight:800}
+.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:3px}
+.thesis{border-left:3px solid var(--ink);padding:0 10px;font-family:ui-serif,Georgia,serif;font-size:14px}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px;color:var(--muted)}
+.meta b{color:var(--ink)}
+.grid{display:grid;grid-template-columns:252px minmax(560px,1fr) 342px;gap:8px;padding:8px;min-height:0}
+.panel{background:rgba(255,253,248,.92);border:1px solid var(--hair);box-shadow:0 1px 0 var(--shadow);min-width:0}
+.panel h2,.panel h3{font-size:12px;text-transform:uppercase;letter-spacing:.07em;margin:0;padding:6px 7px;border-bottom:1px solid var(--hair2);background:#f1ede3}
+.left{display:grid;grid-template-rows:auto auto 1fr;gap:8px;min-height:0}
+.controls{padding:7px;display:grid;gap:7px}
+.row{display:flex;gap:6px;align-items:center;min-width:0}
+.row label{font-size:11px;color:var(--muted);min-width:42px}
+select,.search{width:100%;border:1px solid var(--hair);background:white;padding:4px 5px;border-radius:2px}
+input[type=range]{width:100%;accent-color:var(--red)}
+.ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:-4px}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px}
+.toggles label{border:1px solid var(--hair2);background:#fff;padding:4px;display:flex;gap:4px;align-items:center}
+.lexemes{overflow:auto;min-height:0}
+.lex{width:100%;display:grid;grid-template-columns:1fr auto;gap:4px;border:0;border-bottom:1px solid var(--hair2);background:#fffdf8;text-align:left;padding:7px;cursor:pointer}
+.lex:hover,.lex.active{background:#ece6d8}
+.lex strong{font-size:16px}
+.lex small{color:var(--muted);grid-column:1/3}
+.badge{font-size:10px;border:1px solid var(--hair);padding:1px 4px;align-self:start;background:#fff}
+.main{display:grid;grid-template-rows:auto minmax(360px,1fr) 190px;gap:8px;min-height:0}
+.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:7px;align-items:center;padding:6px 7px}
+.toolbar .title{font-weight:800;font-size:15px}
+.toolbar .sub{color:var(--muted);font-size:11px}
+.legend{display:flex;gap:5px;flex-wrap:wrap;font-size:10px}
+.key{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--hair2);background:white;padding:2px 4px}
+.sw{width:9px;height:9px;border-radius:50%;display:inline-block}
+.loomWrap{position:relative;min-height:0}
+canvas{display:block;width:100%;height:100%;background:#fffdf8}
+.hover{position:absolute;pointer-events:none;background:#fffffb;border:1px solid var(--ink);box-shadow:2px 2px 0 rgba(0,0,0,.12);padding:5px 6px;max-width:270px;font-size:11px;display:none;z-index:3}
+.chronicle{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{border-bottom:1px solid var(--hair2);padding:4px 5px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:#f1ede3;text-transform:uppercase;letter-spacing:.06em;font-size:10px}
+td.form{font-family:ui-serif,Georgia,serif;font-size:13px;font-weight:700}
+.right{display:grid;grid-template-rows:auto auto 1fr;gap:8px;min-height:0}
+.readout{padding:7px;display:grid;gap:6px}
+.bigform{font-family:ui-serif,Georgia,serif;font-size:24px;font-weight:800;border-bottom:1px solid var(--hair2);padding-bottom:4px}
+.kv{display:grid;grid-template-columns:78px 1fr;gap:4px;font-size:12px}
+.kv span:first-child{color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.06em}
+.triad{padding:7px}
+.triad svg{width:100%;height:132px;display:block;background:#fff;border:1px solid var(--hair2)}
+.ledger{overflow:auto}
+.card{border-bottom:1px solid var(--hair2);padding:7px;background:#fffdf8}
+.card b{display:block;font-size:12px;margin-bottom:2px}
+.card .tag{display:inline-block;margin:2px 3px 0 0;border:1px solid var(--hair);font-size:10px;padding:1px 4px;background:#fff}
+.mini{font-size:11px;color:var(--muted)}
+.event-inherited{color:var(--green)} .event-borrowed{color:var(--blue)} .event-shift{color:var(--red)} .event-reconstructed{color:var(--gold)}
+.warn{border-left:3px solid var(--red);padding-left:6px}
+.statusbar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;border-top:1px solid var(--hair);background:var(--hair)}
+.statusbar div{background:#fffdf8;padding:5px 6px;min-width:0}
+.statusbar b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+@media(max-width:1050px){
+  header{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  .left{grid-template-rows:auto auto 220px}
+  .main{grid-template-rows:auto 520px 220px}
+  .right{grid-template-rows:auto auto 320px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><h1>Etymon Loom</h1><div class="kicker">stratigraphic instrument for etymology and time</div></div>
+    <div class="thesis">Words are not born with meanings. They accumulate forms, uses, borrowings, and interpretants under pressure from speakers, writing systems, institutions, and memory.</div>
+    <div class="meta">
+      <div><b>Status</b><br>offline, self-contained, curated micro-corpus</div>
+      <div><b>Reading rule</b><br>dashed = reconstructed; diagonal = borrowing</div>
+    </div>
+  </header>
+  <div class="grid">
+    <aside class="left">
+      <section class="panel">
+        <h2>Temporal Lens</h2>
+        <div class="controls">
+          <div class="row"><label for="year">year</label><input id="year" type="range" min="-4500" max="2026" value="2026" step="25"><b id="yearLabel">2026 CE</b></div>
+          <div class="ticks"><span>4500 BCE</span><span>0</span><span>2026 CE</span></div>
+          <div class="row"><label for="mode">mode</label><select id="mode"><option value="strata">strata</option><option value="certainty">certainty</option><option value="semantics">semantic mechanisms</option><option value="sources">source status</option></select></div>
+          <div class="toggles">
+            <label><input id="showRecon" type="checkbox" checked> reconstructions</label>
+            <label><input id="showBorrow" type="checkbox" checked> borrowings</label>
+            <label><input id="showCognates" type="checkbox" checked> cognates</label>
+            <label><input id="showLabels" type="checkbox" checked> labels</label>
+          </div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Lexeme Index</h2>
+        <div class="controls"><input id="search" class="search" placeholder="filter: word, root, mechanism"></div>
+      </section>
+      <section class="panel lexemes" id="lexemes"></section>
+    </aside>
+    <main class="main">
+      <section class="panel">
+        <div class="toolbar">
+          <div><div class="title" id="entryTitle"></div><div class="sub" id="entrySub"></div></div>
+          <div class="legend">
+            <span class="key"><i class="sw" style="background:var(--gold)"></i>reconstructed</span>
+            <span class="key"><i class="sw" style="background:var(--green)"></i>inherited</span>
+            <span class="key"><i class="sw" style="background:var(--blue)"></i>borrowed</span>
+            <span class="key"><i class="sw" style="background:var(--red)"></i>semantic shift</span>
+          </div>
+          <button id="reset">today</button>
+        </div>
+      </section>
+      <section class="panel loomWrap">
+        <canvas id="loom"></canvas>
+        <div class="hover" id="hover"></div>
+      </section>
+      <section class="panel chronicle">
+        <table>
+          <thead><tr><th>date</th><th>form</th><th>language</th><th>event</th><th>gloss / use</th><th>historical note</th></tr></thead>
+          <tbody id="chronicle"></tbody>
+        </table>
+      </section>
+    </main>
+    <aside class="right">
+      <section class="panel">
+        <h2>Selected Stratum</h2>
+        <div class="readout" id="readout"></div>
+        <div class="statusbar" id="statusbar"></div>
+      </section>
+      <section class="panel">
+        <h2>Sign / Object / Interpretant</h2>
+        <div class="triad" id="triad"></div>
+      </section>
+      <section class="panel ledger">
+        <h2>Semantic Ledger and Cautions</h2>
+        <div id="ledger"></div>
+      </section>
+    </aside>
+  </div>
+</div>
+<script>
+const DATA=[
+{id:"star",word:"star",root:"PIE *h2ster- 'star'",family:"Indo-European inheritance with cognate witnesses",unusual:"A compact case where one night-sky object lets you compare inherited English with Greek, Latin, and Indo-Iranian witnesses without pretending every similar form is an English ancestor.",philosophy:{sense:"celestial point as navigational and calendrical sign",object:"visible luminous body, not technically limited to modern astronomy's star category",game:"navigation, omen-reading, calendar reckoning, poetic naming"},cautions:["Proto-Indo-European forms are reconstructions, not written records.","Greek astēr and Latin stella are cognates or related witnesses, not sources of English star."],nodes:[
+{id:"pie",year:-3500,lang:"Proto-Indo-European",form:"*h2ster-",event:"reconstructed",gloss:"star; celestial body",note:"Reconstructed root behind several Indo-European star words.",certainty:.74},
+{id:"pg",year:-500,lang:"Proto-Germanic",form:"*sternō",event:"inherited",gloss:"star",note:"Germanic continuation; compare Old High German sterno.",parents:["pie"],certainty:.78},
+{id:"skt",year:-1000,lang:"Old Indic",form:"tārā",event:"cognate",gloss:"star",note:"Indo-Iranian witness usually compared with the PIE star word.",parents:["pie"],certainty:.62},
+{id:"grc",year:-750,lang:"Ancient Greek",form:"astēr",event:"cognate",gloss:"star",note:"Cognate witness; initial a- reflects a different branch development, not an English prefix.",parents:["pie"],certainty:.72},
+{id:"lat",year:-200,lang:"Latin",form:"stella",event:"cognate",gloss:"star",note:"Related Italic form, often explained with a suffixal development.",parents:["pie"],certainty:.58},
+{id:"oe",year:725,lang:"Old English",form:"steorra",event:"inherited",gloss:"star",note:"Attested Old English form.",parents:["pg"],certainty:.93},
+{id:"me",year:1200,lang:"Middle English",form:"sterre / starre",event:"shift",gloss:"star",note:"Orthographic and phonological reshaping across Middle English dialects.",parents:["oe"],certainty:.88},
+{id:"mod",year:1600,lang:"Modern English",form:"star",event:"shift",gloss:"star; celebrity",note:"Later metaphorical extension to a famous performer is a semantic re-use of brightness and prominence.",parents:["me"],certainty:.98}
+]},
+{id:"write",word:"write",root:"Proto-Germanic *writaną 'scratch, incise'",family:"Germanic material history of marks",unusual:"The modern mental verb hides a manual verb: writing starts here as cutting, scoring, or scratching a surface.",philosophy:{sense:"visible mark treated as durable speech or record",object:"incised or written sign",game:"accounting, law, message, authorship"},cautions:["The older sense is not 'compose literature' but physical mark-making.","The deeper Indo-European connection is plausible but not as secure as the Germanic history."],nodes:[
+{id:"pg",year:-200,lang:"Proto-Germanic",form:"*writaną",event:"reconstructed",gloss:"scratch, carve, incise",note:"Reconstructed Germanic verb for cutting or scratching marks.",certainty:.76},
+{id:"on",year:900,lang:"Old Norse",form:"rita",event:"cognate",gloss:"scratch; write",note:"North Germanic cognate preserving the mark-making field.",parents:["pg"],certainty:.84},
+{id:"ohg",year:900,lang:"Old High German",form:"rīzan / rizzan",event:"cognate",gloss:"scratch, tear, incise",note:"Related Germanic forms show the physical action domain.",parents:["pg"],certainty:.65},
+{id:"oe",year:700,lang:"Old English",form:"wrītan",event:"inherited",gloss:"score, outline, write",note:"Old English bridges the carved mark and the written sign.",parents:["pg"],certainty:.95},
+{id:"me",year:1250,lang:"Middle English",form:"writen",event:"shift",gloss:"write, compose, record",note:"Use expands with documentary and literary practices.",parents:["oe"],certainty:.92},
+{id:"mod",year:1600,lang:"Modern English",form:"write",event:"shift",gloss:"inscribe; compose text",note:"The physical verb becomes an intellectual and bureaucratic verb.",parents:["me"],certainty:.99}
+]},
+{id:"guest",word:"guest / host",root:"PIE *gʰóstis 'stranger, guest, host'",family:"Reciprocal hospitality and social danger",unusual:"One reconstructed social term splits into guest, host, hostile, hospice, and hotel: the stranger is both protected person and potential enemy.",philosophy:{sense:"outsider under a rule of reception",object:"stranger in a reciprocal social relation",game:"hospitality, treaty, household, war, commerce"},cautions:["English guest is inherited through Germanic; host/hotel/hospice are borrowings through Latin and French paths.","Latin hostis shifted toward 'enemy'; hospes preserves host/guest reciprocity."],nodes:[
+{id:"pie",year:-3500,lang:"Proto-Indo-European",form:"*gʰóstis",event:"reconstructed",gloss:"stranger; guest; host",note:"A reciprocal institution term, not a simple modern role label.",certainty:.78},
+{id:"pg",year:-400,lang:"Proto-Germanic",form:"*gastiz",event:"inherited",gloss:"guest, stranger",note:"Germanic inheritance behind English guest.",parents:["pie"],certainty:.83},
+{id:"latHostis",year:-200,lang:"Latin",form:"hostis",event:"cognate",gloss:"stranger; public enemy",note:"Semantic movement from stranger to enemy in Roman civic language.",parents:["pie"],certainty:.86},
+{id:"latHospes",year:-100,lang:"Latin",form:"hospes",event:"cognate",gloss:"host; guest",note:"Compound-like Latin development preserving reciprocal hospitality.",parents:["pie"],certainty:.82},
+{id:"oe",year:800,lang:"Old English",form:"giest / gæst",event:"inherited",gloss:"guest, stranger",note:"Attested inherited English line.",parents:["pg"],certainty:.95},
+{id:"of",year:1200,lang:"Old French",form:"hoste",event:"borrowed",gloss:"host; guest; landlord",note:"Romance path that later feeds English host and hotel relatives.",parents:["latHospes"],certainty:.88},
+{id:"guest",year:1300,lang:"Middle English",form:"guest",event:"shift",gloss:"visitor received by another",note:"Spelling and sound settle toward modern guest.",parents:["oe"],certainty:.93},
+{id:"host",year:1300,lang:"Middle English",form:"host",event:"borrowed",gloss:"one who receives guests",note:"Borrowed from Old French, ultimately Latin hospes.",parents:["of"],certainty:.91},
+{id:"hostile",year:1500,lang:"English",form:"hostile",event:"borrowed",gloss:"enemy-like",note:"Learned borrowing from Latin hostilis, tied to hostis 'enemy'.",parents:["latHostis"],certainty:.91}
+]},
+{id:"tide",word:"tide / time",root:"Proto-Germanic *tīdiz 'time, period'",family:"Germanic period word narrowed by coastal practice",unusual:"Tide did not begin as ocean water. It meant time, season, appointed period; the sea sense is a later specialization of recurrent time.",philosophy:{sense:"measured or appointed recurrence",object:"period, season, recurring sea movement",game:"calendar, liturgy, labor, navigation"},cautions:["Modern tide is not etymologically born from the sea; the sea meaning is a specialization.","English time and tide are distinct words that came to overlap proverbially."],nodes:[
+{id:"pg",year:-300,lang:"Proto-Germanic",form:"*tīdiz",event:"reconstructed",gloss:"time, period",note:"Reconstructed Germanic noun for a stretch or appointed point of time.",certainty:.79},
+{id:"oe",year:725,lang:"Old English",form:"tīd",event:"inherited",gloss:"time, hour, season, canonical hour",note:"Old English used tīd broadly for appointed time and liturgical time.",parents:["pg"],certainty:.96},
+{id:"yt",year:900,lang:"Old English",form:"Yuletide",event:"shift",gloss:"seasonal period",note:"Compounds preserve the older period/season value.",parents:["oe"],certainty:.88},
+{id:"sea",year:1350,lang:"Middle English",form:"tide",event:"shift",gloss:"periodic rise and fall of the sea",note:"Specialization from recurrent time to the recurrent sea phenomenon.",parents:["oe"],certainty:.9},
+{id:"mod",year:1600,lang:"Modern English",form:"tide",event:"shift",gloss:"sea tide; figurative current",note:"The older temporal sense survives in compounds and formulae.",parents:["sea"],certainty:.98}
+]},
+{id:"clue",word:"clue",root:"Old English cliewen 'ball of thread'",family:"Germanic object turned interpretive method",unusual:"A clue is a thread you can reason with: the Theseus story turns a material guide into an epistemic tool.",philosophy:{sense:"trace that guides interpretation",object:"thread-ball; later evidence",game:"navigation, puzzle-solving, detective inference"},cautions:["The spelling clue is later; the older form is clew/cliewen.","The semantic leap is literary and interpretive, not a sound-law event."],nodes:[
+{id:"oe",year:900,lang:"Old English",form:"cliewen",event:"inherited",gloss:"ball, ball of thread",note:"Material noun in Old English.",certainty:.88},
+{id:"me",year:1300,lang:"Middle English",form:"clewe",event:"shift",gloss:"ball of thread",note:"Middle English form continues the object sense.",parents:["oe"],certainty:.88},
+{id:"myth",year:1590,lang:"English",form:"clew",event:"shift",gloss:"thread as guide through a maze",note:"Ariadne/Theseus imagery supports the guide-to-solution sense.",parents:["me"],certainty:.76},
+{id:"mod",year:1700,lang:"Modern English",form:"clue",event:"shift",gloss:"evidence leading to a solution",note:"Interpretive extension: material thread becomes inferential trace.",parents:["myth"],certainty:.94}
+]},
+{id:"salary",word:"salary",root:"Latin salarium, related to sal 'salt'",family:"Borrowed fiscal word with a famous myth",unusual:"The tool marks the attractive story and the safer history separately: salt is relevant, but 'Roman soldiers were paid in salt' is too neat.",philosophy:{sense:"regular payment for service",object:"allowance, stipend, later wage",game:"military administration, household economy, employment"},cautions:["Salarium is related to Latin sal 'salt', but the common claim that salary literally means soldiers were paid in salt is not secure.","English salary is a borrowing, not an inherited Germanic word."],nodes:[
+{id:"latSal",year:-500,lang:"Latin",form:"sal",event:"cognate",gloss:"salt",note:"Latin noun sal 'salt'.",certainty:.96},
+{id:"lat",year:-100,lang:"Latin",form:"salarium",event:"shift",gloss:"allowance, stipend",note:"A payment or allowance term related to salt, with details debated.",parents:["latSal"],certainty:.82},
+{id:"af",year:1250,lang:"Anglo-French",form:"salarie",event:"borrowed",gloss:"stipend, wage",note:"Romance administrative vocabulary enters English channels.",parents:["lat"],certainty:.86},
+{id:"me",year:1350,lang:"Middle English",form:"salarie",event:"borrowed",gloss:"fixed payment",note:"Borrowed fiscal term.",parents:["af"],certainty:.9},
+{id:"mod",year:1600,lang:"Modern English",form:"salary",event:"shift",gloss:"regular payment for employment",note:"Modern employment sense stabilizes.",parents:["me"],certainty:.98}
+]}
+];
+
+const COLORS={reconstructed:"#9a6a1f",inherited:"#327352",borrowed:"#245e9a",shift:"#a44332",cognate:"#6653a3"};
+const rows=["Proto-Indo-European","Proto-Germanic","Old Indic","Ancient Greek","Latin","Old French","Anglo-French","Old Norse","Old High German","Old English","Middle English","English","Modern English"];
+let state={entry:DATA[0],node:null,hover:null};
+const $=id=>document.getElementById(id);
+const canvas=$("loom"),ctx=canvas.getContext("2d"),hover=$("hover");
+
+function yearText(y){return y<0?Math.abs(y)+" BCE":y+" CE"}
+function xFor(year,w){const min=-4500,max=2026;return 52+(year-min)/(max-min)*(w-78)}
+function yFor(lang,h){let i=rows.indexOf(lang); if(i<0)i=rows.length-1; return 32+i*((h-60)/(rows.length-1))}
+function eventLabel(e){return e==="shift"?"semantic / form shift":e}
+function visibleNode(n){
+ if(n.event==="reconstructed"&&!$("showRecon").checked)return false;
+ if(n.event==="borrowed"&&!$("showBorrow").checked)return false;
+ if(n.event==="cognate"&&!$("showCognates").checked)return false;
+ return true;
+}
+function resize(){const r=canvas.parentElement.getBoundingClientRect();canvas.width=Math.max(400,Math.floor(r.width*devicePixelRatio));canvas.height=Math.max(320,Math.floor(r.height*devicePixelRatio));canvas.style.width=r.width+"px";canvas.style.height=r.height+"px";ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);draw();}
+function draw(){
+ const w=canvas.clientWidth,h=canvas.clientHeight,year=+$("year").value,mode=$("mode").value;
+ ctx.clearRect(0,0,w,h); ctx.fillStyle="#fffdf8"; ctx.fillRect(0,0,w,h);
+ ctx.strokeStyle="#ded8cd"; ctx.lineWidth=1; ctx.font="10px system-ui";
+ rows.forEach(lang=>{const y=yFor(lang,h);ctx.beginPath();ctx.moveTo(48,y);ctx.lineTo(w-24,y);ctx.stroke();ctx.fillStyle="#615d55";ctx.fillText(lang.replace("Proto-","P-"),5,y+3);});
+ [-4000,-3000,-2000,-1000,0,1000,2000].forEach(t=>{const x=xFor(t,w);ctx.strokeStyle=t===0?"#aaa092":"#e5ded3";ctx.beginPath();ctx.moveTo(x,16);ctx.lineTo(x,h-26);ctx.stroke();ctx.fillStyle="#615d55";ctx.fillText(t<0?Math.abs(t)/1000+"k BCE":t===0?"0":t+"",x-15,h-8);});
+ const nowX=xFor(year,w);ctx.fillStyle="rgba(164,67,50,.08)";ctx.fillRect(48,16,Math.max(0,nowX-48),h-42);ctx.strokeStyle="#a44332";ctx.beginPath();ctx.moveTo(nowX,14);ctx.lineTo(nowX,h-22);ctx.stroke();ctx.fillStyle="#a44332";ctx.fillText(yearText(year),nowX+4,25);
+ const nodes=state.entry.nodes.filter(visibleNode),byId=Object.fromEntries(state.entry.nodes.map(n=>[n.id,n]));
+ nodes.forEach(n=>{
+   (n.parents||[]).forEach(pid=>{const p=byId[pid]; if(!p||!visibleNode(p))return; const x1=xFor(p.year,w),y1=yFor(p.lang,h),x2=xFor(n.year,w),y2=yFor(n.lang,h); const future=n.year>year||p.year>year; ctx.strokeStyle=future?"rgba(90,85,78,.22)":(n.event==="borrowed"?"#245e9a":"rgba(35,33,30,.55)"); ctx.lineWidth=n.event==="borrowed"?2:1.2; ctx.setLineDash(n.event==="borrowed"?[5,3]:[]); ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.setLineDash([]);});
+ });
+ state.points=[];
+ nodes.forEach(n=>{
+   const x=xFor(n.year,w),y=yFor(n.lang,h),future=n.year>year,active=Math.abs(n.year-year)<120;
+   let col=COLORS[n.event]||"#444"; if(mode==="certainty") col=`rgba(36,94,154,${.25+n.certainty*.75})`; if(mode==="sources") col=n.event==="reconstructed"?"#9a6a1f":"#327352"; if(mode==="semantics") col=n.event==="shift"?"#a44332":"#287982";
+   ctx.globalAlpha=future ? .28 : 1; ctx.fillStyle=col; ctx.strokeStyle=active?"#171615":"#fffdf8"; ctx.lineWidth=active?2.5:1.3;
+   ctx.setLineDash(n.event==="reconstructed"?[4,3]:[]);
+   ctx.beginPath();ctx.arc(x,y,5+n.certainty*4,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+   if($("showLabels").checked){ctx.font="11px ui-serif, Georgia, serif";ctx.fillStyle=future?"#9c9488":"#171615";ctx.fillText(n.form,x+9,y-7);ctx.font="10px system-ui";ctx.fillStyle="#615d55";ctx.fillText(yearText(n.year),x+9,y+6);}
+   state.points.push({...n,x,y});
+ });
+}
+function renderLexemes(){
+ const q=$("search").value.toLowerCase(),box=$("lexemes");box.innerHTML="";
+ DATA.filter(e=>(e.word+" "+e.root+" "+e.family+" "+e.unusual+" "+e.nodes.map(n=>n.event+" "+n.gloss).join(" ")).toLowerCase().includes(q)).forEach(e=>{
+  const b=document.createElement("button");b.className="lex"+(e===state.entry?" active":"");b.innerHTML=`<strong>${e.word}</strong><span class="badge">${e.nodes.length} strata</span><small>${e.root}<br>${e.family}</small>`;b.onclick=()=>{state.entry=e;state.node=null;renderAll();};box.appendChild(b);
+ });
+}
+function esc(s){return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
+function svgWrap(text,x,y,chars,lines=2){
+ const words=String(text).split(/\s+/),out=[];let line="";
+ words.forEach(w=>{if((line+" "+w).trim().length>chars&&line){out.push(line);line=w}else line=(line+" "+w).trim()});
+ if(line)out.push(line);
+ return out.slice(0,lines).map((l,i)=>`<tspan x="${x}" y="${y+i*13}">${esc(i===lines-1&&out.length>lines?l+"...":l)}</tspan>`).join("");
+}
+function renderPanels(){
+ const e=state.entry,n=state.node||e.nodes[e.nodes.length-1];$("entryTitle").textContent=e.word+" | "+e.root;$("entrySub").textContent=e.unusual;
+ $("readout").innerHTML=`<div class="bigform">${n.form}</div><div class="kv"><span>Date</span><div>${yearText(n.year)} approx.</div><span>Language</span><div>${n.lang}</div><span>Event</span><div class="event-${n.event}">${eventLabel(n.event)}</div><span>Gloss</span><div>${n.gloss}</div><span>Note</span><div>${n.note}</div></div>`;
+ $("statusbar").innerHTML=`<div><b>certainty</b>${Math.round(n.certainty*100)}%</div><div><b>branch</b>${e.family.split(" ")[0]}</div><div><b>parents</b>${(n.parents||[]).length||"root"}</div><div><b>active lens</b>${yearText(+$("year").value)}</div>`;
+ $("triad").innerHTML=`<svg viewBox="0 0 320 132" role="img" aria-label="semiotic triad"><defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#615d55"/></marker></defs><rect x="8" y="8" width="92" height="48" fill="#f8f6ef" stroke="#c9c1b3"/><rect x="114" y="8" width="92" height="48" fill="#f8f6ef" stroke="#c9c1b3"/><rect x="220" y="8" width="92" height="48" fill="#f8f6ef" stroke="#c9c1b3"/><text x="18" y="23" font-size="10" fill="#615d55">SIGNIFIER</text><text x="18" y="40" font-size="12" font-family="Georgia">${esc(n.form)}</text><text x="124" y="23" font-size="10" fill="#615d55">OBJECT</text><text font-size="10">${svgWrap(e.philosophy.object,124,39,15,2)}</text><text x="230" y="23" font-size="10" fill="#615d55">INTERPRETANT</text><text font-size="10">${svgWrap(e.philosophy.game,230,39,13,2)}</text><path d="M100 32 H114" stroke="#615d55" marker-end="url(#arr)"/><path d="M206 32 H220" stroke="#615d55" marker-end="url(#arr)"/><path d="M266 60 C242 116 70 116 54 60" fill="none" stroke="#a44332" stroke-width="1.5" marker-end="url(#arr)"/><text x="18" y="91" font-size="10" fill="#615d55">FREGEAN SENSE</text><text font-size="11">${svgWrap(e.philosophy.sense,18,110,46,2)}</text></svg>`;
+ $("ledger").innerHTML=`<div class="card"><b>Why this entry matters</b><div>${e.unusual}</div></div>`+e.nodes.map(x=>`<div class="card"><b>${yearText(x.year)} · ${x.form}</b><div>${x.gloss}</div><span class="tag event-${x.event}">${eventLabel(x.event)}</span><span class="tag">${Math.round(x.certainty*100)}% confidence</span></div>`).join("")+e.cautions.map(c=>`<div class="card warn"><b>Caution</b><div>${c}</div></div>`).join("");
+ $("chronicle").innerHTML=e.nodes.slice().sort((a,b)=>a.year-b.year).map(x=>`<tr><td>${yearText(x.year)}</td><td class="form">${x.form}</td><td>${x.lang}</td><td class="event-${x.event}">${eventLabel(x.event)}</td><td>${x.gloss}</td><td>${x.note}</td></tr>`).join("");
+}
+function renderAll(){renderLexemes();renderPanels();draw();}
+canvas.addEventListener("mousemove",ev=>{const r=canvas.getBoundingClientRect(),x=ev.clientX-r.left,y=ev.clientY-r.top,p=(state.points||[]).find(p=>Math.hypot(p.x-x,p.y-y)<11); if(!p){hover.style.display="none";return;} hover.style.display="block";hover.style.left=Math.min(x+12,r.width-285)+"px";hover.style.top=Math.max(8,y+12)+"px";hover.innerHTML=`<b>${p.form}</b><br>${yearText(p.year)} · ${p.lang}<br>${eventLabel(p.event)} · ${p.gloss}<br><span class="mini">${p.note}</span>`;});
+canvas.addEventListener("mouseleave",()=>hover.style.display="none");
+canvas.addEventListener("click",ev=>{const r=canvas.getBoundingClientRect(),x=ev.clientX-r.left,y=ev.clientY-r.top,p=(state.points||[]).find(p=>Math.hypot(p.x-x,p.y-y)<12); if(p){state.node=state.entry.nodes.find(n=>n.id===p.id);renderPanels();draw();}});
+["year","mode","showRecon","showBorrow","showCognates","showLabels"].forEach(id=>$(id).addEventListener("input",()=>{$("yearLabel").textContent=yearText(+$("year").value);renderPanels();draw();}));
+$("search").addEventListener("input",renderLexemes);$("reset").onclick=()=>{$("year").value=2026;$("yearLabel").textContent=yearText(2026);renderPanels();draw();};
+window.addEventListener("resize",resize);
+renderAll();resize();
+</script>
+</body>
+</html>

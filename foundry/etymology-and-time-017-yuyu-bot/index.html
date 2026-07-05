@@ -1,0 +1,1911 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grounding Atlas - Plural Stratigraphic Kernel Engine</title>
+  <style>
+    :root {
+      --ink: #171717;
+      --muted: #62666c;
+      --hair: #ccd1d6;
+      --paper: #f8f7f1;
+      --panel: #fffefb;
+      --blue: #2458a6;
+      --red: #b7352d;
+      --green: #34724a;
+      --amber: #946410;
+      --violet: #705396;
+      --cyan: #16727a;
+      --plum: #8a3f70;
+      --brown: #7a5a25;
+      --wash-blue: #e7eef9;
+      --wash-red: #f8e6e4;
+      --wash-green: #e7f1ea;
+      --wash-amber: #f5eedf;
+      --wash-violet: #eee8f5;
+      --wash-cyan: #e3f2f3;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 12px;
+      line-height: 1.22;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: stretch;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--hair);
+      background: #fbfaf5;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: ui-serif, Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .dek {
+      max-width: 1120px;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(72px, 1fr));
+      gap: 1px;
+      min-width: 560px;
+      border: 1px solid var(--hair);
+      background: var(--hair);
+    }
+
+    .metric {
+      background: white;
+      padding: 5px 7px;
+    }
+
+    .metric b {
+      display: block;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .055em;
+      white-space: nowrap;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 270px minmax(470px, 1fr) 430px;
+      min-height: 0;
+    }
+
+    aside, section {
+      min-width: 0;
+      min-height: 0;
+      border-right: 1px solid var(--hair);
+      background: var(--panel);
+    }
+
+    section:last-child { border-right: 0; }
+
+    .pane-head {
+      min-height: 31px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 9px;
+      border-bottom: 1px solid var(--hair);
+      background: #fbfaf5;
+    }
+
+    .pane-head h2 {
+      margin: 0;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 1px 5px 2px;
+      border: 1px solid var(--hair);
+      background: #f7f7f3;
+      color: #444;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .045em;
+      white-space: nowrap;
+    }
+
+    .tag.kernel, .tag.fvs { border-color: #d9a39e; background: var(--wash-red); color: var(--red); }
+    .tag.anchor { border-color: #a8c9b2; background: var(--wash-green); color: var(--green); }
+    .tag.institution { border-color: #dec58b; background: var(--wash-amber); color: var(--amber); }
+    .tag.operator { border-color: #b7c5de; background: var(--wash-blue); color: var(--blue); }
+    .tag.abstraction { border-color: #cab9dc; background: var(--wash-violet); color: var(--violet); }
+    .tag.temporal { border-color: #9acbd0; background: var(--wash-cyan); color: var(--cyan); }
+
+    .tools {
+      display: grid;
+      gap: 7px;
+      padding: 8px;
+      border-bottom: 1px solid var(--hair);
+      background: #fffefa;
+    }
+
+    input[type="search"] {
+      width: 100%;
+      border: 1px solid #aeb5bd;
+      padding: 5px 7px;
+      background: white;
+      color: var(--ink);
+    }
+
+    .mini-row, .source-row {
+      display: grid;
+      gap: 1px;
+      border: 1px solid var(--hair);
+      background: var(--hair);
+    }
+
+    .mini-row { grid-template-columns: repeat(3, 1fr); }
+    .source-row { grid-template-columns: repeat(5, 1fr); }
+
+    .mini-row button, .source-row button, .word-row, .pill-button {
+      border: 0;
+      background: white;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .mini-row button, .source-row button {
+      padding: 5px 6px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .mini-row button.active, .source-row button.active { background: var(--wash-blue); color: var(--blue); font-weight: 700; }
+
+    .word-list {
+      height: calc(100vh - 151px);
+      overflow: auto;
+    }
+
+    .word-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 7px;
+      align-items: start;
+      border-bottom: 1px solid #e7e3da;
+      padding: 6px 8px;
+    }
+
+    .word-row:hover { background: #f2f6fb; }
+    .word-row.active { background: var(--wash-blue); box-shadow: inset 3px 0 0 var(--blue); }
+    .word-row.absent { opacity: .46; }
+
+    .word-row strong {
+      display: block;
+      font-family: ui-serif, Georgia, "Times New Roman", serif;
+      font-size: 14px;
+    }
+
+    .word-row small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .graph-pane {
+      display: grid;
+      grid-template-rows: auto minmax(310px, 1fr) 238px;
+      background: #fff;
+    }
+
+    .timebar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 9px;
+      align-items: center;
+      padding: 7px 9px;
+      border-bottom: 1px solid var(--hair);
+      background: #fffefa;
+    }
+
+    .timebar button {
+      width: 29px;
+      height: 26px;
+      border: 1px solid #aeb5bd;
+      background: white;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .timebar input { width: 100%; accent-color: var(--blue); }
+
+    .year-readout {
+      display: grid;
+      grid-template-columns: 60px 44px;
+      gap: 5px;
+      align-items: baseline;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .year-readout b { font-size: 16px; }
+    .year-readout span { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+
+    .ticks {
+      grid-column: 2 / 3;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-top: -6px;
+    }
+
+    .ticks span { border-left: 1px solid #d9d6cd; padding-left: 3px; }
+
+    .svg-wrap {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      background:
+        linear-gradient(#eceff1 1px, transparent 1px),
+        linear-gradient(90deg, #eceff1 1px, transparent 1px),
+        #fff;
+      background-size: 22px 22px;
+    }
+
+    svg { width: 100%; height: 100%; display: block; }
+
+    .edge {
+      stroke: #90979f;
+      stroke-width: 1.15;
+      fill: none;
+      marker-end: url(#arrow);
+    }
+
+    .edge.kernel-edge { stroke: var(--red); stroke-width: 2.35; marker-end: url(#arrowRed); }
+    .edge.selected-edge { stroke: var(--blue); stroke-width: 1.9; marker-end: url(#arrowBlue); }
+    .edge.new-edge { stroke-dasharray: 4 3; }
+    .edge.source-canonical { stroke: #636970; marker-end: url(#arrow); }
+    .edge.source-structuralist { stroke: var(--violet); marker-end: url(#arrowViolet); }
+    .edge.source-analytic { stroke: var(--brown); marker-end: url(#arrowBrown); }
+    .edge.source-corpus { stroke: var(--cyan); marker-end: url(#arrowCyan); }
+    .edge.added-edge { stroke: var(--green); stroke-width: 2.25; stroke-dasharray: 7 3; marker-end: url(#arrowGreen); }
+    .edge-hit {
+      stroke: transparent;
+      stroke-width: 13;
+      fill: none;
+      cursor: crosshair;
+      pointer-events: stroke;
+    }
+    .cut-shadow {
+      stroke: var(--red);
+      stroke-width: 2.4;
+      stroke-dasharray: 3 4;
+      fill: none;
+      opacity: .84;
+    }
+    .cut-mark {
+      stroke: var(--red);
+      stroke-width: 2;
+      fill: none;
+      pointer-events: none;
+    }
+    .cognate-arc { stroke: var(--cyan); stroke-width: 1.1; stroke-dasharray: 2 4; fill: none; opacity: .74; }
+
+    .node circle { fill: white; stroke: #737980; stroke-width: 1.2; }
+    .node text { font-size: 10.5px; fill: var(--ink); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+    .node .sub { font-size: 7.5px; fill: var(--muted); transform: translateY(11px); text-transform: uppercase; }
+    .node.selected circle { stroke: var(--blue); stroke-width: 3; fill: var(--wash-blue); }
+    .node.fvs circle { stroke: var(--red); stroke-width: 2.6; fill: var(--wash-red); }
+    .node.anchor circle { stroke: var(--green); fill: var(--wash-green); }
+    .node.institution circle { stroke: var(--amber); fill: var(--wash-amber); }
+    .node.operator circle { stroke: var(--blue); fill: var(--wash-blue); }
+    .node.abstraction circle { stroke: var(--violet); fill: var(--wash-violet); }
+
+    .lane-label { font-size: 10px; fill: #555; text-transform: uppercase; letter-spacing: .06em; }
+    .lane-line { stroke: #d7d2c8; stroke-width: 1; }
+    .etymon rect { fill: white; stroke: #747b83; stroke-width: 1.1; }
+    .etymon text { font-size: 12px; fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
+    .etymon .sub { font-size: 8px; fill: var(--muted); transform: translateY(14px); text-transform: uppercase; }
+    .etymon.native rect { stroke: var(--green); fill: var(--wash-green); }
+    .etymon.norse rect { stroke: var(--cyan); fill: var(--wash-cyan); }
+    .etymon.french rect { stroke: var(--amber); fill: var(--wash-amber); }
+    .etymon.learned rect { stroke: var(--violet); fill: var(--wash-violet); }
+    .etymon.modern rect { stroke: var(--blue); fill: var(--wash-blue); }
+    .etymon.disputed rect { stroke: var(--red); fill: var(--wash-red); }
+    .descent-edge { stroke: #646a70; stroke-width: 1.8; fill: none; marker-end: url(#arrow); }
+    .descent-edge.borrowed, .descent-edge.calqued { stroke: var(--amber); stroke-dasharray: 6 3; marker-end: url(#arrowAmber); }
+    .descent-edge.semantic-shift { stroke: var(--blue); stroke-dasharray: 2 3; marker-end: url(#arrowBlue); }
+
+    .matrix-pane {
+      min-height: 0;
+      border-top: 1px solid var(--hair);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: #fbfaf5;
+    }
+
+    .matrix-wrap { overflow: auto; }
+
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+
+    .matrix th, .matrix td { border-bottom: 1px solid #e4e1d8; border-right: 1px solid #e4e1d8; padding: 3px 4px; }
+    .matrix th { position: sticky; top: 0; z-index: 1; background: #f0eee8; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
+    .matrix th:first-child, .matrix td:first-child { position: sticky; left: 0; z-index: 2; background: #fbfaf5; font-family: ui-serif, Georgia, "Times New Roman", serif; font-size: 12px; }
+    .matrix th:first-child { z-index: 3; background: #f0eee8; }
+    .cell { width: 34px; height: 16px; text-align: center; font-variant-numeric: tabular-nums; }
+    .cell.absent { background: #f1f0ec; color: #aaa; }
+    .cell.reach { background: #eef1f4; color: #767b80; }
+    .cell.cycle { background: var(--wash-amber); color: var(--amber); }
+    .cell.fvs { background: var(--wash-red); color: var(--red); font-weight: 800; }
+    .cell.obligate { background: var(--wash-red); color: var(--red); font-weight: 800; }
+    .cell.contingent { background: var(--wash-violet); color: var(--violet); font-weight: 800; }
+    .cell.source-null { background: #eef1f4; color: #80858a; }
+    .cell.selected-year { outline: 2px solid var(--blue); outline-offset: -2px; }
+
+    .right {
+      display: grid;
+      grid-template-rows: auto auto auto 1fr;
+      overflow: hidden;
+    }
+
+    .definition, .kernel-box, .audit-box {
+      padding: 8px 9px;
+      border-bottom: 1px solid var(--hair);
+      background: #fffefa;
+    }
+
+    .definition h3 {
+      margin: 0 0 4px;
+      font-family: ui-serif, Georgia, "Times New Roman", serif;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .gloss { font-size: 12.5px; margin-bottom: 7px; }
+
+    .microgrid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      border: 1px solid var(--hair);
+      background: var(--hair);
+    }
+
+    .microgrid div { min-width: 0; background: white; padding: 5px; }
+    .microgrid b { display: block; font-size: 13px; line-height: 1; }
+    .microgrid span { display: block; margin-top: 3px; color: var(--muted); font-size: 8.5px; text-transform: uppercase; letter-spacing: .045em; }
+
+    .kernel-box { background: var(--wash-red); }
+    .kernel-box h3, .audit-box h3 { margin: 0 0 5px; font-size: 11px; text-transform: uppercase; letter-spacing: .075em; }
+    .kernel-box h3 { color: var(--red); }
+    .audit-box h3 { color: var(--cyan); }
+
+    .kernel-list { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 5px; }
+    .pill-button { padding: 1px 5px 2px; }
+
+    .strata-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      background: rgba(255,255,255,.64);
+      font-size: 10px;
+    }
+
+    .strata-table th, .strata-table td {
+      padding: 3px 4px;
+      border-top: 1px solid rgba(140,100,95,.28);
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ledger { overflow: auto; background: white; }
+
+    table.ledger-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    .ledger-table th { position: sticky; top: 0; z-index: 1; background: #f0eee8; color: #444; text-align: left; font-size: 8.5px; text-transform: uppercase; letter-spacing: .055em; padding: 5px; border-bottom: 1px solid var(--hair); }
+    .ledger-table td { vertical-align: top; padding: 5px; border-bottom: 1px solid #e8e5dd; }
+    .ledger-table td:first-child { font-family: ui-serif, Georgia, "Times New Roman", serif; font-size: 12.5px; white-space: nowrap; }
+
+    .edge-pill { color: var(--blue); font-weight: 700; white-space: nowrap; }
+    .source-pill { display: inline-block; min-width: 62px; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: .05em; }
+    .source-canonical-text { color: #636970; }
+    .source-structuralist-text { color: var(--violet); }
+    .source-analytic-text { color: var(--brown); }
+    .source-corpus-text { color: var(--cyan); }
+    .note { color: var(--muted); font-size: 10.5px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10px; }
+
+    .hypothesis-strip {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 8px;
+      z-index: 2;
+      display: none;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      align-items: center;
+      padding: 5px 6px;
+      border: 1px solid #d8a29d;
+      background: rgba(255, 250, 248, .96);
+      color: var(--red);
+      font-size: 10px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.04);
+    }
+    .hypothesis-strip.active { display: grid; }
+    .hypothesis-strip button, .surgery-form button, .tiny-action {
+      border: 1px solid #aeb5bd;
+      background: white;
+      cursor: pointer;
+      padding: 3px 6px;
+      color: var(--ink);
+    }
+    .surgery-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .surgery-form input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid #aeb5bd;
+      padding: 4px 5px;
+      background: white;
+    }
+    .surgery-log {
+      max-height: 72px;
+      overflow: auto;
+      margin-top: 5px;
+      border-top: 1px solid rgba(22,114,122,.22);
+      padding-top: 4px;
+    }
+
+    @media (max-width: 1180px) {
+      header { grid-template-columns: 1fr; }
+      .metrics { min-width: 0; }
+      main { grid-template-columns: 235px 1fr; }
+      .right { grid-column: 1 / -1; grid-template-rows: auto auto auto 330px; border-top: 1px solid var(--hair); }
+      .word-list { height: calc(100vh - 470px); }
+    }
+
+    @media (max-width: 760px) {
+      main { grid-template-columns: 1fr; }
+      aside, section { border-right: 0; border-bottom: 1px solid var(--hair); }
+      .metrics { grid-template-columns: repeat(3, 1fr); }
+      .word-list { height: 210px; }
+      .graph-pane { grid-template-rows: auto 390px 245px; }
+      .timebar { grid-template-columns: auto 1fr; }
+      .year-readout { grid-column: 1 / -1; grid-template-columns: 70px 1fr; }
+      .ticks { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Grounding Atlas: Plural Stratigraphic Kernel Engine</h1>
+        <div class="dek">A self-contained lexical instrument: choose a word, scrub historical time, switch lexicographers, and the app recomputes definition cycles, minimum feedback-vertex kernels, etymon descent, cognate roots, source variance, and consensus survival. Local authored data only; no network, no model calls.</div>
+      </div>
+      <div class="metrics" id="metrics"></div>
+    </header>
+
+    <main>
+      <aside>
+        <div class="pane-head">
+          <h2>Lexicon</h2>
+          <span class="tag temporal" id="lexiconEra">year</span>
+        </div>
+        <div class="tools">
+          <input id="search" type="search" aria-label="Filter words" placeholder="filter word, root, class, gloss">
+          <div class="mini-row" id="scopeMode">
+            <button data-mode="reachable" class="active">reachable</button>
+            <button data-mode="all">all dated</button>
+            <button data-mode="descent">descent</button>
+          </div>
+          <div class="source-row" id="sourceMode">
+            <button data-source="canonical" class="active">canon</button>
+            <button data-source="structuralist">struct</button>
+            <button data-source="analytic">analytic</button>
+            <button data-source="corpus">corpus</button>
+            <button data-source="all">all</button>
+          </div>
+        </div>
+        <div class="word-list" id="wordList"></div>
+      </aside>
+
+      <section class="graph-pane">
+        <div class="pane-head">
+          <h2>Definition / Source / Etymon Graph</h2>
+          <span class="tag operator" id="graphStatus">reachable subgraph</span>
+        </div>
+        <div class="timebar">
+          <button id="play" aria-label="Play timeline">play</button>
+          <div>
+            <input id="year" type="range" min="900" max="2026" step="1" value="2026" aria-label="Historical year">
+            <div class="ticks"><span>OE 900</span><span>ME 1200</span><span>EM 1500</span><span>MOD 1800</span><span>C20 1950</span><span>NOW</span></div>
+          </div>
+          <div class="year-readout"><b id="yearLabel">2026</b><span id="eraLabel">CUR</span></div>
+        </div>
+        <div class="svg-wrap">
+          <div class="hypothesis-strip" id="hypothesisStrip"></div>
+          <svg id="graph" role="img" aria-label="Diachronic definition graph"></svg>
+        </div>
+        <div class="matrix-pane">
+          <div class="pane-head">
+            <h2>Kernel History Matrix</h2>
+            <span class="tag fvs">FVS by era</span>
+          </div>
+          <div class="matrix-wrap" id="matrixWrap"></div>
+        </div>
+      </section>
+
+      <section class="right">
+        <div class="pane-head">
+          <h2>Proof Ledger</h2>
+          <span class="tag kernel">computed / editorial split</span>
+        </div>
+        <div class="definition" id="definition"></div>
+        <div class="kernel-box" id="kernelBox"></div>
+        <div class="audit-box" id="auditBox"></div>
+        <div class="ledger">
+          <table class="ledger-table">
+            <thead><tr><th>term</th><th>active definition edges</th><th>computed facts + diachronic note</th></tr></thead>
+            <tbody id="ledger"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const ERAS = [
+      { id: "OE", year: 900, label: "Old English" },
+      { id: "ME", year: 1200, label: "Middle English" },
+      { id: "EM", year: 1500, label: "Early Modern" },
+      { id: "MOD", year: 1800, label: "Modern" },
+      { id: "C20", year: 1950, label: "20th c." },
+      { id: "CUR", year: 2026, label: "Current" }
+    ];
+
+    const DATA = {
+      time: { root: "Old English tima; allotted portion, season", states: [
+        { from: 900, class: "operator", gloss: "An allotted portion or suitable season for action.", edges: ["portion", "season", "event"], note: "Concrete allotment dominates; the term can still descend toward portion and season." },
+        { from: 1200, gloss: "A season, occasion, or measured duration in which events fall.", edges: ["season", "duration", "event", "measure"], note: "Clock and calendar practice make duration a public matter." },
+        { from: 1500, class: "kernel", gloss: "The ordered medium of before and after in which change and duration are measured.", edges: ["order", "before", "after", "change", "duration", "measure"], note: "The abstract time/change/duration knot becomes explicit." },
+        { from: 1800, class: "kernel", gloss: "A measurable ordering of change, duration, recurrence, and events.", edges: ["measure", "order", "change", "duration", "event"], note: "Scientific and historical usage makes time a load-bearing abstraction." },
+        { from: 1950, class: "kernel", gloss: "A formal dimension for ordering events, change, duration, and causal explanation.", edges: ["measure", "order", "change", "duration", "event", "cause"], note: "Analytic and physical vocabularies pull event and cause into the kernel." }
+      ]},
+      meaning: { root: "Old English maenan; intend, signify", states: [
+        { from: 900, class: "abstraction", gloss: "Intention or import: what someone means to express.", edges: ["intention", "word", "use"], note: "The older center of gravity is intending, not semantic value alone." },
+        { from: 1500, class: "kernel", gloss: "What a sign, word, or act is taken to indicate, intend, or make available for interpretation.", edges: ["sign", "word", "intention", "interpretation", "use"], note: "Meaning becomes a public semantic relation, not only private intent." },
+        { from: 1950, class: "kernel", gloss: "A public uptake relation among sign, use, intention, and interpretation.", edges: ["sign", "language", "use", "interpretation", "rule"], note: "Use and rule become as important as intention." }
+      ]},
+      language: { root: "Latin lingua via Old French langage; tongue, speech", states: [
+        { from: 1200, class: "institution", gloss: "Speech or tongue belonging to a people.", edges: ["sound", "community", "word"], note: "Language first appears as speech tied to a people and body." },
+        { from: 1500, class: "kernel", gloss: "A social system of words, sounds, marks, and rules for expression.", edges: ["system", "word", "sound", "mark", "rule", "use"], note: "Grammar and print thicken language into a system." },
+        { from: 1950, class: "kernel", gloss: "A structured public system of signs and rules used for expression and interpretation.", edges: ["system", "sign", "rule", "use", "interpretation", "community"], note: "Structural and pragmatic pressure makes the sign-system definition central." }
+      ]},
+      sign: { root: "Latin signum; mark, token, indication", states: [
+        { from: 1200, class: "operator", gloss: "A mark or token that indicates something.", edges: ["mark", "thing", "relation"], note: "Sign is still close to visible mark and token." },
+        { from: 1500, class: "kernel", gloss: "A mark, sound, or event standing for something to someone.", edges: ["mark", "sound", "event", "relation", "meaning"], note: "Standing-for pulls meaning into the cycle." },
+        { from: 1950, class: "kernel", gloss: "A semiotic relation in which a mark, sound, or event is interpreted as meaning something.", edges: ["mark", "sound", "event", "relation", "interpretation", "meaning"], note: "The interpreter becomes non-optional." }
+      ]},
+      word: { root: "Old English word; speech, utterance, verbal unit", states: [
+        { from: 900, class: "institution", gloss: "An utterance or speech-form used by a speaker.", edges: ["sound", "use", "speech"], note: "Word begins near uttered speech." },
+        { from: 1500, class: "kernel", gloss: "A repeatable linguistic form used as a unit in speech, writing, or thought.", edges: ["language", "sound", "mark", "unit", "use"], note: "Print and grammar make the repeatable unit salient." },
+        { from: 1950, class: "kernel", gloss: "A lexical unit whose role is stabilized by language, use, and interpretation.", edges: ["language", "unit", "use", "meaning", "rule"], note: "The word is no longer just material; its role is system-governed." }
+      ]},
+      cause: { root: "Latin causa; reason, legal case, occasion", states: [
+        { from: 1200, class: "abstraction", gloss: "A reason, case, or matter for action.", edges: ["reason", "account", "event"], note: "Legal and rhetorical reason-giving lead the term." },
+        { from: 1500, class: "operator", gloss: "That by which an event, change, or state is brought about or explained.", edges: ["event", "change", "relation", "reason", "explanation"], note: "Efficient causation and explanation meet." },
+        { from: 1950, class: "kernel", gloss: "A relation used to explain change, event order, and dependence.", edges: ["relation", "event", "change", "explanation", "time"], note: "Causal vocabulary becomes temporal and analytic." }
+      ]},
+      interpretation: { root: "Latin interpretari; explain, translate", states: [
+        { from: 1200, class: "operator", gloss: "Translation or explanation of obscure speech or text.", edges: ["text", "explanation", "language"], note: "Interpreter as translator comes first." },
+        { from: 1500, gloss: "The act of assigning a usable reading to a sign, text, event, or action.", edges: ["meaning", "sign", "text", "use", "explanation"], note: "Reading and explanation merge as an operation." },
+        { from: 1950, class: "kernel", gloss: "A rule-governed public uptake that makes signs or texts meaningful in use.", edges: ["meaning", "sign", "rule", "use", "public"], note: "Interpretation is modeled as inspectable uptake, not private glow." }
+      ]},
+      text: { root: "Latin texere; weave", states: [
+        { from: 1200, class: "operator", gloss: "A written passage or woven verbal material.", edges: ["mark", "word", "order"], note: "Text keeps the weave: arrangement before theory." },
+        { from: 1500, gloss: "A woven arrangement of marks or signs available for reading.", edges: ["mark", "sign", "order", "reading"], note: "Print culture stabilizes text as a material object for reading." },
+        { from: 1950, gloss: "An ordered material field of signs whose meaning is produced through reading and interpretation.", edges: ["sign", "order", "reading", "interpretation", "meaning"], note: "Text-as-material enters the semantic engine." }
+      ]},
+      reading: { root: "Old English raedan; advise, interpret, guess", states: [
+        { from: 900, class: "operator", gloss: "Counsel, guessing, or construing what is presented.", edges: ["interpretation", "reason"], note: "The older sense is construal before literacy." },
+        { from: 1500, gloss: "A disciplined taking-up of marks or signs as intelligible.", edges: ["interpretation", "mark", "sign", "rule"], note: "Literacy narrows and sharpens the operation." }
+      ]},
+      measure: { root: "Latin mensura; a measuring", states: [
+        { from: 1200, class: "institution", gloss: "A rule-governed comparison that makes quantity public.", edges: ["rule", "comparison", "quantity", "public"], note: "Measurement grounds time socially: clocks are institutions before facts." },
+        { from: 1500, gloss: "A standard operation for comparing quantity, duration, or extent.", edges: ["rule", "comparison", "quantity", "duration", "extent"], note: "Measure starts binding duration and extent." }
+      ]},
+      order: { root: "Latin ordo; row, rank, arrangement", states: [
+        { from: 1200, class: "operator", gloss: "Rank, row, or arranged sequence.", edges: ["relation", "rule", "before", "after"], note: "Order is both social rank and sequence." },
+        { from: 1500, gloss: "A relation of before, after, priority, rank, or arrangement.", edges: ["relation", "before", "after", "rule"], note: "Order becomes the hidden operator in chronology and syntax." }
+      ]},
+      duration: { root: "Latin durare; harden, last", states: [
+        { from: 1200, class: "operator", gloss: "Lasting or continuance through a season.", edges: ["season", "state"], note: "Duration can still bottom through season and state." },
+        { from: 1500, class: "kernel", gloss: "The continued holding of a state or process through time.", edges: ["time", "state", "process"], note: "Duration becomes deliberately circular with time." }
+      ]},
+      change: { root: "Old French changier; exchange, alter", states: [
+        { from: 1200, class: "operator", gloss: "Exchange or alteration from one condition to another.", edges: ["difference", "state", "event"], note: "Exchange remains visible in the term." },
+        { from: 1500, class: "kernel", gloss: "A difference between states across an ordered interval.", edges: ["difference", "state", "time", "relation"], note: "Change borrows time to define difference and gives time content." }
+      ]},
+      event: { root: "Latin evenire; come out, happen", states: [
+        { from: 1200, class: "operator", gloss: "An outcome or thing that comes to pass.", edges: ["thing", "occurrence"], note: "Outcome precedes abstract eventhood." },
+        { from: 1500, gloss: "Something that occurs, is bounded as a happening, and can enter explanation.", edges: ["time", "occurrence", "boundary", "explanation"], note: "Event becomes a bounded item in explanation." },
+        { from: 1950, class: "kernel", gloss: "A bounded occurrence ordered in time and available to causal explanation.", edges: ["time", "occurrence", "boundary", "cause", "explanation"], note: "Event ties time and cause together." }
+      ]},
+      relation: { root: "Latin relatio; bringing back, report", states: [{ from: 1200, class: "operator", gloss: "A structured bearing of one thing to another.", edges: ["thing", "structure", "comparison"], note: "Relation is low-level and near primitive in this seed." }]},
+      rule: { root: "Latin regula; straight stick, pattern", states: [{ from: 1200, class: "institution", gloss: "A public pattern that licenses, forbids, or stabilizes use.", edges: ["public", "pattern", "use", "system"], note: "Rules live in use, not outside it." }]},
+      use: { root: "Latin usus; employment, practice", states: [{ from: 900, class: "institution", gloss: "Repeated practice by which a form, tool, or sign gets its role.", edges: ["practice", "role", "public", "pattern"], note: "Use is where private intention becomes public evidence." }]},
+      system: { root: "Greek systema; organized whole", states: [{ from: 1500, class: "operator", gloss: "A set of parts whose relations make a functioning whole.", edges: ["part", "relation", "structure", "whole"], note: "Value emerges through relations inside a whole." }]},
+      intention: { root: "Latin intendere; stretch toward", states: [{ from: 900, class: "abstraction", gloss: "A directed mental or practical orientation toward an end.", edges: ["mind", "direction", "end", "meaning"], note: "Intention loops back to meaning; mentalistic grounding is not clean." }]},
+      explanation: { root: "Latin explanare; make plain", states: [{ from: 1200, class: "operator", gloss: "A reason-giving arrangement that makes a fact, event, or relation intelligible.", edges: ["reason", "order", "interpretation", "public"], note: "Explanation is public order imposed on causes or signs." }]},
+      reason: { root: "Latin ratio; reckoning, account", states: [{ from: 1200, class: "abstraction", gloss: "An account offered as support, cause, or justification.", edges: ["account", "cause", "explanation", "public"], note: "Reason bridges causation and argumentation." }]},
+      mark: { root: "Old English mearc; boundary, sign", states: [{ from: 900, class: "anchor", gloss: "A visible trace or boundary made on a surface.", edges: ["visible", "surface", "boundary"], note: "Visible marking is treated as a sensory anchor with edges." }]},
+      sound: { root: "Old English sund / Latin sonus convergence", states: [{ from: 900, class: "anchor", gloss: "A hearable vibration or auditory event.", edges: ["hearing", "vibration", "event"], note: "Sound anchors speech while still touching eventhood." }]},
+      speech: { root: "Old English spraec; utterance", states: [{ from: 900, class: "anchor", gloss: "Audible utterance produced and heard in use.", edges: ["sound", "hearing", "use"], note: "Speech is a bodily-public bridge." }]},
+      visible: { root: "Latin visibilis", states: [{ from: 900, class: "anchor", gloss: "Available to sight.", edges: ["sight"], note: "Terminal sensory vocabulary." }]},
+      sight: { root: "Old English sihth", states: [{ from: 900, class: "anchor", gloss: "The capacity or act of seeing.", edges: [], note: "Terminal in the seed lexicon." }]},
+      hearing: { root: "Old English hyran", states: [{ from: 900, class: "anchor", gloss: "The capacity or act of perceiving sound.", edges: [], note: "Terminal in the seed lexicon." }]},
+      surface: { root: "Latin superficies", states: [{ from: 900, class: "anchor", gloss: "The outside face of a body.", edges: [], note: "Terminal spatial primitive." }]},
+      vibration: { root: "Latin vibrare", states: [{ from: 1500, class: "anchor", gloss: "A rapid oscillating movement.", edges: ["movement"], note: "Acoustic description reconnects sound to movement." }]},
+      movement: { root: "Old French movement", states: [{ from: 1200, class: "anchor", gloss: "Change of position.", edges: ["change"], note: "Motion is sensory but not definitionally isolated." }]},
+      boundary: { root: "Old French bodne", states: [{ from: 900, class: "operator", gloss: "A limit marking where one thing ends and another begins.", edges: ["limit", "difference", "thing"], note: "Boundaries make marks and events countable." }]},
+      limit: { root: "Latin limes; path, boundary", states: [{ from: 900, class: "operator", gloss: "A point or line beyond which something does not extend.", edges: ["boundary", "extent"], note: "A small local loop with boundary." }]},
+      difference: { root: "Latin differentia", states: [{ from: 1200, class: "operator", gloss: "A relation of non-identity between things or states.", edges: ["relation", "thing", "state"], note: "Difference is a workhorse of definition." }]},
+      state: { root: "Latin status; standing", states: [{ from: 1200, class: "operator", gloss: "A way a thing is at a time.", edges: ["thing", "time"], note: "State loops into time once time is active." }]},
+      process: { root: "Latin procedere; go forward", states: [{ from: 1500, class: "operator", gloss: "An ordered series of changes.", edges: ["order", "change"], note: "Process binds order and change." }]},
+      occurrence: { root: "Latin occurrere; run toward", states: [{ from: 1200, class: "operator", gloss: "A happening that presents itself as countable.", edges: ["event", "boundary"], note: "Occurrence is intentionally near-event." }]},
+      thing: { root: "Old English thing; assembly, matter", states: [{ from: 900, class: "abstraction", gloss: "An entity treated as discussable or countable.", edges: ["boundary", "use", "public"], note: "Thinghood is not free; it is bounded and usable." }]},
+      structure: { root: "Latin structura; fitting together", states: [{ from: 1500, class: "operator", gloss: "An arrangement of parts and relations.", edges: ["part", "relation", "order"], note: "Structure is system's skeleton." }]},
+      comparison: { root: "Latin comparare; pair together", states: [{ from: 1200, class: "operator", gloss: "Considering things together with respect to a relation.", edges: ["relation", "thing", "measure"], note: "Comparison loops into measure." }]},
+      quantity: { root: "Latin quantitas", states: [{ from: 1200, class: "abstraction", gloss: "How much or how many of something.", edges: ["measure", "comparison"], note: "Quantity is measured or compared, not naked." }]},
+      public: { root: "Latin publicus; of the people", states: [{ from: 900, class: "institution", gloss: "Available to a community rather than private possession alone.", edges: ["community", "use"], note: "Publicness is the social anchor." }]},
+      community: { root: "Latin communitas", states: [{ from: 900, class: "institution", gloss: "A group sharing practices, rules, or concern.", edges: ["practice", "rule"], note: "Community grounds institutions through practice." }]},
+      practice: { root: "Greek praktikos via Latin/French", states: [{ from: 900, class: "institution", gloss: "Repeated doing under recognizable conditions.", edges: ["pattern", "use"], note: "Practice is institutional repetition." }]},
+      pattern: { root: "Patron; model, example", states: [{ from: 1200, class: "institution", gloss: "A repeatable arrangement recognizable across instances.", edges: ["order", "comparison", "use"], note: "Pattern makes rules visible." }]},
+      role: { root: "Old French rolle; roll of paper, list", states: [{ from: 1200, class: "institution", gloss: "A function or part assigned within a practice or system.", edges: ["function", "system", "use"], note: "Role is institutionalized function." }]},
+      function: { root: "Latin functio; performance", states: [{ from: 1500, class: "operator", gloss: "What something does within a system or practice.", edges: ["role", "system", "use"], note: "Function and role form an institutional loop." }]},
+      part: { root: "Latin pars", states: [{ from: 900, class: "operator", gloss: "A component considered relative to a whole.", edges: ["whole", "relation"], note: "Part/whole is a formal dependency." }]},
+      whole: { root: "Old English hal; entire, unhurt", states: [{ from: 900, class: "operator", gloss: "What is considered complete relative to its parts.", edges: ["part", "system"], note: "Whole is circular with part by design." }]},
+      unit: { root: "Latin unus; one", states: [{ from: 1500, class: "institution", gloss: "A repeatable one used for counting or analysis.", edges: ["one", "use", "measure"], note: "Words are units because practices count them." }]},
+      one: { root: "Old English an", states: [{ from: 900, class: "anchor", gloss: "A single item or instance.", edges: [], note: "Terminal count primitive." }]},
+      mind: { root: "Old English gemynd; memory, thought", states: [{ from: 900, class: "abstraction", gloss: "The seat or activity of thinking, intending, remembering.", edges: ["thought", "intention"], note: "Mind is intentionally not a clean anchor." }]},
+      thought: { root: "Old English thohte", states: [{ from: 900, class: "abstraction", gloss: "A mental act or content available to reflection or expression.", edges: ["mind", "language"], note: "Thought loops through language in this model." }]},
+      direction: { root: "Latin directio", states: [{ from: 1200, class: "operator", gloss: "Orientation toward a point, path, or end.", edges: ["relation", "end"], note: "Direction supplies the vector in intention." }]},
+      end: { root: "Old English ende", states: [{ from: 900, class: "operator", gloss: "A limit, completion, or purpose.", edges: ["limit", "purpose"], note: "Ends are both terminal and teleological." }]},
+      purpose: { root: "Old French porpos", states: [{ from: 1200, class: "abstraction", gloss: "An intended end for which something is done.", edges: ["intention", "end"], note: "Purpose is an intention loop." }]},
+      account: { root: "Old French aconter; count, reckon", states: [{ from: 1200, class: "institution", gloss: "A public rendering of reasons, events, or quantities.", edges: ["public", "reason", "order"], note: "Account is where reckoning becomes discourse." }]},
+      extent: { root: "Latin extendere", states: [{ from: 1200, class: "operator", gloss: "The reach or spread of something.", edges: ["limit", "measure"], note: "Extent binds limit to measure." }]},
+      portion: { root: "Latin portio; share", states: [{ from: 900, class: "anchor", gloss: "An allotted share or part.", edges: ["part", "one"], note: "Portion keeps early time near allotment." }]},
+      season: { root: "Latin satio via Old French; sowing time", states: [{ from: 900, class: "anchor", gloss: "A recurrent natural or social period suitable for action.", edges: ["recurrence", "event"], note: "Season is a temporal anchor before abstract time." }]},
+      recurrence: { root: "Latin recurrere; run back", states: [{ from: 1200, class: "operator", gloss: "Return or repetition across ordered occasions.", edges: ["pattern", "order", "time"], note: "Recurrence makes seasons countable as time." }]},
+      before: { root: "Old English beforan", states: [{ from: 900, class: "operator", gloss: "Earlier than or in front of something in an order.", edges: ["order", "relation"], note: "Before is spatial and temporal." }]},
+      after: { root: "Old English aefter", states: [{ from: 900, class: "operator", gloss: "Later than or following something in an order.", edges: ["order", "relation"], note: "After completes the temporal ordering pair." }]}
+    };
+
+    const SOURCE_META = {
+      canonical: { label: "Canonical", short: "can", color: "#636970", note: "The original authored synthesis: diachronic, graph-formal, and deliberately circular where the seed wants to expose grounding knots." },
+      structuralist: { label: "Structuralist", short: "str", color: "#705396", note: "System-first lexicographer: words get value through language, signs, rules, differences, and public use." },
+      analytic: { label: "Analytic", short: "ana", color: "#7a5a25", note: "Logic-and-explanation lexicographer: definitions privilege relation, condition, cause, event order, and public criteria." },
+      corpus: { label: "Corpus", short: "cor", color: "#16727a", note: "Plain-use lexicographer: definitions stay closer to paraphrase, event, practice, and ordinary public uptake." }
+    };
+    const SOURCE_IDS = Object.keys(SOURCE_META);
+    const COMPARISON_SOURCES = SOURCE_IDS;
+
+    const SOURCE_EDGES = {
+      structuralist: {
+        time: [{ from: 900, edges: ["season", "event", "use"] }, { from: 1200, edges: ["season", "duration", "event", "measure"] }, { from: 1500, edges: ["order", "before", "after", "language", "use"] }, { from: 1950, edges: ["system", "order", "event", "language", "rule"] }],
+        meaning: [{ from: 900, edges: ["intention", "word", "use"] }, { from: 1500, edges: ["sign", "language", "use", "interpretation"] }, { from: 1950, edges: ["sign", "language", "rule", "use", "system"] }],
+        language: [{ from: 1200, edges: ["sound", "community", "word"] }, { from: 1500, edges: ["system", "word", "sign", "rule", "use"] }, { from: 1950, edges: ["system", "sign", "rule", "difference", "community"] }],
+        sign: [{ from: 1200, edges: ["mark", "relation", "thing"] }, { from: 1500, edges: ["mark", "relation", "meaning", "system"] }, { from: 1950, edges: ["relation", "meaning", "interpretation", "system", "difference"] }],
+        word: [{ from: 900, edges: ["sound", "speech", "use"] }, { from: 1500, edges: ["language", "unit", "rule", "use"] }, { from: 1950, edges: ["language", "sign", "rule", "meaning"] }],
+        cause: [{ from: 1200, edges: ["reason", "account", "event"] }, { from: 1500, edges: ["relation", "event", "explanation", "order"] }, { from: 1950, edges: ["relation", "event", "system", "explanation"] }],
+        interpretation: [{ from: 1200, edges: ["text", "language", "explanation"] }, { from: 1500, edges: ["sign", "text", "meaning", "rule"] }, { from: 1950, edges: ["sign", "text", "rule", "use", "community"] }],
+        text: [{ from: 1200, edges: ["mark", "word", "order"] }, { from: 1500, edges: ["sign", "order", "reading", "language"] }, { from: 1950, edges: ["sign", "system", "interpretation", "meaning"] }],
+        rule: [{ from: 1200, edges: ["system", "pattern", "use", "community"] }],
+        use: [{ from: 900, edges: ["practice", "public", "pattern", "rule"] }],
+        system: [{ from: 1500, edges: ["part", "relation", "structure", "whole", "difference"] }],
+        event: [{ from: 1200, edges: ["thing", "occurrence"] }, { from: 1500, edges: ["time", "boundary", "order"] }, { from: 1950, edges: ["time", "order", "system", "cause"] }],
+        relation: [{ from: 1200, edges: ["thing", "structure", "difference"] }],
+        explanation: [{ from: 1200, edges: ["order", "interpretation", "rule", "public"] }],
+        reason: [{ from: 1200, edges: ["account", "explanation", "rule", "public"] }],
+        order: [{ from: 1200, edges: ["relation", "rule", "before", "after", "system"] }],
+        change: [{ from: 1200, edges: ["difference", "state", "event"] }, { from: 1500, edges: ["difference", "state", "time", "system"] }],
+        duration: [{ from: 1200, edges: ["season", "state"] }, { from: 1500, edges: ["time", "state", "order"] }],
+        measure: [{ from: 1200, edges: ["rule", "comparison", "public"] }, { from: 1500, edges: ["rule", "comparison", "duration", "system"] }],
+        state: [{ from: 1200, edges: ["thing", "time", "system"] }],
+        thing: [{ from: 900, edges: ["boundary", "use", "public", "difference"] }],
+        intention: [{ from: 900, edges: ["mind", "use", "meaning"] }],
+        mind: [{ from: 900, edges: ["thought", "language"] }],
+        process: [{ from: 1500, edges: ["order", "change", "system"] }]
+      },
+      analytic: {
+        time: [{ from: 900, edges: ["portion", "season", "event"] }, { from: 1200, edges: ["duration", "event", "measure", "order"] }, { from: 1500, edges: ["measure", "order", "change", "event"] }, { from: 1950, edges: ["measure", "order", "change", "event", "cause"] }],
+        meaning: [{ from: 900, edges: ["intention", "word", "use"] }, { from: 1500, edges: ["word", "intention", "interpretation", "relation"] }, { from: 1950, edges: ["language", "use", "interpretation", "rule", "public"] }],
+        language: [{ from: 1200, edges: ["sound", "community", "word"] }, { from: 1500, edges: ["word", "rule", "use", "system"] }, { from: 1950, edges: ["rule", "use", "interpretation", "public", "system"] }],
+        sign: [{ from: 1200, edges: ["mark", "thing", "relation"] }, { from: 1500, edges: ["mark", "relation", "meaning"] }, { from: 1950, edges: ["relation", "interpretation", "meaning", "public"] }],
+        word: [{ from: 900, edges: ["sound", "use", "speech"] }, { from: 1500, edges: ["unit", "language", "use", "rule"] }, { from: 1950, edges: ["unit", "language", "meaning", "rule"] }],
+        cause: [{ from: 1200, edges: ["reason", "account", "event"] }, { from: 1500, edges: ["event", "change", "relation", "explanation"] }, { from: 1950, edges: ["event", "change", "relation", "explanation", "time"] }],
+        interpretation: [{ from: 1200, edges: ["text", "explanation", "language"] }, { from: 1500, edges: ["meaning", "text", "explanation", "reason"] }, { from: 1950, edges: ["meaning", "rule", "public", "reason"] }],
+        text: [{ from: 1200, edges: ["mark", "word", "order"] }, { from: 1500, edges: ["mark", "sign", "order", "reading"] }, { from: 1950, edges: ["sign", "order", "interpretation"] }],
+        rule: [{ from: 1200, edges: ["public", "pattern", "use"] }],
+        use: [{ from: 900, edges: ["practice", "role", "public"] }],
+        system: [{ from: 1500, edges: ["part", "relation", "whole"] }],
+        event: [{ from: 1200, edges: ["thing", "occurrence"] }, { from: 1500, edges: ["occurrence", "boundary", "time", "explanation"] }, { from: 1950, edges: ["occurrence", "boundary", "time", "cause"] }],
+        relation: [{ from: 1200, edges: ["thing", "comparison", "structure"] }],
+        explanation: [{ from: 1200, edges: ["reason", "order", "public"] }],
+        reason: [{ from: 1200, edges: ["account", "cause", "explanation"] }],
+        order: [{ from: 1200, edges: ["relation", "before", "after", "rule"] }],
+        change: [{ from: 1200, edges: ["difference", "state", "event"] }, { from: 1500, edges: ["difference", "state", "time", "event"] }],
+        duration: [{ from: 1200, edges: ["season", "state"] }, { from: 1500, edges: ["time", "state", "measure"] }],
+        measure: [{ from: 1200, edges: ["rule", "comparison", "quantity", "public"] }, { from: 1500, edges: ["comparison", "quantity", "duration", "standard"] }],
+        state: [{ from: 1200, edges: ["thing", "time", "condition"] }],
+        thing: [{ from: 900, edges: ["boundary", "one", "public"] }],
+        intention: [{ from: 900, edges: ["mind", "direction", "end"] }],
+        mind: [{ from: 900, edges: ["thought", "intention"] }],
+        process: [{ from: 1500, edges: ["change", "order", "event"] }]
+      },
+      corpus: {
+        time: [{ from: 900, edges: ["season", "event"] }, { from: 1200, edges: ["duration", "event", "season"] }, { from: 1500, edges: ["duration", "event", "measure"] }, { from: 1950, edges: ["duration", "event", "use"] }],
+        meaning: [{ from: 900, edges: ["intention", "word", "use"] }, { from: 1500, edges: ["word", "sign", "use", "interpretation"] }, { from: 1950, edges: ["word", "use", "interpretation", "public"] }],
+        language: [{ from: 1200, edges: ["sound", "community", "word"] }, { from: 1500, edges: ["word", "sound", "mark", "rule", "community"] }, { from: 1950, edges: ["word", "rule", "use", "community"] }],
+        sign: [{ from: 1200, edges: ["mark", "thing"] }, { from: 1500, edges: ["mark", "sound", "event", "meaning"] }, { from: 1950, edges: ["mark", "event", "meaning", "interpretation"] }],
+        word: [{ from: 900, edges: ["sound", "speech", "use"] }, { from: 1500, edges: ["sound", "mark", "unit", "use"] }, { from: 1950, edges: ["unit", "use", "meaning", "language"] }],
+        cause: [{ from: 1200, edges: ["reason", "event"] }, { from: 1500, edges: ["event", "change", "explanation"] }, { from: 1950, edges: ["event", "change", "explanation", "reason"] }],
+        interpretation: [{ from: 1200, edges: ["text", "explanation"] }, { from: 1500, edges: ["meaning", "text", "use"] }, { from: 1950, edges: ["meaning", "use", "public"] }],
+        text: [{ from: 1200, edges: ["mark", "word"] }, { from: 1500, edges: ["mark", "word", "reading"] }, { from: 1950, edges: ["word", "reading", "interpretation"] }],
+        rule: [{ from: 1200, edges: ["public", "pattern", "use"] }],
+        use: [{ from: 900, edges: ["practice", "role", "public"] }],
+        system: [{ from: 1500, edges: ["part", "whole", "function"] }],
+        event: [{ from: 1200, edges: ["thing", "occurrence"] }, { from: 1500, edges: ["occurrence", "boundary", "time"] }, { from: 1950, edges: ["occurrence", "time", "cause"] }],
+        relation: [{ from: 1200, edges: ["thing", "comparison"] }],
+        explanation: [{ from: 1200, edges: ["reason", "account", "public"] }],
+        reason: [{ from: 1200, edges: ["account", "cause", "public"] }],
+        order: [{ from: 1200, edges: ["before", "after", "relation"] }],
+        change: [{ from: 1200, edges: ["difference", "state", "event"] }, { from: 1500, edges: ["state", "event", "time"] }],
+        duration: [{ from: 1200, edges: ["season", "state"] }, { from: 1500, edges: ["time", "state"] }],
+        measure: [{ from: 1200, edges: ["comparison", "quantity", "public"] }, { from: 1500, edges: ["comparison", "quantity", "duration"] }],
+        state: [{ from: 1200, edges: ["thing", "time"] }],
+        thing: [{ from: 900, edges: ["boundary", "use"] }],
+        intention: [{ from: 900, edges: ["mind", "end", "meaning"] }],
+        mind: [{ from: 900, edges: ["thought", "intention"] }],
+        process: [{ from: 1500, edges: ["change", "event"] }]
+      }
+    };
+
+    const ETYMONS = {
+      time: [{ lang: "PIE", form: "*di-mon-", gloss: "division, portion", era: -3500, rel: "root" }, { lang: "PGmc", form: "*timon-", gloss: "measured occasion", era: -100, rel: "inherited" }, { lang: "OE", form: "tima", gloss: "allotted portion, season", era: 900, rel: "inherited" }],
+      meaning: [{ lang: "PIE", form: "*mei-no-", gloss: "opinion, intent", era: -3000, rel: "root" }, { lang: "PGmc", form: "*mainijan", gloss: "intend, signify", era: -100, rel: "inherited" }, { lang: "OE", form: "maenan", gloss: "mean, intend", era: 900, rel: "inherited" }],
+      language: [{ lang: "PIE", form: "*dnghu-", gloss: "tongue", era: -3500, rel: "root" }, { lang: "Lat", form: "lingua", gloss: "tongue, speech", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "langage", gloss: "speech of a people", era: 1100, rel: "borrowed" }],
+      sign: [{ lang: "PIE", form: "*sek-no-", gloss: "cut mark", era: -3000, rel: "root", confidence: "medium" }, { lang: "Lat", form: "signum", gloss: "mark, token", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "signe", gloss: "indication", era: 1100, rel: "borrowed" }],
+      word: [{ lang: "PIE", form: "*were-", gloss: "speak, say", era: -3500, rel: "root" }, { lang: "PGmc", form: "*wurda-", gloss: "word", era: -100, rel: "inherited" }, { lang: "OE", form: "word", gloss: "speech, utterance", era: 900, rel: "inherited" }],
+      cause: [{ lang: "PIE", form: "*kaw-", gloss: "strike, hew", era: -3000, rel: "root", confidence: "low" }, { lang: "Lat", form: "causa", gloss: "legal case, reason", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "cause", gloss: "cause, reason", era: 1100, rel: "borrowed" }],
+      interpretation: [{ lang: "PIE", form: "*per-", gloss: "traffic, sell", era: -3000, rel: "root", confidence: "medium" }, { lang: "Lat", form: "interpretari", gloss: "explain, translate", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "interpretacion", gloss: "explanation", era: 1200, rel: "borrowed" }],
+      text: [{ lang: "PIE", form: "*teks-", gloss: "weave, fabricate", era: -3500, rel: "root" }, { lang: "Lat", form: "textus", gloss: "woven thing, wording", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "texte", gloss: "written passage", era: 1200, rel: "borrowed" }],
+      reading: [{ lang: "PIE", form: "*hreh1d-", gloss: "arrange, advise", era: -3500, rel: "root", confidence: "medium" }, { lang: "PGmc", form: "*redan", gloss: "advise, interpret", era: -100, rel: "inherited" }, { lang: "OE", form: "raedan", gloss: "read, advise", era: 900, rel: "inherited" }],
+      measure: [{ lang: "PIE", form: "*meh1-", gloss: "measure", era: -3500, rel: "root" }, { lang: "Lat", form: "mensura", gloss: "measuring", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "mesure", gloss: "measure", era: 1200, rel: "borrowed" }],
+      order: [{ lang: "PIE", form: "*h2er-", gloss: "fit, join", era: -3500, rel: "root" }, { lang: "Lat", form: "ordo", gloss: "row, rank", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "ordre", gloss: "arrangement", era: 1200, rel: "borrowed" }],
+      duration: [{ lang: "PIE", form: "*deru-", gloss: "firm, hard", era: -3500, rel: "root" }, { lang: "Lat", form: "durare", gloss: "last, harden", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "duration", gloss: "lasting", era: 1200, rel: "borrowed" }],
+      change: [{ lang: "LateLat", form: "cambiare", gloss: "exchange", era: 300, rel: "root", confidence: "medium" }, { lang: "OFr", form: "changier", gloss: "exchange, alter", era: 1100, rel: "borrowed" }],
+      event: [{ lang: "PIE", form: "*gwehm-", gloss: "come, go", era: -3500, rel: "root" }, { lang: "Lat", form: "evenire", gloss: "come out, happen", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "event", gloss: "outcome", era: 1200, rel: "borrowed" }],
+      relation: [{ lang: "PIE", form: "*tolh2-", gloss: "lift, bear", era: -3500, rel: "root", confidence: "medium" }, { lang: "Lat", form: "relatio", gloss: "bringing back, report", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "relacion", gloss: "report, relation", era: 1200, rel: "borrowed" }],
+      rule: [{ lang: "PIE", form: "*reg-", gloss: "move straight", era: -3500, rel: "root" }, { lang: "Lat", form: "regula", gloss: "straight stick, rule", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "reule", gloss: "rule", era: 1200, rel: "borrowed" }],
+      use: [{ lang: "PIE", form: "*oit-", gloss: "use, employ", era: -3000, rel: "root", confidence: "medium" }, { lang: "Lat", form: "usus", gloss: "practice, use", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "user", gloss: "use", era: 1200, rel: "borrowed" }],
+      system: [{ lang: "PIE", form: "*sta-", gloss: "stand", era: -3500, rel: "root" }, { lang: "Gk", form: "systema", gloss: "organized whole", era: -300, rel: "semantic-shift" }, { lang: "Lat", form: "systema", gloss: "system", era: 100, rel: "borrowed" }],
+      intention: [{ lang: "PIE", form: "*ten-", gloss: "stretch", era: -3500, rel: "root" }, { lang: "Lat", form: "intendere", gloss: "stretch toward", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "entencion", gloss: "purpose", era: 1200, rel: "borrowed" }],
+      explanation: [{ lang: "PIE", form: "*pele-", gloss: "flat, spread", era: -3500, rel: "root" }, { lang: "Lat", form: "explanare", gloss: "make level, make plain", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "explanacion", gloss: "explanation", era: 1300, rel: "borrowed" }],
+      reason: [{ lang: "PIE", form: "*reh1-", gloss: "reckon, count", era: -3500, rel: "root" }, { lang: "Lat", form: "ratio", gloss: "reckoning, account", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "raison", gloss: "reason", era: 1200, rel: "borrowed" }],
+      mark: [{ lang: "PIE", form: "*merg-", gloss: "edge, boundary", era: -3500, rel: "root", confidence: "medium" }, { lang: "PGmc", form: "*marko", gloss: "boundary, sign", era: -100, rel: "inherited" }, { lang: "OE", form: "mearc", gloss: "mark, boundary", era: 900, rel: "inherited" }],
+      sound: [{ lang: "PIE", form: "*swen-", gloss: "sound", era: -3500, rel: "root", confidence: "medium" }, { lang: "PGmc", form: "*swina-", gloss: "sound", era: -100, rel: "inherited" }, { lang: "OE", form: "sund", gloss: "sound", era: 900, rel: "inherited" }],
+      speech: [{ lang: "PIE", form: "*spereg-", gloss: "speak", era: -3000, rel: "root", confidence: "medium" }, { lang: "PGmc", form: "*sprek-", gloss: "speech", era: -100, rel: "inherited" }, { lang: "OE", form: "spraec", gloss: "speech", era: 900, rel: "inherited" }],
+      visible: [{ lang: "PIE", form: "*weid-", gloss: "see, know", era: -3500, rel: "root" }, { lang: "Lat", form: "visibilis", gloss: "visible", era: -100, rel: "semantic-shift" }],
+      sight: [{ lang: "PIE", form: "*sekw-", gloss: "see", era: -3500, rel: "root", confidence: "medium" }, { lang: "PGmc", form: "*sihtiz", gloss: "sight", era: -100, rel: "inherited" }, { lang: "OE", form: "sihth", gloss: "sight", era: 900, rel: "inherited" }],
+      hearing: [{ lang: "PIE", form: "*kous-", gloss: "hear", era: -3500, rel: "root" }, { lang: "PGmc", form: "*hauzijan", gloss: "hear", era: -100, rel: "inherited" }, { lang: "OE", form: "hyran", gloss: "hear", era: 900, rel: "inherited" }],
+      surface: [{ lang: "PIE", form: "*uper-", gloss: "over", era: -3500, rel: "root" }, { lang: "Lat", form: "superficies", gloss: "outer face", era: -100, rel: "compound" }],
+      vibration: [{ lang: "PIE", form: "*weip-", gloss: "turn, tremble", era: -3000, rel: "root", confidence: "medium" }, { lang: "Lat", form: "vibrare", gloss: "shake, brandish", era: -100, rel: "semantic-shift" }],
+      movement: [{ lang: "PIE", form: "*meue-", gloss: "push away, move", era: -3500, rel: "root" }, { lang: "Lat", form: "movere", gloss: "move", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "movement", gloss: "motion", era: 1200, rel: "borrowed" }],
+      boundary: [{ lang: "MedLat", form: "bodina", gloss: "limit marker", era: 900, rel: "root", confidence: "medium" }, { lang: "OFr", form: "bodne", gloss: "boundary", era: 1100, rel: "borrowed" }],
+      limit: [{ lang: "PIE", form: "*lei-", gloss: "path, furrow", era: -3000, rel: "root", confidence: "medium" }, { lang: "Lat", form: "limes", gloss: "path, boundary", era: -100, rel: "semantic-shift" }],
+      difference: [{ lang: "PIE", form: "*bher-", gloss: "carry", era: -3500, rel: "root" }, { lang: "Lat", form: "differentia", gloss: "carrying apart", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "difference", gloss: "difference", era: 1200, rel: "borrowed" }],
+      state: [{ lang: "PIE", form: "*sta-", gloss: "stand", era: -3500, rel: "root" }, { lang: "Lat", form: "status", gloss: "standing, condition", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "estat", gloss: "state", era: 1200, rel: "borrowed" }],
+      process: [{ lang: "PIE", form: "*ked-", gloss: "go, yield", era: -3000, rel: "root", confidence: "medium" }, { lang: "Lat", form: "procedere", gloss: "go forward", era: -100, rel: "semantic-shift" }],
+      occurrence: [{ lang: "PIE", form: "*kers-", gloss: "run", era: -3500, rel: "root" }, { lang: "Lat", form: "occurrere", gloss: "run toward", era: -100, rel: "semantic-shift" }],
+      thing: [{ lang: "PIE", form: "*tenk-", gloss: "stretch, time", era: -3000, rel: "root", confidence: "medium" }, { lang: "PGmc", form: "*thinga-", gloss: "assembly, matter", era: -100, rel: "inherited" }, { lang: "OE", form: "thing", gloss: "assembly, matter", era: 900, rel: "inherited" }],
+      structure: [{ lang: "PIE", form: "*stere-", gloss: "spread, build", era: -3000, rel: "root", confidence: "medium" }, { lang: "Lat", form: "structura", gloss: "fitting together", era: -100, rel: "semantic-shift" }],
+      comparison: [{ lang: "PIE", form: "*per-", gloss: "forward, through", era: -3500, rel: "root" }, { lang: "Lat", form: "comparare", gloss: "pair together", era: -100, rel: "compound" }],
+      quantity: [{ lang: "PIE", form: "*kwo-", gloss: "how, who", era: -3500, rel: "root" }, { lang: "Lat", form: "quantitas", gloss: "how-muchness", era: -100, rel: "semantic-shift" }],
+      public: [{ lang: "PIE", form: "*pelh1-", gloss: "people, full", era: -3000, rel: "root", confidence: "medium" }, { lang: "Lat", form: "publicus", gloss: "of the people", era: -100, rel: "semantic-shift" }],
+      community: [{ lang: "PIE", form: "*mei-", gloss: "change, exchange", era: -3500, rel: "root" }, { lang: "Lat", form: "communitas", gloss: "shared fellowship", era: -100, rel: "semantic-shift" }],
+      practice: [{ lang: "PIE", form: "*per-", gloss: "forward, through", era: -3500, rel: "root" }, { lang: "Gk", form: "praktikos", gloss: "fit for action", era: -300, rel: "semantic-shift" }, { lang: "OFr", form: "pratique", gloss: "practice", era: 1400, rel: "borrowed" }],
+      pattern: [{ lang: "Lat", form: "patronus", gloss: "protector, model", era: -100, rel: "root" }, { lang: "OFr", form: "patron", gloss: "model, example", era: 1200, rel: "borrowed" }],
+      role: [{ lang: "Lat", form: "rotulus", gloss: "small roll", era: 100, rel: "root" }, { lang: "OFr", form: "rolle", gloss: "roll, list", era: 1200, rel: "borrowed" }],
+      function: [{ lang: "PIE", form: "*bheug-", gloss: "enjoy, use", era: -3000, rel: "root", confidence: "medium" }, { lang: "Lat", form: "functio", gloss: "performance", era: -100, rel: "semantic-shift" }],
+      part: [{ lang: "PIE", form: "*per-", gloss: "grant, allot", era: -3500, rel: "root" }, { lang: "Lat", form: "pars", gloss: "part, share", era: -100, rel: "semantic-shift" }],
+      whole: [{ lang: "PIE", form: "*kailo-", gloss: "whole, uninjured", era: -3500, rel: "root" }, { lang: "PGmc", form: "*haila-", gloss: "whole", era: -100, rel: "inherited" }, { lang: "OE", form: "hal", gloss: "entire, unhurt", era: 900, rel: "inherited" }],
+      unit: [{ lang: "PIE", form: "*oi-no-", gloss: "one", era: -3500, rel: "root" }, { lang: "Lat", form: "unus", gloss: "one", era: -100, rel: "semantic-shift" }],
+      one: [{ lang: "PIE", form: "*oi-no-", gloss: "one", era: -3500, rel: "root" }, { lang: "PGmc", form: "*ainaz", gloss: "one", era: -100, rel: "inherited" }, { lang: "OE", form: "an", gloss: "one", era: 900, rel: "inherited" }],
+      mind: [{ lang: "PIE", form: "*men-", gloss: "think", era: -3500, rel: "root" }, { lang: "PGmc", form: "*gamundiz", gloss: "memory", era: -100, rel: "inherited" }, { lang: "OE", form: "gemynd", gloss: "memory, thought", era: 900, rel: "inherited" }],
+      thought: [{ lang: "PIE", form: "*tong-", gloss: "think, feel", era: -3000, rel: "root", confidence: "medium" }, { lang: "PGmc", form: "*thanhto", gloss: "thought", era: -100, rel: "inherited" }, { lang: "OE", form: "thohte", gloss: "thought", era: 900, rel: "inherited" }],
+      direction: [{ lang: "PIE", form: "*reg-", gloss: "straighten", era: -3500, rel: "root" }, { lang: "Lat", form: "directio", gloss: "straightening, guidance", era: -100, rel: "semantic-shift" }],
+      end: [{ lang: "PIE", form: "*ant-", gloss: "front, forehead", era: -3500, rel: "root", confidence: "medium" }, { lang: "PGmc", form: "*andja-", gloss: "end", era: -100, rel: "inherited" }, { lang: "OE", form: "ende", gloss: "end", era: 900, rel: "inherited" }],
+      purpose: [{ lang: "Lat", form: "proponere", gloss: "put forth", era: -100, rel: "root" }, { lang: "OFr", form: "porpos", gloss: "intention", era: 1200, rel: "borrowed" }],
+      account: [{ lang: "Lat", form: "computare", gloss: "reckon together", era: -100, rel: "root" }, { lang: "OFr", form: "aconter", gloss: "count, tell", era: 1200, rel: "borrowed" }],
+      extent: [{ lang: "PIE", form: "*ten-", gloss: "stretch", era: -3500, rel: "root" }, { lang: "Lat", form: "extendere", gloss: "stretch out", era: -100, rel: "semantic-shift" }],
+      portion: [{ lang: "PIE", form: "*per-", gloss: "grant, allot", era: -3500, rel: "root" }, { lang: "Lat", form: "portio", gloss: "share, part", era: -100, rel: "semantic-shift" }],
+      season: [{ lang: "PIE", form: "*seh1-", gloss: "sow", era: -3500, rel: "root" }, { lang: "Lat", form: "satio", gloss: "sowing", era: -100, rel: "semantic-shift" }, { lang: "OFr", form: "seison", gloss: "sowing time", era: 1100, rel: "borrowed" }],
+      recurrence: [{ lang: "PIE", form: "*kers-", gloss: "run", era: -3500, rel: "root" }, { lang: "Lat", form: "recurrere", gloss: "run back", era: -100, rel: "semantic-shift" }],
+      before: [{ lang: "PIE", form: "*per-", gloss: "forward, through", era: -3500, rel: "root" }, { lang: "PGmc", form: "*bi-fora", gloss: "in front", era: -100, rel: "inherited" }, { lang: "OE", form: "beforan", gloss: "before", era: 900, rel: "inherited" }],
+      after: [{ lang: "PIE", form: "*apo-", gloss: "off, away", era: -3500, rel: "root" }, { lang: "PGmc", form: "*aftera", gloss: "behind, later", era: -100, rel: "inherited" }, { lang: "OE", form: "aefter", gloss: "after", era: 900, rel: "inherited" }]
+    };
+
+    const STRATA = {
+      native: { label: "Native Germanic", class: "anchor" },
+      norse: { label: "Norse layer", class: "temporal" },
+      french: { label: "Norman-French", class: "institution" },
+      learned: { label: "Latin/Greek learned", class: "abstraction" },
+      modern: { label: "Modern coinage", class: "operator" },
+      disputed: { label: "Disputed/unclear", class: "fvs" }
+    };
+
+    const CLASS_LABEL = {
+      kernel: "editorial kernel candidate",
+      fvs: "minimum feedback vertex",
+      anchor: "sensory/count anchor",
+      institution: "public practice",
+      operator: "semantic operator",
+      abstraction: "abstract term",
+      temporal: "diachronic state"
+    };
+
+    let selected = "time";
+    let year = 2026;
+    let filter = "";
+    let mode = "reachable";
+    let currentSource = "canonical";
+    let timer = null;
+    let eraCache = new Map();
+    let escapeCache = new Map();
+    let HYPOTHESES = { cuts: new Set(), adds: new Map(), log: [] };
+
+    const $ = id => document.getElementById(id);
+    const esc = text => String(text).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+    function activeSource() {
+      return currentSource === "all" ? "canonical" : currentSource;
+    }
+
+    function sourceOverride(source, id, y) {
+      const states = SOURCE_EDGES[source]?.[id];
+      if (!states) return null;
+      let active = null;
+      for (const state of states) if (state.from <= y) active = state;
+      return active;
+    }
+
+    function sourceLabel(source = activeSource()) {
+      return SOURCE_META[source]?.label || "All sources";
+    }
+
+    function edgeToken(from, to) {
+      return `${from}->${to}`;
+    }
+
+    function addToken(from, to) {
+      return `${from}!>${to}`;
+    }
+
+    function resetDerived() {
+      eraCache = new Map();
+      escapeCache = new Map();
+    }
+
+    function hypothesisCount() {
+      let adds = 0;
+      HYPOTHESES.adds.forEach(set => { adds += set.size; });
+      return HYPOTHESES.cuts.size + adds;
+    }
+
+    function activeHypothesisLabels() {
+      const cuts = [...HYPOTHESES.cuts].sort().map(t => `cut ${t}`);
+      const adds = [...HYPOTHESES.adds.entries()].flatMap(([from, tos]) => [...tos].sort().map(to => `add ${from}->${to}`));
+      return cuts.concat(adds);
+    }
+
+    function logSurgery(label) {
+      HYPOTHESES.log.unshift(`${eraAt(year).id} ${year} / ${currentSource}: ${label}`);
+      HYPOTHESES.log = HYPOTHESES.log.slice(0, 18);
+    }
+
+    function withHypotheses(id, edges) {
+      const added = HYPOTHESES.adds.get(id) ? [...HYPOTHESES.adds.get(id)] : [];
+      const merged = [...new Set(edges.concat(added).filter(e => DATA[e]))];
+      return merged.filter(e => !HYPOTHESES.cuts.has(edgeToken(id, e)));
+    }
+
+    function isAddedEdge(from, to) {
+      return HYPOTHESES.adds.get(from)?.has(to);
+    }
+
+    function toggleCut(from, to) {
+      const token = edgeToken(from, to);
+      if (HYPOTHESES.cuts.has(token)) {
+        HYPOTHESES.cuts.delete(token);
+        logSurgery(`restored ${from}->${to}`);
+      } else {
+        HYPOTHESES.cuts.add(token);
+        logSurgery(`cut ${from}->${to}`);
+      }
+      resetDerived();
+      render();
+    }
+
+    function proposeEdge(from, to) {
+      from = from.trim().toLowerCase();
+      to = to.trim().toLowerCase();
+      if (!DATA[from] || !DATA[to] || !stateAt(from) || !stateAt(to) || from === to && edgesOf(from).includes(to)) return;
+      if (!HYPOTHESES.adds.has(from)) HYPOTHESES.adds.set(from, new Set());
+      const set = HYPOTHESES.adds.get(from);
+      if (set.has(to)) {
+        set.delete(to);
+        if (!set.size) HYPOTHESES.adds.delete(from);
+        logSurgery(`removed proposed ${from}->${to}`);
+      } else {
+        set.add(to);
+        logSurgery(`proposed ${from}->${to}`);
+      }
+      resetDerived();
+      render();
+    }
+
+    function resetHypotheses() {
+      HYPOTHESES = { cuts: new Set(), adds: new Map(), log: [] };
+      resetDerived();
+      render();
+    }
+
+    function etymonChain(id) {
+      const base = ETYMONS[id] ? ETYMONS[id].map(e => ({ confidence: "high", ...e })) : [{ lang: "UNK", form: DATA[id].root.split(";")[0], gloss: DATA[id].root, era: 900, rel: "root", confidence: "low" }];
+      const modernEra = DATA[id].states[0].from;
+      return base.concat({ lang: "ModE", form: id, gloss: stateAt(id, Math.max(year, modernEra), activeSource())?.gloss || id, era: Math.max(modernEra, 2026), rel: "semantic-shift", confidence: "high" });
+    }
+
+    function rootKey(id) {
+      const first = etymonChain(id)[0];
+      return `${first.lang}:${first.form}`;
+    }
+
+    function stratigraphy(id) {
+      const chain = etymonChain(id);
+      if (chain.some(e => e.confidence === "low" || e.confidence === "disputed")) return "disputed";
+      const boundary = [...chain].reverse().find(e => e.rel && !["inherited", "semantic-shift", "root"].includes(e.rel));
+      const langs = chain.map(e => e.lang);
+      if (langs.includes("ON")) return "norse";
+      if (langs.includes("OFr")) return "french";
+      if (langs.includes("Lat") || langs.includes("Gk") || langs.includes("LateLat")) return "learned";
+      if (!boundary) return "native";
+      if (boundary.era >= 1700) return "modern";
+      return "disputed";
+    }
+
+    function loanDepth(id) {
+      return Math.max(0, etymonChain(id).length - 1);
+    }
+
+    function cognatesOf(id, nodes = activeIds(year)) {
+      const key = rootKey(id);
+      return nodes.filter(n => n !== id && rootKey(n) === key).sort();
+    }
+
+    function strataCensus(nodes, fvsSet = new Set()) {
+      const rows = {};
+      for (const id of nodes) {
+        const s = stratigraphy(id);
+        if (!rows[s]) rows[s] = { total: 0, kernel: 0 };
+        rows[s].total++;
+        if (fvsSet.has(id)) rows[s].kernel++;
+      }
+      return Object.keys(rows).sort((a, b) => rows[b].kernel - rows[a].kernel || rows[b].total - rows[a].total || a.localeCompare(b));
+    }
+
+    function strataCensusValue(nodes, stratum) {
+      return nodes.filter(id => stratigraphy(id) === stratum).length;
+    }
+
+    function eraAt(y) {
+      let active = ERAS[0];
+      for (const era of ERAS) if (y >= era.year) active = era;
+      return active;
+    }
+
+    function stateAt(id, y = year, source = activeSource()) {
+      const item = DATA[id];
+      if (!item) return null;
+      let active = null;
+      for (const state of item.states) if (state.from <= y) active = state;
+      if (!active) return null;
+      const override = sourceOverride(source, id, y);
+      const edges = withHypotheses(id, (override?.edges || active.edges).filter(e => DATA[e]));
+      return { id, root: item.root, ...active, source, sourceOverridden: !!override, edges };
+    }
+
+    function activeIds(y = year, source = activeSource()) {
+      return Object.keys(DATA).filter(id => stateAt(id, y, source));
+    }
+
+    function edgesOf(id, y = year, scope = null, source = activeSource()) {
+      const st = stateAt(id, y, source);
+      if (!st) return [];
+      const allowed = scope ? new Set(scope) : null;
+      return st.edges.filter(e => stateAt(e, y, source) && (!allowed || allowed.has(e)));
+    }
+
+    function reachableFrom(start, y = year, source = activeSource()) {
+      const seen = new Set();
+      const stack = [start];
+      while (stack.length) {
+        const id = stack.pop();
+        if (seen.has(id) || !stateAt(id, y, source)) continue;
+        seen.add(id);
+        for (const next of edgesOf(id, y, null, source)) stack.push(next);
+      }
+      return [...seen];
+    }
+
+    function tarjan(nodes, y = year, source = activeSource()) {
+      const nodeSet = new Set(nodes);
+      let index = 0;
+      const stack = [];
+      const onStack = new Set();
+      const meta = new Map();
+      const groups = [];
+      function strong(v) {
+        meta.set(v, { index, low: index });
+        index++;
+        stack.push(v);
+        onStack.add(v);
+        for (const w of edgesOf(v, y, nodeSet, source)) {
+          if (!meta.has(w)) {
+            strong(w);
+            meta.get(v).low = Math.min(meta.get(v).low, meta.get(w).low);
+          } else if (onStack.has(w)) {
+            meta.get(v).low = Math.min(meta.get(v).low, meta.get(w).index);
+          }
+        }
+        if (meta.get(v).low === meta.get(v).index) {
+          const group = [];
+          let w;
+          do {
+            w = stack.pop();
+            onStack.delete(w);
+            group.push(w);
+          } while (w !== v);
+          groups.push(group.sort());
+        }
+      }
+      for (const n of nodes) if (!meta.has(n)) strong(n);
+      return groups.sort((a, b) => b.length - a.length || a[0].localeCompare(b[0]));
+    }
+
+    function cyclicGroups(groups, y = year, source = activeSource()) {
+      return groups.filter(g => g.length > 1 || edgesOf(g[0], y, g, source).includes(g[0]));
+    }
+
+    function findCycle(nodes, y = year, removed = new Set(), source = activeSource()) {
+      const allowed = new Set(nodes.filter(n => !removed.has(n)));
+      const color = new Map();
+      const path = [];
+      let found = null;
+      function dfs(v) {
+        if (found) return;
+        color.set(v, 1);
+        path.push(v);
+        for (const w of edgesOf(v, y, allowed, source)) {
+          if (removed.has(w)) continue;
+          if (!color.has(w)) dfs(w);
+          else if (color.get(w) === 1) {
+            found = path.slice(path.indexOf(w));
+            return;
+          }
+        }
+        path.pop();
+        color.set(v, 2);
+      }
+      for (const n of allowed) if (!color.has(n)) dfs(n);
+      return found;
+    }
+
+    function greedyFvs(nodes, y = year, source = activeSource()) {
+      const removed = [];
+      const removedSet = new Set();
+      let cycle = findCycle(nodes, y, removedSet, source);
+      while (cycle) {
+        let best = cycle[0];
+        let bestScore = -1;
+        for (const n of cycle) {
+          const out = edgesOf(n, y, nodes, source).filter(e => !removedSet.has(e)).length;
+          const incoming = nodes.filter(m => !removedSet.has(m) && edgesOf(m, y, nodes, source).includes(n)).length;
+          const score = out + incoming + (n === selected ? .5 : 0);
+          if (score > bestScore || (score === bestScore && n.localeCompare(best) < 0)) {
+            best = n;
+            bestScore = score;
+          }
+        }
+        removed.push(best);
+        removedSet.add(best);
+        cycle = findCycle(nodes, y, removedSet, source);
+      }
+      return removed.sort();
+    }
+
+    function exactFvs(nodes, y = year, source = activeSource()) {
+      const core = [...new Set(cyclicGroups(tarjan(nodes, y, source), y, source).flat())].sort();
+      if (!core.length) return { set: [], exact: true, core };
+      const greedy = greedyFvs(core, y, source);
+      if (core.length > 18) return { set: greedy, exact: false, core };
+      let best = greedy;
+      const memo = new Set();
+      let steps = 0;
+      let exhausted = false;
+      function search(removed) {
+        steps++;
+        if (steps > 14000) {
+          exhausted = true;
+          return;
+        }
+        if (removed.size >= best.length) return;
+        const key = [...removed].sort().join("|");
+        if (memo.has(key)) return;
+        memo.add(key);
+        const cycle = findCycle(core, y, removed, source);
+        if (!cycle) {
+          best = [...removed].sort();
+          return;
+        }
+        const ordered = cycle.slice().sort((a, b) => {
+          const sa = edgesOf(a, y, core, source).length + core.filter(n => edgesOf(n, y, core, source).includes(a)).length;
+          const sb = edgesOf(b, y, core, source).length + core.filter(n => edgesOf(n, y, core, source).includes(b)).length;
+          return sb - sa || a.localeCompare(b);
+        });
+        for (const n of ordered) {
+          removed.add(n);
+          search(removed);
+          if (exhausted) return;
+          removed.delete(n);
+        }
+      }
+      search(new Set());
+      return { set: best, exact: !exhausted, core };
+    }
+
+    function edgesOfWithExtraCuts(id, y = year, scope = null, source = activeSource(), extraCuts = new Set()) {
+      const st = stateAt(id, y, source);
+      if (!st) return [];
+      const allowed = scope ? new Set(scope) : null;
+      return st.edges.filter(e => stateAt(e, y, source) && (!allowed || allowed.has(e)) && !extraCuts.has(edgeToken(id, e)));
+    }
+
+    function tarjanWithExtraCuts(nodes, y = year, source = activeSource(), extraCuts = new Set()) {
+      const nodeSet = new Set(nodes);
+      let index = 0;
+      const stack = [];
+      const onStack = new Set();
+      const meta = new Map();
+      const groups = [];
+      function strong(v) {
+        meta.set(v, { index, low: index });
+        index++;
+        stack.push(v);
+        onStack.add(v);
+        for (const w of edgesOfWithExtraCuts(v, y, nodeSet, source, extraCuts)) {
+          if (!meta.has(w)) {
+            strong(w);
+            meta.get(v).low = Math.min(meta.get(v).low, meta.get(w).low);
+          } else if (onStack.has(w)) {
+            meta.get(v).low = Math.min(meta.get(v).low, meta.get(w).index);
+          }
+        }
+        if (meta.get(v).low === meta.get(v).index) {
+          const group = [];
+          let w;
+          do {
+            w = stack.pop();
+            onStack.delete(w);
+            group.push(w);
+          } while (w !== v);
+          groups.push(group.sort());
+        }
+      }
+      for (const n of nodes) if (!meta.has(n)) strong(n);
+      return groups.sort((a, b) => b.length - a.length || a[0].localeCompare(b[0]));
+    }
+
+    function targetCyclicGroup(term, nodes, y = year, source = activeSource(), extraCuts = new Set()) {
+      const group = tarjanWithExtraCuts(nodes, y, source, extraCuts).find(g => g.includes(term));
+      if (!group) return [];
+      if (group.length > 1) return group;
+      return edgesOfWithExtraCuts(term, y, group, source, extraCuts).includes(term) ? group : [];
+    }
+
+    function findTargetCycle(term, nodes, y = year, source = activeSource(), extraCuts = new Set()) {
+      const allowed = new Set(nodes);
+      const seen = new Set();
+      const edgePath = [];
+      let found = null;
+      function dfs(v) {
+        if (found) return;
+        seen.add(v);
+        for (const w of edgesOfWithExtraCuts(v, y, allowed, source, extraCuts)) {
+          const tok = edgeToken(v, w);
+          if (w === term) {
+            found = edgePath.concat(tok);
+            return;
+          }
+          if (!seen.has(w)) {
+            edgePath.push(tok);
+            dfs(w);
+            edgePath.pop();
+          }
+        }
+        seen.delete(v);
+      }
+      dfs(term);
+      return found;
+    }
+
+    function escapeCost(term, nodes, y = year, source = activeSource()) {
+      const cacheKey = `${term}|${y}|${source}|${nodes.join(",")}|${activeHypothesisLabels().join(";")}`;
+      if (escapeCache.has(cacheKey)) return escapeCache.get(cacheKey);
+      const group = targetCyclicGroup(term, nodes, y, source);
+      if (!group.length) {
+        const value = { cost: 0, edges: [], exact: true, group: [] };
+        escapeCache.set(cacheKey, value);
+        return value;
+      }
+      const groupSet = new Set(group);
+      const candidates = [];
+      for (const from of group) {
+        for (const to of edgesOf(from, y, groupSet, source)) {
+          if (from === term || to === term || groupSet.has(to)) candidates.push(edgeToken(from, to));
+        }
+      }
+      const unique = [...new Set(candidates)].sort((a, b) => {
+        const ai = a.startsWith(`${term}->`) || a.endsWith(`->${term}`) ? 0 : 1;
+        const bi = b.startsWith(`${term}->`) || b.endsWith(`->${term}`) ? 0 : 1;
+        return ai - bi || a.localeCompare(b);
+      });
+      const bounded = unique.slice(0, 18);
+      if (!bounded.length) {
+        const value = { cost: Infinity, edges: [], exact: true, group };
+        escapeCache.set(cacheKey, value);
+        return value;
+      }
+      function escapes(combo) {
+        return !targetCyclicGroup(term, nodes, y, source, new Set(combo)).length;
+      }
+      let best = null;
+      const searchSpace = bounded.slice(0, 12);
+      function search(size, start = 0, picked = []) {
+        if (best) return;
+        if (picked.length === size) {
+          if (escapes(picked)) best = picked.slice().sort();
+          return;
+        }
+        for (let i = start; i <= searchSpace.length - (size - picked.length); i++) {
+          picked.push(searchSpace[i]);
+          search(size, i + 1, picked);
+          picked.pop();
+          if (best) return;
+        }
+      }
+      for (let k = 1; k <= Math.min(3, searchSpace.length) && !best; k++) search(k);
+      const value = best ? { cost: best.length, edges: best, exact: searchSpace.length === unique.length, group } : { cost: ">3", edges: searchSpace.slice(0, 3), exact: false, group };
+      escapeCache.set(cacheKey, value);
+      return value;
+    }
+
+    function anchorDistance(start, nodes, y = year, source = activeSource()) {
+      const nodeSet = new Set(nodes);
+      const queue = [[start, 0]];
+      const seen = new Set();
+      while (queue.length) {
+        const [id, dist] = queue.shift();
+        if (seen.has(id)) continue;
+        const st = stateAt(id, y, source);
+        if (!st) continue;
+        seen.add(id);
+        const edges = edgesOf(id, y, nodeSet, source);
+        if (st.class === "anchor" && edges.length === 0) return dist;
+        for (const next of edges) queue.push([next, dist + 1]);
+      }
+      return Infinity;
+    }
+
+    function layout(nodes, y = year, source = activeSource()) {
+      const centerX = 520;
+      const centerY = 282;
+      const byDepth = new Map();
+      const depths = new Map([[selected, 0]]);
+      const queue = [selected];
+      const nodeSet = new Set(nodes);
+      while (queue.length) {
+        const id = queue.shift();
+        const depth = depths.get(id);
+        for (const next of edgesOf(id, y, nodeSet, source)) {
+          if (!depths.has(next)) {
+            depths.set(next, depth + 1);
+            queue.push(next);
+          }
+        }
+      }
+      for (const id of nodes) {
+        const d = Math.min(depths.get(id) ?? 5, 5);
+        if (!byDepth.has(d)) byDepth.set(d, []);
+        byDepth.get(d).push(id);
+      }
+      const pos = {};
+      const rings = [0, 104, 188, 270, 352, 430];
+      for (const [depth, ids] of byDepth.entries()) {
+        ids.sort((a, b) => a.localeCompare(b));
+        ids.forEach((id, i) => {
+          if (depth === 0) pos[id] = { x: centerX, y: centerY };
+          else {
+            const angle = -Math.PI / 2 + Math.PI * 2 * i / ids.length + depth * .31;
+            pos[id] = { x: centerX + Math.cos(angle) * rings[depth], y: centerY + Math.sin(angle) * rings[depth] * .70 };
+          }
+        });
+      }
+      return pos;
+    }
+
+    function allSourceNodes(y = year) {
+      const merged = new Set();
+      for (const source of COMPARISON_SOURCES) {
+        const nodes = mode === "all" ? activeIds(y, source) : reachableFrom(selected, y, source);
+        nodes.forEach(n => merged.add(n));
+      }
+      return [...merged].sort();
+    }
+
+    function sourceAnalysis(source, y = year, start = selected, scopeMode = mode) {
+      const nodes = scopeMode === "all" ? activeIds(y, source) : reachableFrom(start, y, source);
+      const groups = tarjan(nodes, y, source);
+      const fvs = exactFvs(nodes, y, source);
+      return { source, nodes, groups, cycles: cyclicGroups(groups, y, source), fvs };
+    }
+
+    function currentAnalysis(y = year) {
+      const source = activeSource();
+      if (currentSource === "all" && mode !== "descent") {
+        const nodes = allSourceNodes(y);
+        const base = sourceAnalysis("canonical", y);
+        return { ...base, nodes, allSources: true, source: "all" };
+      }
+      return sourceAnalysis(source, y);
+    }
+
+    function eraAnalysis(y, source = activeSource()) {
+      const key = `${selected}|${y}|${source}|${mode}`;
+      if (eraCache.has(key)) return eraCache.get(key);
+      const value = sourceAnalysis(source, y, selected, "reachable");
+      eraCache.set(key, value);
+      return value;
+    }
+
+    function sourceAnalyses(y = year) {
+      return COMPARISON_SOURCES.map(source => sourceAnalysis(source, y, selected, mode === "all" ? "all" : "reachable"));
+    }
+
+    function fvsSourcesFor(term, y = year) {
+      return COMPARISON_SOURCES.filter(source => eraAnalysis(y, source).fvs.set.includes(term));
+    }
+
+    function consensusClass(term, y = year) {
+      if (!COMPARISON_SOURCES.some(source => stateAt(term, y, source))) return "absent";
+      const count = fvsSourcesFor(term, y).length;
+      if (count === COMPARISON_SOURCES.length) return "obligate";
+      if (count > 0) return "contingent";
+      return "source-null";
+    }
+
+    function consensusIndex(y = year) {
+      const fvsSets = COMPARISON_SOURCES.map(source => new Set(eraAnalysis(y, source).fvs.set));
+      const union = new Set(fvsSets.flatMap(set => [...set]));
+      if (!union.size) return { index: 1, obligate: 0, union: 0 };
+      const obligate = [...union].filter(term => fvsSets.every(set => set.has(term))).length;
+      return { index: obligate / union.size, obligate, union: union.size };
+    }
+
+    function varianceEdges(term, y = year) {
+      const edgeSources = new Map();
+      for (const source of COMPARISON_SOURCES) {
+        for (const edge of edgesOf(term, y, null, source)) {
+          if (!edgeSources.has(edge)) edgeSources.set(edge, []);
+          edgeSources.get(edge).push(source);
+        }
+      }
+      return [...edgeSources.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+    }
+
+    function sourceEdgeRows(nodes, y = year) {
+      const rows = [];
+      const nodeSet = new Set(nodes);
+      for (const source of COMPARISON_SOURCES) {
+        for (const from of nodes) for (const to of edgesOf(from, y, nodeSet, source)) rows.push({ source, from, to });
+      }
+      return rows;
+    }
+
+    function renderHypothesisStrip() {
+      const labels = activeHypothesisLabels();
+      $("hypothesisStrip").classList.toggle("active", labels.length > 0);
+      $("hypothesisStrip").innerHTML = labels.length ? `<span><b>hypothesis active</b>: ${esc(labels.slice(0, 5).join("; "))}${labels.length > 5 ? `; +${labels.length - 5} more` : ""}</span><button id="resetHypotheses">reset</button>` : "";
+      const btn = $("resetHypotheses");
+      if (btn) btn.addEventListener("click", resetHypotheses);
+    }
+
+    function renderMetrics(analysis) {
+      const { nodes, groups, cycles, fvs } = analysis;
+      const source = activeSource();
+      const consensus = consensusIndex(year);
+      const anchors = nodes.filter(n => stateAt(n, year, source).class === "anchor").length;
+      const edgeCount = currentSource === "all" && mode !== "descent" ? sourceEdgeRows(nodes).length : nodes.reduce((sum, n) => sum + edgesOf(n, year, nodes, source).length, 0);
+      const strata = new Set(nodes.map(stratigraphy)).size;
+      $("metrics").innerHTML = [
+        ["active terms", activeIds().length],
+        ["scope terms", nodes.length],
+        ["edges", edgeCount],
+        ["SCCs", groups.length],
+        ["min FVS", fvs.set.length],
+        [hypothesisCount() ? "hypotheses" : "consensus", hypothesisCount() || `${Math.round(consensus.index * 100)}%`]
+      ].map(([label, value]) => `<div class="metric"><b>${value}</b><span>${label}</span></div>`).join("");
+      $("graphStatus").textContent = mode === "descent" ? `${selected} etymon chain / ${cognatesOf(selected, activeIds()).length} cognates` : `${sourceLabel(currentSource === "all" ? "canonical" : source)} / ${nodes.length} scope / ${anchors} anchors / ${fvs.exact ? "exact" : "greedy"} FVS`;
+      $("lexiconEra").textContent = `${eraAt(year).id} ${year} / ${currentSource === "all" ? "all sources" : SOURCE_META[source].short}`;
+      renderHypothesisStrip();
+    }
+
+    function renderWordList(analysis) {
+      const scoped = new Set(analysis.nodes);
+      const q = filter.trim().toLowerCase();
+      $("wordList").innerHTML = Object.keys(DATA).sort().filter(id => {
+        const st = stateAt(id);
+        const stratum = STRATA[stratigraphy(id)].label;
+        const hay = `${id} ${DATA[id].root} ${stratum} ${rootKey(id)} ${st ? `${st.class} ${st.gloss}` : "absent"}`.toLowerCase();
+        return !q || hay.includes(q);
+      }).map(id => {
+        const st = stateAt(id);
+        const absent = !st;
+        const inScope = scoped.has(id);
+        const label = st ? stratigraphy(id) : `from ${DATA[id].states[0].from}`;
+        const strataClass = STRATA[stratigraphy(id)].class;
+        const plural = consensusClass(id, year);
+        return `<button class="word-row ${id === selected ? "active" : ""} ${absent ? "absent" : ""}" data-word="${id}">
+          <span><strong>${esc(id)}</strong><small>${esc(st ? st.gloss : "not active at this year")}</small></span>
+          <span><span class="tag ${st ? strataClass : ""}">${esc(label)}</span><br><small>${esc(plural)}</small>${inScope ? "<br><small>scope</small>" : ""}</span>
+        </button>`;
+      }).join("");
+      document.querySelectorAll(".word-row").forEach(btn => btn.addEventListener("click", () => {
+        selected = btn.dataset.word;
+        eraCache = new Map();
+        if (!stateAt(selected, year)) year = DATA[selected].states[0].from;
+        $("year").value = year;
+        render();
+      }));
+    }
+
+    function renderDescentGraph(analysis) {
+      const chain = etymonChain(selected);
+      const cognates = cognatesOf(selected, activeIds(year)).slice(0, 9);
+      const lanes = ["PIE", "PGmc", "OE", "ON", "Lat", "Gk", "LateLat", "MedLat", "OFr", "ModE", "UNK"];
+      const laneY = lang => 62 + Math.max(0, lanes.indexOf(lang)) * 41;
+      const minEra = Math.min(...chain.map(e => e.era), -3500);
+      const maxEra = 2026;
+      const xOf = era => 88 + (era - minEra) / (maxEra - minEra) * 850;
+      const points = chain.map((e, i) => ({ ...e, x: xOf(e.era), y: laneY(e.lang), i, stratum: stratigraphy(selected) }));
+      $("graph").setAttribute("viewBox", "0 0 1040 565");
+      $("graph").innerHTML = `
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#747b83"></path></marker>
+          <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#2458a6"></path></marker>
+          <marker id="arrowAmber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#946410"></path></marker>
+        </defs>
+        ${lanes.map(lang => `<text class="lane-label" x="18" y="${laneY(lang) + 3}">${lang}</text><path class="lane-line" d="M 62 ${laneY(lang)} L 972 ${laneY(lang)}"></path>`).join("")}
+        ${[-3500,-100,900,1200,1500,1800,1950,2026].map(t => `<path class="lane-line" d="M ${xOf(t).toFixed(1)} 34 L ${xOf(t).toFixed(1)} 500"></path><text class="lane-label" x="${xOf(t).toFixed(1)}" y="24" text-anchor="middle">${t}</text>`).join("")}
+        ${points.slice(1).map((p, i) => {
+          const a = points[i];
+          const cls = ["descent-edge", p.rel].join(" ");
+          return `<path class="${cls}" d="M ${a.x + 50} ${a.y} C ${(a.x + p.x) / 2} ${a.y}, ${(a.x + p.x) / 2} ${p.y}, ${p.x - 50} ${p.y}"></path>`;
+        }).join("")}
+        ${points.map(p => `<g class="etymon ${p.stratum}" transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})">
+          <rect x="-50" y="-17" width="100" height="34" rx="3"></rect>
+          <text y="-4">${esc(p.form)}</text><text class="sub">${esc(p.lang)} / ${esc(p.rel)}</text>
+          <title>${esc(p.gloss)}; confidence ${esc(p.confidence)}</title>
+        </g>`).join("")}
+        <g transform="translate(66 514)">
+          <text class="lane-label" x="0" y="0">computed descent: ${esc(STRATA[stratigraphy(selected)].label)} / loan depth ${loanDepth(selected)} / root ${esc(rootKey(selected))}</text>
+          <text class="lane-label" x="0" y="20">cognates in active lexicon: ${esc(cognates.join(", ") || "none")}</text>
+        </g>
+      `;
+    }
+
+    function renderAllSourceGraph(analysis) {
+      const nodes = analysis.nodes;
+      const pos = layout(nodes, year, "canonical");
+      const rows = sourceEdgeRows(nodes);
+      const fvsBySource = new Map(COMPARISON_SOURCES.map(source => [source, new Set(eraAnalysis(year, source).fvs.set)]));
+      const fvsUnion = new Set([...fvsBySource.values()].flatMap(set => [...set]));
+      const offsets = { canonical: -6, structuralist: -2, analytic: 2, corpus: 6 };
+      $("graph").setAttribute("viewBox", "0 0 1040 565");
+      $("graph").innerHTML = `
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#747b83"></path></marker>
+          <marker id="arrowViolet" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#705396"></path></marker>
+          <marker id="arrowBrown" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#7a5a25"></path></marker>
+          <marker id="arrowCyan" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#16727a"></path></marker>
+        </defs>
+        ${rows.map(({ source, from, to }) => {
+          const a = pos[from], b = pos[to];
+          if (!a || !b) return "";
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const len = Math.max(1, Math.hypot(dx, dy));
+          const nx = -dy / len * offsets[source], ny = dx / len * offsets[source];
+          const r1 = from === selected ? 39 : 31;
+          const r2 = to === selected ? 39 : 31;
+          const x1 = a.x + dx / len * r1 + nx;
+          const y1 = a.y + dy / len * r1 + ny;
+          const x2 = b.x - dx / len * r2 + nx;
+          const y2 = b.y - dy / len * r2 + ny;
+          const d = `M ${x1.toFixed(1)} ${y1.toFixed(1)} L ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+          return `<path class="edge source-${source}" style="stroke-width:1.25;opacity:.78" d="${d}"><title>${esc(SOURCE_META[source].label)}: ${esc(from)} -> ${esc(to)}; click to cut globally</title></path><path class="edge-hit" data-from="${esc(from)}" data-to="${esc(to)}" d="${d}"></path>`;
+        }).join("")}
+        ${nodes.map(id => {
+          const p = pos[id];
+          const st = stateAt(id, year, "canonical");
+          const c = consensusClass(id);
+          const cls = [st.class, id === selected ? "selected" : "", fvsUnion.has(id) ? "fvs" : ""].join(" ");
+          const r = id === selected ? 39 : fvsUnion.has(id) ? 34 : 31;
+          return `<g class="node ${cls}" data-word="${id}" transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})">
+            <circle r="${r}"></circle><text y="-4">${esc(id)}</text><text class="sub">${c === "obligate" ? "4/4 fvs" : c === "contingent" ? `${fvsSourcesFor(id).length}/4 fvs` : esc(st.class)}</text>
+          </g>`;
+        }).join("")}
+        <g transform="translate(18 530)">
+          ${COMPARISON_SOURCES.map((source, i) => `<text class="lane-label source-${source}-text" x="${i * 126}" y="0">${SOURCE_META[source].label}</text>`).join("")}
+        </g>
+      `;
+      document.querySelectorAll(".node").forEach(node => node.addEventListener("click", () => {
+        selected = node.dataset.word;
+        eraCache = new Map();
+        render();
+      }));
+      document.querySelectorAll(".edge-hit").forEach(edge => edge.addEventListener("click", event => {
+        event.stopPropagation();
+        toggleCut(edge.dataset.from, edge.dataset.to);
+      }));
+    }
+
+    function renderGraph(analysis) {
+      if (mode === "descent") {
+        renderDescentGraph(analysis);
+        return;
+      }
+      if (currentSource === "all") {
+        renderAllSourceGraph(analysis);
+        return;
+      }
+      const { nodes, fvs } = analysis;
+      const source = activeSource();
+      const pos = layout(nodes, year, source);
+      const nodeSet = new Set(nodes);
+      const fvsSet = new Set(fvs.set);
+      const coreSet = new Set(fvs.core);
+      const edges = [];
+      for (const from of nodes) for (const to of edgesOf(from, year, nodeSet, source)) edges.push([from, to]);
+      const cognatePairs = [];
+      for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+        if (rootKey(nodes[i]) === rootKey(nodes[j])) cognatePairs.push([nodes[i], nodes[j]]);
+      }
+      $("graph").setAttribute("viewBox", "0 0 1040 565");
+      $("graph").innerHTML = `
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#747b83"></path></marker>
+          <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#b7352d"></path></marker>
+          <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#2458a6"></path></marker>
+          <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="#34724a"></path></marker>
+        </defs>
+        ${cognatePairs.map(([from, to]) => {
+          const a = pos[from], b = pos[to];
+          const mx = (a.x + b.x) / 2;
+          const my = (a.y + b.y) / 2 - 72;
+          return `<path class="cognate-arc" d="M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}"><title>${esc(from)} and ${esc(to)} share ${esc(rootKey(from))}</title></path>`;
+        }).join("")}
+        ${[...HYPOTHESES.cuts].map(token => {
+          const [from, to] = token.split("->");
+          const a = pos[from], b = pos[to];
+          if (!a || !b) return "";
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const len = Math.max(1, Math.hypot(dx, dy));
+          const x1 = a.x + dx / len * 31;
+          const y1 = a.y + dy / len * 31;
+          const x2 = b.x - dx / len * 31;
+          const y2 = b.y - dy / len * 31;
+          const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+          return `<path class="cut-shadow" d="M ${x1.toFixed(1)} ${y1.toFixed(1)} L ${x2.toFixed(1)} ${y2.toFixed(1)}"><title>cut hypothesis: ${esc(from)} -> ${esc(to)}</title></path><path class="cut-mark" d="M ${(mx - 8).toFixed(1)} ${(my - 8).toFixed(1)} L ${(mx + 8).toFixed(1)} ${(my + 8).toFixed(1)} M ${(mx + 8).toFixed(1)} ${(my - 8).toFixed(1)} L ${(mx - 8).toFixed(1)} ${(my + 8).toFixed(1)}"></path>`;
+        }).join("")}
+        ${edges.map(([from, to]) => {
+          const a = pos[from], b = pos[to];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const len = Math.max(1, Math.hypot(dx, dy));
+          const r1 = from === selected ? 39 : 31;
+          const r2 = to === selected ? 39 : 31;
+          const x1 = a.x + dx / len * r1;
+          const y1 = a.y + dy / len * r1;
+          const x2 = b.x - dx / len * r2;
+          const y2 = b.y - dy / len * r2;
+          const cls = isAddedEdge(from, to) ? "added-edge" : fvsSet.has(from) || fvsSet.has(to) ? "kernel-edge" : from === selected ? "selected-edge" : coreSet.has(from) && coreSet.has(to) ? "new-edge" : "";
+          const d = `M ${x1.toFixed(1)} ${y1.toFixed(1)} L ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+          return `<path class="edge ${cls}" d="${d}"><title>${esc(from)} -> ${esc(to)}; click edge to cut</title></path><path class="edge-hit" data-from="${esc(from)}" data-to="${esc(to)}" d="${d}"></path>`;
+        }).join("")}
+        ${nodes.map(id => {
+          const p = pos[id];
+          const st = stateAt(id, year, source);
+          const cls = [st.class, id === selected ? "selected" : "", fvsSet.has(id) ? "fvs" : ""].join(" ");
+          const r = id === selected ? 39 : fvsSet.has(id) ? 34 : 31;
+          return `<g class="node ${cls}" data-word="${id}" transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})">
+            <circle r="${r}"></circle><text y="-4">${esc(id)}</text><text class="sub">${fvsSet.has(id) ? "min fvs" : esc(st.class)}</text>
+          </g>`;
+        }).join("")}
+      `;
+      document.querySelectorAll(".node").forEach(node => node.addEventListener("click", () => {
+        selected = node.dataset.word;
+        eraCache = new Map();
+        render();
+      }));
+      document.querySelectorAll(".edge-hit").forEach(edge => edge.addEventListener("click", event => {
+        event.stopPropagation();
+        toggleCut(edge.dataset.from, edge.dataset.to);
+      }));
+    }
+
+    function renderDefinition(analysis) {
+      const source = activeSource();
+      const st = stateAt(selected, year, source);
+      if (!st) return;
+      const group = analysis.groups.find(g => g.includes(selected)) || [selected];
+      const dist = anchorDistance(selected, analysis.nodes, year, source);
+      const stratum = stratigraphy(selected);
+      const cognates = cognatesOf(selected, activeIds(year));
+      const c = consensusClass(selected);
+      const fvsSources = fvsSourcesFor(selected);
+      const escape = escapeCost(selected, analysis.nodes, year, source);
+      $("definition").innerHTML = `<h3>${esc(selected)}</h3>
+        <div class="gloss">${esc(st.gloss)}</div>
+        <div style="margin-bottom:7px"><span class="tag ${st.class}">${esc(CLASS_LABEL[st.class] || st.class)}</span> <span class="tag ${STRATA[stratum].class}">${esc(STRATA[stratum].label)}</span> <span class="tag temporal">${esc(currentSource === "all" ? "all-source overlay" : SOURCE_META[source].label)}</span> <span class="tag ${c === "obligate" ? "fvs" : c === "contingent" ? "abstraction" : "operator"}">${esc(c)}</span></div>
+        <div class="microgrid">
+          <div><b>${edgesOf(selected, year, null, source).length}</b><span>out edges</span></div>
+          <div><b>${group.length}</b><span>SCC size</span></div>
+          <div><b>${loanDepth(selected)}</b><span>loan depth</span></div>
+          <div><b>${escape.cost}</b><span>edge escape</span></div>
+        </div>
+        <div class="note" style="margin-top:6px"><span class="mono">root</span>: ${esc(rootKey(selected))}; anchor path ${Number.isFinite(dist) ? dist : "none"}; source FVS ${fvsSources.length}/4; cognates ${esc(cognates.join(", ") || "none")}.</div>
+        <div class="note"><span class="mono">escape certificate</span>: ${escape.edges.length ? esc(escape.edges.join(", ")) : "selected term is not presently cyclic"}${escape.exact ? "" : " (bounded search)"}</div>`;
+    }
+
+    function renderKernel(analysis) {
+      const fvs = analysis.fvs.set;
+      const fvsSet = new Set(fvs);
+      const strataRows = strataCensus(analysis.nodes, fvsSet);
+      const consensus = consensusIndex(year);
+      const perSource = sourceAnalyses(year).map(a => `<span class="source-pill source-${a.source}-text">${SOURCE_META[a.source].short}</span> ${a.fvs.set.join(", ") || "acyclic"}`).join("<br>");
+      const escapeRows = fvs.slice().sort().map(k => {
+        const e = escapeCost(k, analysis.nodes, year, activeSource());
+        return `<span class="mono">${esc(k)}</span> ${esc(e.cost)} [${esc(e.edges.join(", ") || "acyclic")}]${e.exact ? "" : " approx"}`;
+      }).join("<br>");
+      $("kernelBox").innerHTML = `<h3>Minimum grounding kernel</h3>
+        <div class="kernel-list">${fvs.map(k => `<button class="tag fvs pill-button jump" data-word="${k}">${esc(k)}</button>`).join("") || "<span class='note'>No feedback vertex needed: active scope is acyclic.</span>"}</div>
+        <div class="note">Computed fact: ${analysis.fvs.exact ? "exact" : "greedy upper-bound"} minimum feedback vertex set over ${currentSource === "all" ? "canonical layout plus all-source overlay" : SOURCE_META[activeSource()].label}. Consensus index ${Math.round(consensus.index * 100)}% (${consensus.obligate}/${consensus.union || 1} union kernel terms obligate).</div>
+        <div class="note" style="margin-top:5px"><span class="mono">edge escape costs</span><br>${escapeRows || "none"}</div>
+        <div class="note" style="margin-top:5px">${perSource}</div>
+        <table class="strata-table"><thead><tr><th>stratum</th><th>scope</th><th>kernel</th></tr></thead><tbody>
+          ${strataRows.map(s => `<tr><td><span class="tag ${STRATA[s].class}">${esc(STRATA[s].label)}</span></td><td>${strataCensusValue(analysis.nodes, s)}</td><td>${fvs.filter(id => stratigraphy(id) === s).length}</td></tr>`).join("")}
+        </tbody></table>`;
+      document.querySelectorAll(".jump").forEach(btn => btn.addEventListener("click", () => {
+        selected = btn.dataset.word;
+        eraCache = new Map();
+        render();
+      }));
+    }
+
+    function renderAudit(analysis) {
+      const source = activeSource();
+      const firstCycle = findCycle(analysis.nodes, year, new Set(), source);
+      const s = stateAt(selected, year, source);
+      const previousEra = [...ERAS].reverse().find(e => e.year < year && stateAt(selected, e.year));
+      let delta = "No earlier active state for selected term.";
+      if (previousEra) {
+        const old = stateAt(selected, previousEra.year, source);
+        const born = s.edges.filter(e => !old.edges.includes(e));
+        const died = old.edges.filter(e => !s.edges.includes(e));
+        delta = `${previousEra.id}->${eraAt(year).id}: +[${born.join(", ") || "none"}] -[${died.join(", ") || "none"}]`;
+      }
+      const chain = etymonChain(selected).map(e => `${e.lang}:${e.form}/${e.rel}${e.confidence !== "high" ? `:${e.confidence}` : ""}`).join(" -> ");
+      const variance = varianceEdges(selected).map(([edge, sources]) => `${edge}(${sources.map(s => SOURCE_META[s].short).join("/")})`).join(", ") || "terminal under every source";
+      const witnesses = COMPARISON_SOURCES.map(src => {
+        const a = eraAnalysis(year, src);
+        const cyc = findCycle(a.nodes, year, new Set(), src);
+        return `<div class="note"><span class="source-pill source-${src}-text">${SOURCE_META[src].short}</span>${cyc ? esc(cyc.concat(cyc[0]).join(" -> ")) : "none"}</div>`;
+      }).join("");
+      const escape = escapeCost(selected, analysis.nodes, year, source);
+      const hypotheses = activeHypothesisLabels();
+      $("auditBox").innerHTML = `<h3>Detector audit</h3>
+        <div class="note"><span class="mono">active cycle</span>: ${firstCycle ? esc(firstCycle.concat(firstCycle[0]).join(" -> ")) : "none"}</div>
+        ${witnesses}
+        <div class="note"><span class="mono">selected escape</span>: cost ${esc(escape.cost)}, ${escape.edges.length ? esc(escape.edges.join(", ")) : "not cyclic"}${escape.exact ? "" : " (bounded)"}</div>
+        <div class="surgery-form">
+          <input id="proposeFrom" aria-label="Proposed dependency source" placeholder="from" value="${esc(selected)}">
+          <input id="proposeTo" aria-label="Proposed dependency target" placeholder="to">
+          <button id="addHypothesis">add</button>
+        </div>
+        <div class="note"><span class="mono">hypotheses</span>: ${hypotheses.length ? esc(hypotheses.join("; ")) : "none"} ${hypotheses.length ? '<button class="tiny-action" id="auditReset">reset</button>' : ""}</div>
+        <div class="surgery-log">${HYPOTHESES.log.map(row => `<div class="note">${esc(row)}</div>`).join("") || "<div class='note'>Click graph edges to cut; add a dependency here to test cycle creation.</div>"}</div>
+        <div class="note"><span class="mono">variance edges</span>: ${esc(variance)}</div>
+        <div class="note"><span class="mono">selected delta</span>: ${esc(delta)}</div>
+        <div class="note"><span class="mono">descent witness</span>: ${esc(chain)}</div>
+        <div class="note"><span class="mono">root note</span>: ${esc(DATA[selected].root)}. ${esc(s.note)}</div>`;
+      $("addHypothesis").addEventListener("click", () => proposeEdge($("proposeFrom").value, $("proposeTo").value));
+      const reset = $("auditReset");
+      if (reset) reset.addEventListener("click", resetHypotheses);
+    }
+
+    function renderLedger(analysis) {
+      const source = activeSource();
+      const fvsSet = new Set(analysis.fvs.set);
+      const coreSet = new Set(analysis.fvs.core);
+      const groupByNode = new Map();
+      analysis.groups.forEach((g, i) => g.forEach(n => groupByNode.set(n, i + 1)));
+      $("ledger").innerHTML = analysis.nodes.slice().sort((a, b) => {
+        if (fvsSet.has(a) !== fvsSet.has(b)) return fvsSet.has(a) ? -1 : 1;
+        if (coreSet.has(a) !== coreSet.has(b)) return coreSet.has(a) ? -1 : 1;
+        return a.localeCompare(b);
+      }).map(id => {
+        const st = stateAt(id, year, source);
+        const dist = anchorDistance(id, analysis.nodes, year, source);
+        const s = stratigraphy(id);
+        const c = consensusClass(id);
+        const fvsSrc = fvsSourcesFor(id).map(src => SOURCE_META[src].short).join("/") || "none";
+        const escape = coreSet.has(id) ? escapeCost(id, analysis.nodes, year, source) : { cost: 0, edges: [], exact: true };
+        return `<tr>
+          <td>${esc(id)}<br><span class="tag ${fvsSet.has(id) ? "fvs" : st.class}">${fvsSet.has(id) ? "min fvs" : esc(st.class)}</span><br><span class="tag ${STRATA[s].class}">${esc(s)}</span><br><span class="tag ${c === "obligate" ? "fvs" : c === "contingent" ? "abstraction" : "operator"}">${esc(c)}</span></td>
+          <td>${edgesOf(id, year, analysis.nodes, source).map(e => `<span class="edge-pill">${esc(id)} -> ${esc(e)}</span>`).join("<br>") || "<span class='note'>terminal in active scope</span>"}<div class="note">${esc(st.gloss)}</div></td>
+          <td>SCC ${groupByNode.get(id)}; ${coreSet.has(id) ? "cyclic core; " : ""}${Number.isFinite(dist) ? `anchor distance ${dist}` : "no terminal anchor path"}; escape ${esc(escape.cost)}; loan depth ${loanDepth(id)}; FVS sources ${esc(fvsSrc)}<div class="note">${escape.edges.length ? `escape witness ${esc(escape.edges.join(", "))}; ` : ""}${esc(rootKey(id))}; from ${st.from}; ${esc(st.note)}</div></td>
+        </tr>`;
+      }).join("");
+    }
+
+    function membershipAt(term, y) {
+      const source = activeSource();
+      if (!stateAt(term, y, source)) return "absent";
+      const analysis = eraAnalysis(y, source);
+      if (!analysis.nodes.includes(term)) return "absent";
+      if (analysis.fvs.set.includes(term)) return "fvs";
+      if (analysis.fvs.core.includes(term)) return "cycle";
+      return "reach";
+    }
+
+    function renderMatrix() {
+      const selectedEra = eraAt(year).id;
+      const rows = activeIds(2026).filter(id => {
+        const any = ERAS.some(e => currentSource === "all" ? consensusClass(id, e.year) !== "absent" : membershipAt(id, e.year) !== "absent");
+        return any;
+      }).sort((a, b) => {
+        const af = ERAS.some(e => currentSource === "all" ? ["obligate", "contingent"].includes(consensusClass(a, e.year)) : membershipAt(a, e.year) === "fvs");
+        const bf = ERAS.some(e => currentSource === "all" ? ["obligate", "contingent"].includes(consensusClass(b, e.year)) : membershipAt(b, e.year) === "fvs");
+        return af === bf ? a.localeCompare(b) : af ? -1 : 1;
+      });
+      $("matrixWrap").innerHTML = `<table class="matrix"><thead><tr><th>term</th>${ERAS.map(e => `<th>${e.id}</th>`).join("")}<th>cons</th></tr></thead><tbody>
+        ${rows.map(id => `<tr><td>${esc(id)}</td>${ERAS.map(e => {
+          const m = currentSource === "all" ? consensusClass(id, e.year) : membershipAt(id, e.year);
+          const glyph = currentSource === "all" ? (m === "obligate" ? "4" : m === "contingent" ? String(fvsSourcesFor(id, e.year).length) : m === "source-null" ? "·" : "") : (m === "fvs" ? "F" : m === "cycle" ? "C" : m === "reach" ? "·" : "");
+          const pressure = currentSource === "all" ? Number(glyph) || 0 : m === "fvs" ? 4 : m === "cycle" ? 2 : 0;
+          const shade = pressure ? ` style="box-shadow: inset 0 -${Math.min(12, 2 + pressure * 2)}px 0 rgba(183,53,45,.22)"` : "";
+          return `<td class="cell ${m} ${e.id === selectedEra ? "selected-year" : ""}"${shade} title="${esc(id)} ${e.id}: ${m}; fragility pressure ${pressure || "none"}">${glyph}</td>`;
+        }).join("")}<td class="cell ${consensusClass(id, year)}" title="current consensus">${currentSource === "all" ? (fvsSourcesFor(id).length || "·") : consensusClass(id, year).slice(0, 1).toUpperCase()}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function render() {
+      const st = stateAt(selected);
+      if (!st) {
+        year = DATA[selected].states[0].from;
+        $("year").value = year;
+      }
+      $("yearLabel").textContent = year;
+      $("eraLabel").textContent = eraAt(year).id;
+      const analysis = currentAnalysis();
+      renderMetrics(analysis);
+      renderWordList(analysis);
+      renderGraph(analysis);
+      renderDefinition(analysis);
+      renderKernel(analysis);
+      renderAudit(analysis);
+      renderLedger(analysis);
+      renderMatrix();
+    }
+
+    $("search").addEventListener("input", event => { filter = event.target.value.toLowerCase(); renderWordList(currentAnalysis()); });
+    $("year").addEventListener("input", event => { year = Number(event.target.value); render(); });
+    $("play").addEventListener("click", () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+        $("play").textContent = "play";
+        return;
+      }
+      $("play").textContent = "stop";
+      timer = setInterval(() => {
+        const nextEra = ERAS.find(e => e.year > year);
+        year = nextEra ? nextEra.year : 900;
+        $("year").value = year;
+        render();
+      }, 900);
+    });
+    document.querySelectorAll("#scopeMode button").forEach(btn => btn.addEventListener("click", () => {
+      mode = btn.dataset.mode;
+      document.querySelectorAll("#scopeMode button").forEach(b => b.classList.toggle("active", b === btn));
+      eraCache = new Map();
+      render();
+    }));
+    document.querySelectorAll("#sourceMode button").forEach(btn => btn.addEventListener("click", () => {
+      currentSource = btn.dataset.source;
+      document.querySelectorAll("#sourceMode button").forEach(b => b.classList.toggle("active", b === btn));
+      render();
+    }));
+
+    render();
+  </script>
+</body>
+</html>
