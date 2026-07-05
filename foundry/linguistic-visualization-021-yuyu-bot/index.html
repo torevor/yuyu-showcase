@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounding Atlas - Invariance Round</title>
+<style>
+  :root{
+    --ink:#1f211d;--muted:#646158;--rule:#b8b19f;--paper:#f2efe4;--panel:#fffdf6;--panel2:#e7e2d4;
+    --red:#a43831;--gold:#9a6b16;--green:#486f38;--blue:#255e7a;--violet:#65517c;--cyan:#2f7377;
+  }
+  *{box-sizing:border-box}html,body{margin:0;min-height:100%}
+  body{font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink);font-size:12px;line-height:1.25}
+  .app{min-height:100vh;display:grid;grid-template-rows:auto 1fr}
+  header{display:grid;grid-template-columns:330px 1fr 740px;gap:8px;padding:7px 8px;border-bottom:2px solid var(--ink);background:#fbfaf2}
+  h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:24px;line-height:1;letter-spacing:0}
+  .dek{margin-top:4px;color:var(--muted);font-size:11px;max-width:72ch}
+  .tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;align-content:start}
+  .tab,.stamp,button,select{border:1px solid var(--rule);background:var(--panel);color:var(--ink);font:inherit}
+  button{cursor:pointer}.tab{min-height:39px;padding:5px 6px;text-align:left}.tab b,.stamp b{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+  .tab.active{background:#e0e8d7;border-color:#71895d;color:#1f3d1f;font-weight:700}
+  .source{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}.stamp{padding:5px 6px;min-height:39px}
+  main{display:grid;grid-template-columns:310px minmax(670px,1fr) 420px;gap:7px;padding:7px;min-height:0}
+  .panel{background:var(--panel);border:1px solid var(--rule);min-width:0}.panel h2{margin:0;padding:5px 7px;border-bottom:1px solid var(--rule);background:var(--panel2);font-size:10px;text-transform:uppercase;letter-spacing:.05em}.body{padding:7px}
+  label{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}select,button,input{width:100%}select,input{padding:4px 5px;background:#fff;border:1px solid var(--rule)}
+  .tight{display:grid;gap:6px}.two{display:grid;grid-template-columns:1fr 1fr;gap:6px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+  .seg{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--rule)}.seg button{border:0;border-right:1px solid var(--rule);background:#fff;padding:4px 2px;font-size:10px}.seg button:last-child{border-right:0}.seg button.active{background:#e5eadc;font-weight:700;color:#1e401d}
+  .definition{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:7px 0;margin:4px 0}.word{font-family:Georgia,"Times New Roman",serif;font-size:26px;line-height:1}.gloss{margin-top:4px}.small{font-size:10px;color:var(--muted)}
+  .deps,.tray{display:flex;flex-wrap:wrap;gap:3px}.deps{margin-top:6px}.tray{max-height:82px;overflow:auto;border:1px solid var(--rule);background:#fff;padding:4px}
+  .pill{width:auto;padding:2px 5px;border:1px solid var(--rule);background:#fff;font-size:10px}.pill.hot{border-color:var(--red);color:var(--red);font-weight:700}.pill.bearing{background:#fff0ae;border-color:#3b3218;color:#2d250e;font-weight:700}.pill.concept{background:#e0e9d6;border-color:#526f3b}
+  .metric{border:1px solid var(--rule);background:#fff;padding:4px 5px;min-height:38px}.metric b{display:block;font-family:Georgia,"Times New Roman",serif;font-size:18px;line-height:1}.metric span{font-size:9px;color:var(--muted);text-transform:uppercase}
+  .graph-wrap{position:relative;height:calc(100vh - 92px);min-height:680px}svg{display:block;width:100%;height:100%;background:#fffdf8}.caption{position:absolute;left:7px;right:7px;bottom:7px;display:grid;grid-template-columns:1fr auto;gap:7px;pointer-events:none}.note{border:1px solid var(--rule);background:rgba(255,253,247,.95);padding:5px 6px;font-size:10px;color:#38342d}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .edge{stroke:#837e70;stroke-width:1;fill:none;marker-end:url(#arrow);opacity:.65}.edge.hot{stroke:var(--red);stroke-width:1.8;opacity:.9}.edge.bearing{stroke:#272318;stroke-width:2;opacity:.95}
+  .continent{stroke:#2b2922;stroke-width:1.1;opacity:.93}.continent.fail{fill:#f3dcd9;stroke:var(--red);stroke-width:1.7}.continent.part{fill:#fff0ae}.continent.cut{fill:#dfead6}.continent.none{fill:#e6e1d4}
+  .continent-label{font-family:Georgia,"Times New Roman",serif;font-size:11px;font-weight:700;text-anchor:middle;fill:#211f1b}.micro{stroke:#5c564a;stroke-width:.7;fill:#fff}.micro.kernel{fill:#f4dcd8;stroke:var(--red)}.micro.bearing{fill:#fff0ae;stroke:#1f1b10;stroke-width:1.3}.micro.aligned{fill:#dfead6;stroke:#20491e;stroke-width:1.7}.micro.selected{fill:#202018;stroke:#202018}
+  .node circle{fill:#fff;stroke:#777164;stroke-width:1.3}.node.root circle{fill:#dfeaf2;stroke:var(--blue);stroke-width:2.2}.node.kernel circle{fill:#f4dcd8;stroke:var(--red);stroke-width:2}.node.bearing circle{fill:#fff0ae;stroke:#201b0c;stroke-width:2.4}.node.exit circle{fill:#deebd5;stroke:var(--green);stroke-width:1.6}.node text{text-anchor:middle;dominant-baseline:middle;font-size:10px;pointer-events:none}.node .mode{font-size:7px;fill:var(--muted);transform:translateY(12px);text-transform:uppercase}
+  .wheel-label{font-size:9px;text-anchor:middle;dominant-baseline:middle;cursor:pointer}.wheel-label.active{font-weight:700;fill:var(--red)}.arc{fill:none;stroke:#b7ad98;stroke-width:1;opacity:.45}.arc.s3{stroke:#9a6b16;stroke-width:1.7;opacity:.75}.arc.s4,.arc.s5{stroke:var(--red);stroke-width:2.2;opacity:.9}
+  .right{display:grid;grid-template-rows:auto auto auto 1fr;gap:7px}.scroll{max-height:215px;overflow:auto;border:1px solid var(--rule);background:#fff}.scroll.tall{max-height:286px}table{width:100%;border-collapse:collapse;font-size:10px}th,td{border-bottom:1px solid #ddd7c8;padding:3px;text-align:left;vertical-align:top}th{background:#faf8ef;color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.04em}tr.active-row td{background:#fff0ae;font-weight:700}tr.hot-row td{color:var(--red);font-weight:700}.score{font-weight:700}.good{color:#315d24}.warn{color:#805d10}.bad{color:#9b302b}
+  .bar{height:9px;border:1px solid var(--rule);background:#fff;margin-top:3px}.bar i{display:block;height:100%;background:#b8473d}.wall{display:grid;grid-template-columns:1fr 1fr;gap:5px}.wall section{border:1px solid var(--rule);background:#fff;padding:5px;min-height:150px}.wall h3{margin:0 0 4px;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}ul{margin:0;padding-left:15px}li{margin-bottom:3px}
+  .spoke{stroke:#222;stroke-width:2;fill:none}.spoke.deferred{stroke:var(--red);stroke-dasharray:5 3}.spoke.truncated{stroke:var(--muted);stroke-dasharray:2 3}.era-label{font-size:9px;text-anchor:middle;fill:var(--muted);text-transform:uppercase;letter-spacing:.04em}.root-glyph{stroke-width:2}.root-glyph.escaped{fill:#dfead6;stroke:var(--green)}.root-glyph.deferred{fill:#fff;stroke:var(--red)}.root-glyph.truncated{fill:#fff;stroke:var(--muted);stroke-dasharray:2 2}
+  @media(max-width:1150px){header,main{grid-template-columns:1fr}.source{grid-template-columns:repeat(2,1fr)}.graph-wrap{height:720px}.right{grid-template-rows:auto}.tabs{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div><h1>Grounding Atlas</h1><div class="dek">Cross-linguistic circular-definition atlas: five independent lexicons, one separate concept alignment layer, and falsifiable invariance scores for primitive-vocabulary theories.</div></div>
+  <div class="tabs" id="viewTabs">
+    <button class="tab active" data-view="invariance"><b>View</b>Invariance atlas</button>
+    <button class="tab" data-view="language"><b>View</b>Language atlas</button>
+    <button class="tab" data-view="probe"><b>View</b>Local probe</button>
+    <button class="tab" data-view="theory"><b>View</b>Theory surgery</button>
+    <button class="tab" data-view="matrix"><b>View</b>Matrix ledger</button>
+    <button class="tab" data-view="deep"><b>View</b>Deep time</button>
+  </div>
+  <div class="source">
+    <div class="stamp"><b>Languages</b><span id="mLangs">5</span></div><div class="stamp"><b>Entries</b><span id="mEntries">0</span></div><div class="stamp"><b>Edges</b><span id="mEdges">0</span></div>
+    <div class="stamp"><b>Continents</b><span id="mComps">0</span></div><div class="stamp"><b>Concepts</b><span id="mConcepts">0</span></div><div class="stamp"><b>Contract</b>offline, deterministic</div>
+  </div>
+</header>
+<main>
+  <aside class="panel"><h2>Instrument</h2><div class="body tight">
+    <div class="two"><div><label for="langSelect">Language</label><select id="langSelect"></select></div><div><label for="wordSelect">Entry word</label><select id="wordSelect"></select></div></div>
+    <div class="two"><div><label for="conceptSelect">Aligned concept</label><select id="conceptSelect"></select></div><div><label for="theorySelect">Theory</label><select id="theorySelect"></select></div></div>
+    <div class="two"><div><label for="depthRange">Probe depth <span id="depthValue">4</span></label><input id="depthRange" type="range" min="1" max="6" value="4"></div><div><label for="sortSelect">Sort</label><select id="sortSelect"><option value="score">invariance</option><option value="alpha">concept id</option><option value="spread">language spread</option></select></div></div>
+    <div class="seg" id="langSeg"></div>
+    <div class="definition"><div class="word" id="entryWord"></div><div class="small" id="entryMeta"></div><div class="gloss" id="entryGloss"></div><div class="deps" id="entryDeps"></div></div>
+    <div class="three"><div class="metric"><b id="sEntries">0</b><span>lang entries</span></div><div class="metric"><b id="sKernel">0</b><span>lang kernel</span></div><div class="metric"><b id="sBearing">0</b><span>load-bearing</span></div><div class="metric"><b id="sInv">0/5</b><span>selected invariant</span></div><div class="metric"><b id="sTheory">0%</b><span>theory floor</span></div><div class="metric"><b id="sLocal">0</b><span>local cycles</span></div></div>
+    <label>Selected theory concepts</label><div class="tray" id="theoryTray"></div>
+    <div class="small">Graph facts are computed independently per language. Concept alignment is only a comparison layer; it never creates definition edges.</div>
+  </div></aside>
+  <section class="panel graph-wrap"><svg id="graph" role="img" aria-label="Cross-linguistic grounding atlas"></svg><div class="caption"><div class="note" id="graphNote"></div><div class="note mono" id="formulaNote"></div></div></section>
+  <aside class="right">
+    <section class="panel"><h2>Invariance Ledger</h2><div class="body"><div class="scroll"><table><thead><tr><th>Concept</th><th>Score</th><th>English</th><th>Spanish</th><th>Mandarin</th><th>Arabic</th><th>Russian</th></tr></thead><tbody id="invarianceRows"></tbody></table></div></div></section>
+    <section class="panel"><h2>Theory Scoreboard</h2><div class="body"><div class="scroll"><table><thead><tr><th>Theory</th><th>Concepts</th><th>EN</th><th>ES</th><th>ZH</th><th>AR</th><th>RU</th><th>Floor</th></tr></thead><tbody id="theoryRows"></tbody></table></div></div></section>
+    <section class="panel"><h2 id="detailTitle">Language Continents</h2><div class="body"><div class="scroll tall"><table><thead id="detailHead"></thead><tbody id="detailRows"></tbody></table></div></div></section>
+    <section class="panel"><h2>Determinism Wall</h2><div class="body wall"><section><h3>Graph facts</h3><ul id="factsList"></ul></section><section><h3>Interpretive reading</h3><ul id="readingList"></ul></section></div></section>
+  </aside>
+</main>
+</div>
+<script>
+const LANGS=[
+  {id:"en",name:"English",short:"EN",dir:"ltr",anchor:"meaning",family:"Germanic control"},
+  {id:"es",name:"Spanish",short:"ES",dir:"ltr",anchor:"sentido",family:"Romance control"},
+  {id:"zh",name:"Mandarin",short:"ZH",dir:"ltr",anchor:"意思",family:"isolating logographic"},
+  {id:"ar",name:"Arabic",short:"AR",dir:"rtl",anchor:"معنى",family:"root-pattern"},
+  {id:"ru",name:"Russian",short:"RU",dir:"ltr",anchor:"значение",family:"Slavic aspectual"}
+];
+const STOP_MODES=new Set(["perceptual","embodied","ostensive"]);
+const CONCEPTS=[
+  ["MEANING","meaning","sentido","意思","معنى","значение"],["SIGN","sign","signo","符号","علامة","знак"],["WORD","word","palabra","词","كلمة","слово"],
+  ["SAY","say","decir","说","قال","сказать"],["SEE","see","ver","看","رأى","видеть"],["HEAR","hear","oir","听","سمع","слышать"],
+  ["KNOW","know","saber","知道","عرف","знать"],["THINK","think","pensar","想","فكر","думать"],["THING","thing","cosa","东西","شيء","вещь"],
+  ["PERSON","person","persona","人","شخص","человек"],["BODY","body","cuerpo","身体","جسد","тело"],["GOOD","good","bueno","好","خير","хороший"],
+  ["BAD","bad","malo","坏","شر","плохой"],["DO","do","hacer","做","فعل","делать"],["WANT","want","querer","想要","أراد","хотеть"],
+  ["TRUE","true","verdadero","真","صحيح","истинный"],["BECAUSE","because","porque","因为","لأن","потому"],["PART","part","parte","部分","جزء","часть"],
+  ["NAME","name","nombre","名字","اسم","имя"],["PLACE","place","lugar","地方","مكان","место"],["TIME","time","tiempo","时间","وقت","время"],
+  ["CAUSE","cause","causa","原因","سبب","причина"],["SAME","same","mismo","同","نفس","тотже"],["OTHER","other","otro","别的","آخر","другой"]
+].map(r=>({id:r[0],en:r[1],es:r[2],zh:r[3],ar:r[4],ru:r[5]}));
+const conceptById=Object.fromEntries(CONCEPTS.map(c=>[c.id,c]));
+const THEORIES={
+  nsm:{name:"NSM primes",claim:"universal lexical primes",concepts:["I","YOU","SOMEONE","SOMETHING","PEOPLE","BODY","KIND","PART","THIS","SAME","OTHER","ONE","TWO","MUCH","GOOD","BAD","BIG","SMALL","THINK","KNOW","WANT","FEEL","SEE","HEAR","SAY","WORD","TRUE","DO","HAPPEN","MOVE","PLACE","TIME","BECAUSE"]},
+  basic:{name:"Basic core",claim:"restricted defining vocabulary",concepts:["THING","PERSON","BODY","PLACE","TIME","PART","SAME","OTHER","GOOD","BAD","DO","SAY","SEE","HEAR","KNOW","WANT","CAUSE","NAME"]},
+  embodied:{name:"Embodied floor",claim:"perceptual/social exits",concepts:["SEE","HEAR","BODY","PERSON","PLACE","DO","SAY","NAME"]},
+  etymological:{name:"Etymological floor",claim:"motivated roots ground descent",concepts:["SEE","HEAR","BODY","PLACE","NAME","SAY","DO","PERSON","TIME"]},
+  computed:{name:"Computed FVS",claim:"per-language removal baseline",concepts:[]}
+};
+const SEEDS={
+en:[
+["meaning","what is meant, signified, indicated, or understood by a sign, word, action, or expression",["signify","indicate","understand","sign","word","expression"],"lexical","MEANING"],
+["signify","to be a sign of; to mean, express, or make something known",["sign","meaning","express","know"],"lexical"],["sign","a mark, event, or gesture that indicates or represents something else",["mark","event","gesture","indicate","represent","thing"],"social","SIGN"],
+["word","a speech sound or written mark that symbolizes and communicates meaning",["speech","sound","mark","symbolize","communicate","meaning"],"lexical","WORD"],["expression","a word, phrase, sign, or gesture used to convey thought or feeling",["word","phrase","sign","gesture","convey","think"],"lexical"],
+["indicate","to point out, show, or make known by signs or evidence",["point","show","know","sign","evidence"],"indexical"],["understand","to grasp the meaning, reason, or explanation of something",["meaning","reason","explanation","thing","know"],"cognitive"],
+["represent","to stand for, describe, or depict something by a sign or image",["stand","describe","depict","thing","sign","image"],"lexical"],["symbolize","to serve as a symbol; to represent by convention",["symbol","represent","convention"],"social"],["symbol","a sign that stands for an idea, object, or relation by convention",["sign","idea","thing","relation","convention"],"social"],
+["communicate","to share information, thought, or feeling by speech, signs, or behavior",["share","know","think","speech","sign","behavior"],"social"],["convey","to carry, communicate, or make an idea or meaning known",["carry","communicate","idea","meaning","know"],"lexical"],["idea","a thought, plan, image, or concept formed by the mind",["think","plan","image","concept","mind"],"cognitive"],["think","to use the mind to form ideas, judgments, or plans",["mind","idea","judge","plan"],"cognitive","THINK"],["know","to understand a fact, person, or thing as true",["understand","true","person","thing"],"epistemic","KNOW"],
+["thing","an entity, object, event, or item that may be perceived or named",["entity","object","event","perceive","name"],"ontic","THING"],["person","a human being considered as an individual",["human","body","mind","individual"],"social","PERSON"],["body","the physical structure of a person or animal",["person","physical","part","touch"],"embodied","BODY"],
+["see","to perceive with the eyes",["perceive","eye"],"perceptual","SEE"],["hear","to perceive sound with the ear",["perceive","sound","ear"],"perceptual","HEAR"],["say","to express words by voice or writing",["express","word","voice","write"],"social","SAY"],["do","to perform an act or cause something to happen",["act","cause","happen","thing"],"embodied","DO"],
+["good","having desired, proper, or valued quality",["want","value","quality"],"evaluative","GOOD"],["bad","not good; harmful or unwanted",["good","harm","want"],"evaluative","BAD"],["want","to desire or wish for something",["desire","wish","thing"],"cognitive","WANT"],["true","agreeing with fact or reality",["fact","reality","know"],"epistemic","TRUE"],["because","for the reason that; on account of a cause",["reason","cause"],"epistemic","BECAUSE"],["part","a piece, member, or portion of a whole",["piece","member","whole"],"ontic","PART"],["name","a word by which a person, place, or thing is known",["word","person","place","thing","know"],"social","NAME"],["place","a particular position, area, or location",["position","area","location"],"ostensive","PLACE"],["time","the ordered duration in which events occur",["order","duration","event"],"ontic","TIME"],["cause","something that makes an event happen",["thing","event","happen"],"epistemic","CAUSE"],["same","not different; identical in kind or instance",["different","kind","thing"],"ontic","SAME"],["other","different from the one mentioned",["different","one","say"],"ontic","OTHER"]
+],
+es:[
+["sentido","lo que una palabra, signo o acto quiere decir o permite comprender",["palabra","signo","acto","decir","comprender"],"lexical","MEANING"],["signo","objeto, marca o gesto que indica o representa otra cosa",["objeto","marca","gesto","indicar","representar","cosa"],"social","SIGN"],["palabra","unidad hablada o escrita que nombra, dice o comunica sentido",["habla","escritura","nombrar","decir","comunicar","sentido"],"lexical","WORD"],
+["decir","expresar con palabras una idea, noticia o juicio",["expresar","palabra","idea","juicio"],"social","SAY"],["indicar","mostrar o dar a entender algo por signos, datos o gestos",["mostrar","entender","signo","dato","gesto"],"indexical"],["comprender","captar el sentido o la razon de una cosa",["captar","sentido","razon","cosa"],"cognitive"],["representar","hacer presente una cosa por imagen, signo o palabra",["presente","cosa","imagen","signo","palabra"],"lexical"],["comunicar","hacer saber o compartir informacion por signos o palabras",["saber","compartir","informacion","signo","palabra"],"social"],["idea","representacion mental, pensamiento o plan",["mente","pensar","representar","plan"],"cognitive"],["pensar","formar ideas o juicios en la mente",["idea","juicio","mente"],"cognitive","THINK"],["saber","tener conocimiento verdadero de una cosa o persona",["conocimiento","verdadero","cosa","persona"],"epistemic","KNOW"],
+["cosa","objeto, hecho o ser que puede nombrarse o percibirse",["objeto","hecho","ser","nombrar","percibir"],"ontic","THING"],["persona","ser humano considerado como individuo",["humano","cuerpo","individuo"],"social","PERSON"],["cuerpo","estructura fisica de una persona",["persona","fisico","parte","tocar"],"embodied","BODY"],["ver","percibir con los ojos",["percibir","ojo"],"perceptual","SEE"],["oir","percibir sonidos con el oido",["percibir","sonido","oido"],"perceptual","HEAR"],["hacer","realizar un acto o producir un hecho",["acto","producir","hecho"],"embodied","DO"],["bueno","que tiene valor, conveniencia o cualidad deseada",["valor","convenir","cualidad","querer"],"evaluative","GOOD"],["malo","contrario a bueno; danino o no deseado",["bueno","dano","querer"],"evaluative","BAD"],["querer","desear o tener voluntad de algo",["desear","voluntad","cosa"],"cognitive","WANT"],["verdadero","conforme con los hechos o con la realidad",["hecho","realidad","saber"],"epistemic","TRUE"],["porque","por la razon o causa de algo",["razon","causa","cosa"],"epistemic","BECAUSE"],["parte","porcion de un todo",["porcion","todo"],"ontic","PART"],["nombre","palabra con que se conoce una persona, lugar o cosa",["palabra","conocer","persona","lugar","cosa"],"social","NAME"],["lugar","sitio o espacio determinado",["sitio","espacio","determinar"],"ostensive","PLACE"],["tiempo","duracion ordenada en que suceden los hechos",["duracion","orden","hecho"],"ontic","TIME"],["causa","aquello que produce un hecho o efecto",["cosa","producir","hecho","efecto"],"epistemic","CAUSE"],["mismo","igual, no diferente en identidad o clase",["igual","diferente","clase"],"ontic","SAME"],["otro","distinto del que se habla",["distinto","hablar"],"ontic","OTHER"]
+],
+zh:[
+["意思","词语、符号或行为所表示、传达、让人明白的内容",["词","符号","行为","表示","传达","明白","内容"],"lexical","MEANING"],["符号","用来表示、指示或代表别的东西的记号",["表示","指示","代表","东西","记号"],"social","SIGN"],["词","能说出或写出并表示意思的语言单位",["说","写","表示","意思","语言"],"lexical","WORD"],["说","用声音或文字表达词和想法",["声音","文字","表达","词","想"],"social","SAY"],["表示","用符号、动作或话语让意思出现",["符号","动作","话语","意思"],"lexical"],["指示","指出、显示或使人知道某事",["指出","显示","知道","事"],"indexical"],["明白","知道一件事的意思或原因",["知道","意思","原因","事"],"cognitive"],["代表","以符号或形象代替并指向某物",["符号","形象","代替","物"],"lexical"],["传达","把信息、想法或意思交给别人知道",["信息","想","意思","别人","知道"],"social"],["想","心里形成念头、计划或判断",["心","念头","计划","判断"],"cognitive","THINK"],["知道","对人、事或真情况有所明白",["人","事","真","明白"],"epistemic","KNOW"],["东西","可以看见、触到、命名或谈论的物",["看","触","命名","谈论","物"],"ontic","THING"],["人","有身体、心和社会身份的个体",["身体","心","社会","个体"],"social","PERSON"],["身体","人的可触可动的物质结构",["人","触","动","部分"],"embodied","BODY"],["看","用眼睛感知",["眼睛","感知"],"perceptual","SEE"],["听","用耳朵感知声音",["耳朵","感知","声音"],"perceptual","HEAR"],["做","实行动作或使事情发生",["实行","动作","事情","发生"],"embodied","DO"],["好","令人想要、赞成或有价值",["想要","赞成","价值"],"evaluative","GOOD"],["坏","不好、有害或不想要",["好","害","想要"],"evaluative","BAD"],["想要","心里希望得到或发生某事",["心","希望","得到","事情"],"cognitive","WANT"],["真","与事实或实际相合",["事实","实际","知道"],"epistemic","TRUE"],["因为","表示原因或理由",["原因","理由","表示"],"epistemic","BECAUSE"],["部分","整体中的一段、一块或成员",["整体","块","成员"],"ontic","PART"],["名字","让人、地方或东西被知道的词",["人","地方","东西","知道","词"],"social","NAME"],["地方","某个位置、区域或处所",["位置","区域","处所"],"ostensive","PLACE"],["时间","事情发生的先后和持续",["事情","发生","先后","持续"],"ontic","TIME"],["原因","使事情发生的东西或情况",["事情","发生","东西","情况"],"epistemic","CAUSE"],["同","没有差别或属于一个身份",["差别","身份"],"ontic","SAME"],["别的","不是这个而是另一个",["这个","另一个"],"ontic","OTHER"]
+],
+ar:[
+["معنى","ما تدل عليه كلمة أو علامة ويفهمه السامع أو القارئ",["كلمة","علامة","دل","فهم","سامع"],"lexical","MEANING"],["علامة","أثر أو إشارة تدل على شيء أو تمثله",["أثر","إشارة","دل","شيء","مثل"],"social","SIGN"],["كلمة","لفظ أو رسم يحمل معنى ويستعمل في القول",["لفظ","رسم","حمل","معنى","قال"],"lexical","WORD"],["قال","نطق بكلمات ليعبر عن معنى أو خبر",["نطق","كلمة","عبر","معنى","خبر"],"social","SAY"],["دل","أشار أو أظهر معنى بعلامة أو دليل",["أشار","أظهر","معنى","علامة","دليل"],"indexical"],["فهم","أدرك معنى الشيء أو سببه",["أدرك","معنى","شيء","سبب"],"cognitive"],["مثل","جعل شيئا يقوم مقام شيء بعلامة أو صورة",["جعل","شيء","قام","علامة","صورة"],"lexical"],["عبر","أظهر فكرة أو شعورا بكلمة أو فعل",["أظهر","فكرة","شعور","كلمة","فعل"],"social"],["فكر","أعمل العقل في فكرة أو حكم",["عقل","فكرة","حكم"],"cognitive","THINK"],["عرف","كان عنده علم صحيح بشخص أو شيء",["علم","صحيح","شخص","شيء"],"epistemic","KNOW"],["شيء","موجود أو أمر يمكن إدراكه أو تسميته",["موجود","أمر","أدرك","اسم"],"ontic","THING"],["شخص","إنسان معين له جسد وعقل",["إنسان","جسد","عقل","عين"],"social","PERSON"],["جسد","البنية المادية للإنسان التي ترى وتلمس",["إنسان","مادي","رأى","لمس","جزء"],"embodied","BODY"],["رأى","أدرك بالعين",["أدرك","عين"],"perceptual","SEE"],["سمع","أدرك الصوت بالأذن",["أدرك","صوت","أذن"],"perceptual","HEAR"],["فعل","أحدث عملا أو جعل شيئا يقع",["عمل","جعل","شيء","وقع"],"embodied","DO"],["خير","ما يرغب فيه أو يحمد لقيمته",["رغب","حمد","قيمة"],"evaluative","GOOD"],["شر","نقيض الخير وما يضر أو لا يراد",["خير","ضر","أراد"],"evaluative","BAD"],["أراد","طلب في نفسه حصول شيء",["طلب","نفس","حصول","شيء"],"cognitive","WANT"],["صحيح","مطابق للواقع أو للعلم",["واقع","علم"],"epistemic","TRUE"],["لأن","حرف يذكر السبب أو العلة",["سبب","علة","ذكر"],"epistemic","BECAUSE"],["جزء","قطعة أو عضو من كل",["قطعة","عضو","كل"],"ontic","PART"],["اسم","كلمة يعرف بها شخص أو مكان أو شيء",["كلمة","عرف","شخص","مكان","شيء"],"social","NAME"],["مكان","موضع أو حيز معين",["موضع","حيز","عين"],"ostensive","PLACE"],["وقت","مقدار من الزمن تقع فيه الأحداث",["زمن","حدث","وقع"],"ontic","TIME"],["سبب","ما يجعل حدثا يقع أو يفسره",["جعل","حدث","وقع","فسر"],"epistemic","CAUSE"],["نفس","عين الشيء لا غيره",["عين","شيء","غير"],"ontic","SAME"],["آخر","غير المذكور أو المختلف عنه",["غير","ذكر","اختلف"],"ontic","OTHER"]
+],
+ru:[
+["значение","то, что слово, знак или действие обозначает и дает понять",["слово","знак","действие","обозначать","понимать"],"lexical","MEANING"],["знак","метка, жест или предмет, который указывает или представляет вещь",["метка","жест","предмет","указывать","представлять","вещь"],"social","SIGN"],["слово","звуковая или письменная единица речи, несущая значение",["звук","письмо","речь","нести","значение"],"lexical","WORD"],["сказать","выразить словами мысль, сообщение или оценку",["выразить","слово","мысль","сообщение"],"social","SAY"],["обозначать","служить знаком, указывать на значение или вещь",["служить","знак","указывать","значение","вещь"],"lexical"],["понимать","схватывать значение, причину или смысл вещи",["схватывать","значение","причина","вещь"],"cognitive"],["представлять","замещать или показывать вещь знаком или образом",["замещать","показывать","вещь","знак","образ"],"lexical"],["думать","образовывать мысли, планы или суждения в уме",["мысль","план","суждение","ум"],"cognitive","THINK"],["знать","иметь верное представление о человеке, вещи или факте",["верный","представление","человек","вещь","факт"],"epistemic","KNOW"],["вещь","предмет, событие или сущность, которую можно назвать или воспринять",["предмет","событие","сущность","назвать","воспринять"],"ontic","THING"],["человек","лицо с телом, умом и социальной жизнью",["лицо","тело","ум","общество"],"social","PERSON"],["тело","физическая структура человека, видимая и осязаемая",["человек","физический","видеть","трогать","часть"],"embodied","BODY"],["видеть","воспринимать глазами",["воспринимать","глаз"],"perceptual","SEE"],["слышать","воспринимать звук ушами",["воспринимать","звук","ухо"],"perceptual","HEAR"],["делать","совершать действие или вызывать событие",["совершать","действие","вызывать","событие"],"embodied","DO"],["хороший","имеющий желательное качество или ценность",["желать","качество","ценность"],"evaluative","GOOD"],["плохой","не хороший, вредный или нежелательный",["хороший","вред","желать"],"evaluative","BAD"],["хотеть","желать получения или наступления чего-либо",["желать","получение","наступление","вещь"],"cognitive","WANT"],["истинный","соответствующий факту или действительности",["факт","действительность","знать"],"epistemic","TRUE"],["потому","по причине или основанию чего-либо",["причина","основание","вещь"],"epistemic","BECAUSE"],["часть","доля, кусок или член целого",["доля","кусок","целое"],"ontic","PART"],["имя","слово, по которому знают человека, место или вещь",["слово","знать","человек","место","вещь"],"social","NAME"],["место","определенная точка, область или пространство",["точка","область","пространство"],"ostensive","PLACE"],["время","длительность и порядок, в котором происходят события",["длительность","порядок","событие"],"ontic","TIME"],["причина","то, что вызывает событие или объясняет его",["вызывать","событие","объяснять"],"epistemic","CAUSE"],["тотже","не иной, совпадающий по личности или виду",["иной","совпадать","вид"],"ontic","SAME"],["другой","не этот, отличный от названного",["этот","отличный","назвать"],"ontic","OTHER"]
+]};
+function entry(gloss,deps,mode,concept){return{gloss,deps,mode,concept:concept||""};}
+function buildLexicon(lang){
+  const base={};SEEDS[lang.id].forEach(x=>base[x[0]]=entry(x[1],x[2],x[3],x[4]));
+  const terms=Object.keys(base),modes=["lexical","social","cognitive","epistemic","ontic","indexical"];
+  const prefix={en:["field","usage","case","sense","account","pattern"],es:["campo","uso","caso","matiz","cuenta","patron"],zh:["场","用","例","义","说","型"],ar:["باب","استعمال","حال","وجه","شرح","نمط"],ru:["поле","употребление","случай","смысл","разбор","тип"]}[lang.id];
+  terms.forEach((t,i)=>{
+    for(let k=0;k<4;k++){
+      const a=terms[(i+k+3)%terms.length],b=terms[(i*3+k+5)%terms.length],c=terms[(i+k*7+9)%terms.length];
+      const name=lang.id==="zh"?`${t}${prefix[k%prefix.length]}${k+1}`:lang.id==="ar"?`${prefix[k%prefix.length]}-${t}-${k+1}`:`${t}-${prefix[k%prefix.length]}-${k+1}`;
+      base[name]=entry(`${lang.name} generated dictionary stratum for ${t}: a local use defined through ${a}, ${b}, and ${c}.`,[t,a,b,c],modes[(i+k)%modes.length]);
+    }
+  });
+  const all=Object.keys(base);
+  all.slice(0,64).forEach((t,i)=>{
+    const name=lang.id==="zh"?`${t}链`:`${t}-chain`;
+    const a=all[(i+11)%all.length],b=all[(i+29)%all.length];
+    base[name]=entry(`${lang.name} cross-reference chain for ${t}; included to expose delayed circularity rather than translation.`,[t,a,b],modes[i%modes.length]);
+  });
+  return base;
+}
+const CORPORA=Object.fromEntries(LANGS.map(l=>[l.id,buildLexicon(l)]));
+function edgesOf(entries){const e=[];Object.entries(entries).forEach(([a,v])=>v.deps.forEach(b=>{if(entries[b])e.push([a,b]);}));return e;}
+function tarjan(nodes,edges){
+  const out=new Map(nodes.map(n=>[n,[]]));edges.forEach(([a,b])=>out.get(a)?.push(b));
+  let idx=0;const st=[],on=new Set(),index=new Map(),low=new Map(),comps=[];
+  function strong(v){index.set(v,idx);low.set(v,idx++);st.push(v);on.add(v);(out.get(v)||[]).forEach(w=>{if(!index.has(w)){strong(w);low.set(v,Math.min(low.get(v),low.get(w)));}else if(on.has(w))low.set(v,Math.min(low.get(v),index.get(w)));});if(low.get(v)===index.get(v)){const c=[];let w;do{w=st.pop();on.delete(w);c.push(w);}while(w!==v);if(c.length>1||(out.get(v)||[]).includes(v))comps.push(c.sort());}}
+  nodes.forEach(n=>{if(!index.has(n))strong(n)});return comps;
+}
+function isCyclic(nodes,edges){return tarjan(nodes,edges).length>0;}
+function greedyFvs(nodes,edges){
+  let rem=new Set(nodes),chosen=[];while(isCyclic([...rem],edges.filter(([a,b])=>rem.has(a)&&rem.has(b)))){
+    const score=new Map([...rem].map(n=>[n,0]));edges.forEach(([a,b])=>{if(rem.has(a)&&rem.has(b)){score.set(a,score.get(a)+2);score.set(b,score.get(b)+1);}});
+    const pick=[...score.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0][0];chosen.push(pick);rem.delete(pick);
+  }return new Set(chosen);
+}
+function dominantMode(entries,nodes){const c={};nodes.forEach(n=>c[entries[n].mode]=(c[entries[n].mode]||0)+1);return Object.keys(c).sort((a,b)=>c[b]-c[a]||a.localeCompare(b))[0]||"lexical";}
+function analyzeLang(lang){
+  const entries=CORPORA[lang.id],nodes=Object.keys(entries),edges=edgesOf(entries),comps=tarjan(nodes,edges),bearing=new Set(),kernel=new Set();
+  const compInfo=comps.map(c=>{const ce=edges.filter(([a,b])=>c.includes(a)&&c.includes(b));c.forEach(n=>kernel.add(n));const fvs=greedyFvs(c,ce);fvs.forEach(n=>bearing.add(n));return{nodes:c,edges:ce,bearing:fvs,mode:dominantMode(entries,c),verified:!isCyclic(c.filter(n=>!fvs.has(n)),ce.filter(([a,b])=>!fvs.has(a)&&!fvs.has(b)))};});
+  return{lang,entries,nodes,edges,comps,compInfo,kernel,bearing};
+}
+const ANALYSES=Object.fromEntries(LANGS.map(l=>[l.id,analyzeLang(l)]));
+const TOTAL={entries:LANGS.reduce((s,l)=>s+ANALYSES[l.id].nodes.length,0),edges:LANGS.reduce((s,l)=>s+ANALYSES[l.id].edges.length,0),comps:LANGS.reduce((s,l)=>s+ANALYSES[l.id].comps.length,0)};
+const MOTIVATED=new Set(["SEE","HEAR","BODY","PLACE","NAME","SAY","DO","PERSON","TIME"]);
+const ROOT_KIND={SEE:"deictic",HEAR:"iconic",BODY:"ostensive",PLACE:"deictic",NAME:"ostensive",SAY:"iconic",DO:"ostensive",PERSON:"ostensive",TIME:"deictic"};
+const ERAS={
+  en:["Modern English","Old English","Proto-Germanic"],es:["Modern Spanish","Latin","Proto-Italic"],zh:["Modern Mandarin","Old Chinese","Oracle/graph root"],ar:["Modern Arabic","Classical Arabic","Proto-Semitic"],ru:["Modern Russian","Old Church Slavonic","Proto-Slavic"]
+};
+const OLD={
+  en:{MEANING:"maenan",SIGN:"tacen",WORD:"word",SAY:"cwedan",SEE:"seon",HEAR:"hieran",KNOW:"witan",THINK:"thencan",THING:"thing",PERSON:"mann",BODY:"bodig",GOOD:"god",BAD:"yfel",DO:"don",WANT:"willan",TRUE:"treowe",BECAUSE:"for-tham",PART:"dael",NAME:"nama",PLACE:"stow",TIME:"tid",CAUSE:"sacu",SAME:"ilca",OTHER:"other"},
+  es:{MEANING:"sensus",SIGN:"signum",WORD:"verbum",SAY:"dicere",SEE:"videre",HEAR:"audire",KNOW:"sapere",THINK:"pensare",THING:"res",PERSON:"persona",BODY:"corpus",GOOD:"bonus",BAD:"malus",DO:"facere",WANT:"volere",TRUE:"verus",BECAUSE:"quia",PART:"pars",NAME:"nomen",PLACE:"locus",TIME:"tempus",CAUSE:"causa",SAME:"idem",OTHER:"alter"},
+  zh:{MEANING:"意",SIGN:"符",WORD:"詞",SAY:"曰",SEE:"見",HEAR:"聞",KNOW:"知",THINK:"思",THING:"物",PERSON:"人",BODY:"身",GOOD:"善",BAD:"惡",DO:"作",WANT:"欲",TRUE:"真",BECAUSE:"因",PART:"分",NAME:"名",PLACE:"方",TIME:"時",CAUSE:"故",SAME:"同",OTHER:"異"},
+  ar:{MEANING:"عني",SIGN:"علم",WORD:"كلم",SAY:"قول",SEE:"رأي",HEAR:"سمع",KNOW:"عرف",THINK:"فكر",THING:"شيء",PERSON:"نفس",BODY:"جسم",GOOD:"خير",BAD:"شرر",DO:"فعل",WANT:"رود",TRUE:"صحح",BECAUSE:"سبب",PART:"جزء",NAME:"وسم",PLACE:"كون",TIME:"وقت",CAUSE:"علل",SAME:"مثل",OTHER:"غير"},
+  ru:{MEANING:"znakъ-smysl",SIGN:"znakъ",WORD:"slovo",SAY:"rek-ti",SEE:"videti",HEAR:"slysati",KNOW:"znati",THINK:"mysliti",THING:"vestь",PERSON:"chelovekъ",BODY:"telo",GOOD:"dobrъ",BAD:"zlъ",DO:"delati",WANT:"xoteti",TRUE:"istina",BECAUSE:"ponezhe",PART:"chastь",NAME:"imę",PLACE:"mesto",TIME:"vremę",CAUSE:"prichina",SAME:"samъ",OTHER:"drugъ"}
+};
+function rootName(langId,cid){return (langId==="zh"?"*":langId==="ar"?"*":langId==="ru"?"*":"*")+OLD[langId][cid].replace(/\s+/g,"-").toLowerCase();}
+function conceptForTerm(langId,term){return CONCEPTS.find(c=>c[langId]===term)?.id||"";}
+function fallbackConcept(langId,word){
+  const e=ANALYSES[langId].entries[word];if(e?.concept)return e.concept;
+  const dep=(e?.deps||[]).map(d=>conceptForTerm(langId,d)).find(Boolean);if(dep)return dep;
+  const codes=CONCEPTS.map(c=>c.id);let n=0;[...word].forEach(ch=>n+=ch.charCodeAt(0));return codes[n%codes.length];
+}
+function buildTemporal(lang){
+  const a=ANALYSES[lang.id],nodes=new Map(),edges=[];
+  function id(era,label){return `${era}:${label}`;}
+  function put(era,label,v){nodes.set(id(era,label),{id:id(era,label),era,label,...v});}
+  Object.entries(a.entries).forEach(([w,e])=>put("modern",w,{kind:"modern",mode:e.mode,concept:e.concept||fallbackConcept(lang.id,w),motivation:"",deps:e.deps.filter(d=>a.entries[d]).map(d=>id("modern",d))}));
+  CONCEPTS.forEach((c,i)=>{
+    const cid=c.id,old=OLD[lang.id][cid],root=rootName(lang.id,cid),mot=MOTIVATED.has(cid)?ROOT_KIND[cid]||"motivated":"arbitrary";
+    const dep1=OLD[lang.id][CONCEPTS[(i+5)%CONCEPTS.length].id],dep2=OLD[lang.id][CONCEPTS[(i+11)%CONCEPTS.length].id];
+    put("old",old,{kind:"ancestral",mode:"historical",concept:cid,motivation:"",deps:[id("old",dep1),id("old",dep2),id("root",root)]});
+    put("root",root,{kind:"root",mode:mot==="arbitrary"?"conventional":mot,concept:cid,motivation:mot,deps:[]});
+  });
+  const arbitrary=CONCEPTS.filter(c=>!MOTIVATED.has(c.id)).map(c=>id("root",rootName(lang.id,c.id)));
+  arbitrary.forEach((n,i)=>{nodes.get(n).deps=[arbitrary[(i+1)%arbitrary.length]];});
+  Object.values(OLD[lang.id]).forEach(old=>{const n=nodes.get(id("old",old));n.deps=n.deps.filter(d=>nodes.has(d));});
+  nodes.forEach(n=>n.deps.forEach(d=>edges.push([n.id,d])));
+  Object.keys(a.entries).forEach(w=>{
+    const cid=fallbackConcept(lang.id,w),old=OLD[lang.id][cid];if(old)edges.push([id("modern",w),id("old",old)]);
+  });
+  const comps=tarjan([...nodes.keys()],edges),kernel=new Set(),bearing=new Set();
+  comps.forEach(c=>{c.forEach(n=>kernel.add(n));greedyFvs(c,edges.filter(([x,y])=>c.includes(x)&&c.includes(y))).forEach(n=>bearing.add(n));});
+  return{lang,nodes,edges,comps,kernel,bearing};
+}
+const TEMPORAL=Object.fromEntries(LANGS.map(l=>[l.id,buildTemporal(l)]));
+function descentChain(langId,word){
+  const t=TEMPORAL[langId],chain=[`modern:${word}`],cid=fallbackConcept(langId,word),old=OLD[langId][cid],root=rootName(langId,cid);
+  if(old&&t.nodes.has(`old:${old}`))chain.push(`old:${old}`);else return{chain,status:"truncated",cid,root:null};
+  if(root&&t.nodes.has(`root:${root}`))chain.push(`root:${root}`);else return{chain,status:"truncated",cid,root:null};
+  const end=t.nodes.get(chain[chain.length-1]),inCycle=chain.some(n=>t.kernel.has(n));
+  return{chain,cid,root:chain[chain.length-1],status:end.motivation&&end.motivation!=="arbitrary"&&!t.kernel.has(end.id)?"escaped":inCycle?"deferred":"truncated",motivation:end.motivation||"unknown"};
+}
+function escapeRows(langId){
+  const a=ANALYSES[langId];return [...a.bearing].sort((x,y)=>x.localeCompare(y)).map(w=>({word:w,...descentChain(langId,w)}));
+}
+function escapeSummary(langId){
+  const rows=escapeRows(langId),c={escaped:0,deferred:0,truncated:0};rows.forEach(r=>c[r.status]++);return{rows,...c,total:rows.length,rate:rows.length?c.escaped/rows.length:0};
+}
+const state={view:"invariance",lang:"en",word:"meaning",concept:"MEANING",theory:"nsm",depth:4,sort:"score"};
+const $=id=>document.getElementById(id),graph=$("graph");
+function init(){
+  LANGS.forEach(l=>{let o=new Option(l.name,l.id);$("langSelect").add(o);});
+  CONCEPTS.forEach(c=>$("conceptSelect").add(new Option(c.id,c.id)));
+  Object.entries(THEORIES).forEach(([id,t])=>$("theorySelect").add(new Option(t.name,id)));
+  $("mEntries").textContent=TOTAL.entries;$("mEdges").textContent=TOTAL.edges;$("mComps").textContent=TOTAL.comps;$("mConcepts").textContent=CONCEPTS.length;
+  bind();syncWords();render();
+}
+function bind(){
+  $("langSelect").onchange=e=>{state.lang=e.target.value;state.word=LANGS.find(l=>l.id===state.lang).anchor;syncWords();render();};
+  $("wordSelect").onchange=e=>{state.word=e.target.value;const c=ANALYSES[state.lang].entries[state.word].concept;if(c)state.concept=c;syncControls();render();};
+  $("conceptSelect").onchange=e=>{state.concept=e.target.value;const term=conceptById[state.concept][state.lang];if(term&&ANALYSES[state.lang].entries[term])state.word=term;syncWords();render();};
+  $("theorySelect").onchange=e=>{state.theory=e.target.value;render();};
+  $("depthRange").oninput=e=>{state.depth=+e.target.value;$("depthValue").textContent=state.depth;render();};
+  $("sortSelect").onchange=e=>{state.sort=e.target.value;render();};
+  document.querySelectorAll("#viewTabs .tab").forEach(b=>b.onclick=()=>{state.view=b.dataset.view;render();});
+}
+function syncControls(){
+  $("langSelect").value=state.lang;$("wordSelect").value=state.word;$("conceptSelect").value=state.concept;$("theorySelect").value=state.theory;$("sortSelect").value=state.sort;$("depthRange").value=state.depth;$("depthValue").textContent=state.depth;
+  document.querySelectorAll("#viewTabs .tab").forEach(b=>b.classList.toggle("active",b.dataset.view===state.view));
+}
+function syncWords(){
+  const sel=$("wordSelect");sel.innerHTML="";Object.keys(ANALYSES[state.lang].entries).sort((a,b)=>a.localeCompare(b)).forEach(w=>sel.add(new Option(w,w)));syncControls();
+}
+function theoryConcepts(id){return id==="computed"?[...new Set(LANGS.flatMap(l=>[...ANALYSES[l.id].bearing].map(w=>ANALYSES[l.id].entries[w].concept).filter(Boolean)))]:THEORIES[id].concepts.filter(c=>conceptById[c]);}
+function conceptScore(id){
+  const c=conceptById[id],cells=LANGS.map(l=>{const term=c[l.id],a=ANALYSES[l.id],present=!!a.entries[term],bearing=present&&a.bearing.has(term),kernel=present&&a.kernel.has(term);return{lang:l,term,present,bearing,kernel,mode:present?a.entries[term].mode:"absent",gloss:present?a.entries[term].gloss:"not in corpus"};});
+  return{id,cells,score:cells.filter(x=>x.bearing).length,present:cells.filter(x=>x.present).length,kernel:cells.filter(x=>x.kernel).length};
+}
+function theoryScore(id){
+  const cs=theoryConcepts(id),per=LANGS.map(l=>{let present=0,bearing=0;cs.forEach(cid=>{const t=conceptById[cid]?.[l.id],a=ANALYSES[l.id];if(t&&a.entries[t]){present++;if(a.bearing.has(t))bearing++;}});return{lang:l,present,bearing,ratio:present?bearing/present:0};});
+  return{id,concepts:cs,per,floor:per.length?Math.min(...per.map(x=>x.ratio)):0};
+}
+function traverse(langId,root,depth){
+  const entries=ANALYSES[langId].entries,seen=new Set([root]),dmap=new Map([[root,0]]),edges=[],missing=[],q=[root];
+  while(q.length){const a=q.shift(),d=dmap.get(a);if(d>=depth)continue;(entries[a]?.deps||[]).forEach(b=>{if(entries[b]){edges.push([a,b]);if(!seen.has(b)){seen.add(b);dmap.set(b,d+1);q.push(b);}}else missing.push(b);});}
+  return{nodes:[...seen],edges,missing,depth:dmap};
+}
+function localAnalysis(){
+  const data=traverse(state.lang,state.word,state.depth),entries=ANALYSES[state.lang].entries,comps=tarjan(data.nodes,data.edges),kernel=new Set(),bearing=new Set();
+  comps.forEach(c=>{c.forEach(n=>kernel.add(n));greedyFvs(c,data.edges.filter(([a,b])=>c.includes(a)&&c.includes(b))).forEach(n=>bearing.add(n));});
+  return{data,kernel,bearing,comps};
+}
+function svgBase(){const r=graph.getBoundingClientRect(),w=Math.max(660,r.width||860),h=Math.max(660,r.height||700);graph.setAttribute("viewBox",`0 0 ${w} ${h}`);graph.innerHTML=`<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#837e70"></path></marker></defs>`;return{w,h};}
+function add(name,attrs,parent=graph){const e=document.createElementNS("http://www.w3.org/2000/svg",name);Object.entries(attrs||{}).forEach(([k,v])=>e.setAttribute(k,v));parent.appendChild(e);return e;}
+function modeColor(m){return{lexical:"#d9e3ef",social:"#e5ecd7",cognitive:"#ece1f0",epistemic:"#f2e2c4",perceptual:"#d8ece8",embodied:"#eaded2",ostensive:"#deebd5",ontic:"#e5e1d6",indexical:"#dce6d2",evaluative:"#f1dfcf"}[m]||"#eee";}
+function render(){
+  syncControls();renderLangSeg();renderEntry();renderSidebars();renderMetrics();
+  if(state.view==="probe")renderProbe();else if(state.view==="language")renderLanguageAtlas();else if(state.view==="theory")renderTheorySurgery();else if(state.view==="matrix")renderMatrixGraph();else if(state.view==="deep")renderDeepTime();else renderInvarianceAtlas();
+  renderWall();
+}
+function renderLangSeg(){const box=$("langSeg");box.innerHTML="";LANGS.forEach(l=>{const b=document.createElement("button");b.textContent=l.short;b.className=l.id===state.lang?"active":"";b.onclick=()=>{state.lang=l.id;state.word=l.anchor;syncWords();render();};box.appendChild(b);});}
+function renderEntry(){
+  const a=ANALYSES[state.lang],e=a.entries[state.word],lang=LANGS.find(l=>l.id===state.lang);
+  $("entryWord").dir=lang.dir;$("entryWord").textContent=state.word;$("entryMeta").textContent=`${lang.name} / ${e.mode}${e.concept?" / "+e.concept:""}`;$("entryGloss").textContent=e.gloss;
+  const deps=$("entryDeps");deps.innerHTML="";e.deps.forEach(d=>{const b=document.createElement("button");b.className="pill"+(a.bearing.has(d)?" bearing":a.kernel.has(d)?" hot":"");b.textContent=d;b.onclick=()=>{if(a.entries[d]){state.word=d;const c=a.entries[d].concept;if(c)state.concept=c;syncWords();render();}};deps.appendChild(b);});
+}
+function renderMetrics(){
+  const a=ANALYSES[state.lang],cs=conceptScore(state.concept),ts=theoryScore(state.theory),local=localAnalysis();
+  $("sEntries").textContent=a.nodes.length;$("sKernel").textContent=a.kernel.size;$("sBearing").textContent=a.bearing.size;$("sInv").textContent=`${cs.score}/5`;$("sTheory").textContent=Math.round(ts.floor*100)+"%";$("sLocal").textContent=local.comps.length;
+  const tray=$("theoryTray");tray.innerHTML="";theoryConcepts(state.theory).forEach(cid=>{const b=document.createElement("button");b.className="pill "+(cid===state.concept?"concept":"");b.textContent=cid;b.onclick=()=>{state.concept=cid;const t=conceptById[cid][state.lang];if(ANALYSES[state.lang].entries[t])state.word=t;syncWords();render();};tray.appendChild(b);});
+}
+function miniAtlas(a,cx,cy,scale,selected){
+  const comps=a.compInfo.slice().sort((x,y)=>y.nodes.length-x.nodes.length).slice(0,18),max=Math.max(1,...comps.map(c=>c.nodes.length));
+  add("text",{x:cx,y:cy-scale*1.24,"font-size":"11","font-weight":"700","text-anchor":"middle",fill:"#222"}).textContent=a.lang.name;
+  comps.forEach((c,i)=>{const ring=i<6?0:1,slot=ring?i-6:i,total=ring?Math.max(1,comps.length-6):Math.min(6,comps.length),r=ring?scale*.72:scale*.34,ang=-Math.PI/2+slot*Math.PI*2/total+ring*.2,x=cx+Math.cos(ang)*r,y=cy+Math.sin(ang)*r,rad=9+22*Math.sqrt(c.nodes.length/max);const aligned=c.nodes.includes(selected),score=theoryConcepts(state.theory).filter(id=>{const t=conceptById[id]?.[a.lang.id];return t&&c.nodes.includes(t);}).length;add("circle",{cx:x,cy:y,r:rad,fill:modeColor(c.mode),class:"continent "+(score?score<c.bearing.size?"part":"cut":"none")});add("text",{x:x,y:y+3,class:"continent-label"}).textContent=c.nodes[0].slice(0,8);c.nodes.slice(0,22).forEach((n,j)=>{const aa=j*Math.PI*2/Math.min(22,c.nodes.length),rr=rad*.65,klass=n===selected?"selected":a.bearing.has(n)?"bearing":a.kernel.has(n)?"kernel":"",dot=add("circle",{cx:x+Math.cos(aa)*rr,cy:y+Math.sin(aa)*rr,r:n===selected?3.6:a.bearing.has(n)?2.8:2,class:"micro "+klass});dot.onclick=()=>{state.lang=a.lang.id;state.word=n;const con=a.entries[n].concept;if(con)state.concept=con;syncWords();state.view="probe";render();};dot.style.cursor="pointer";});if(aligned)add("circle",{cx:x,cy:y,r:rad+4,fill:"none",stroke:"#a43831","stroke-width":"2","stroke-dasharray":"3 2"});});
+}
+function renderInvarianceAtlas(){
+  const {w,h}=svgBase(),cx=w/2,cy=h/2,R=Math.min(w,h)*.35,selected=conceptById[state.concept];const langPos={};
+  LANGS.forEach((l,i)=>{const ang=-Math.PI/2+i*Math.PI*2/LANGS.length,x=cx+Math.cos(ang)*R,y=cy+Math.sin(ang)*R;langPos[l.id]={x,y};miniAtlas(ANALYSES[l.id],x,y,Math.min(w,h)*.145,selected[l.id]);});
+  const concepts=sortedConcepts().slice(0,32),rr=Math.min(w,h)*.145;concepts.forEach((c,i)=>{const ang=-Math.PI/2+i*Math.PI*2/concepts.length,x=cx+Math.cos(ang)*rr,y=cy+Math.sin(ang)*rr,s=conceptScore(c.id);add("circle",{cx:x,cy:y,r:c.id===state.concept?16:13,fill:c.id===state.concept?"#fff0ae":"#fff",stroke:s.score>=4?"#a43831":s.score>=2?"#9a6b16":"#b8b19f","stroke-width":c.id===state.concept?2:1});const t=add("text",{x:x,y:y,class:"wheel-label "+(c.id===state.concept?"active":"")});t.textContent=c.id.slice(0,5);t.onclick=()=>{state.concept=c.id;const term=conceptById[c.id][state.lang];if(ANALYSES[state.lang].entries[term])state.word=term;syncWords();render();};});
+  LANGS.forEach(l=>{const p=langPos[l.id],term=selected[l.id],a=ANALYSES[l.id],s=a.bearing.has(term)?5:a.kernel.has(term)?3:a.entries[term]?1:0;add("path",{d:`M ${cx} ${cy} Q ${(cx+p.x)/2} ${(cy+p.y)/2-28} ${p.x} ${p.y}`,class:`arc s${s}`});});
+  add("text",{x:cx,y:cy-8,"font-size":"18","font-family":"Georgia,serif","font-weight":"700","text-anchor":"middle"}).textContent=state.concept;
+  add("text",{x:cx,y:cy+10,"font-size":"11","text-anchor":"middle",fill:"#5f5a51"}).textContent=`invariance ${conceptScore(state.concept).score}/5; ${THEORIES[state.theory].name}`;
+  $("graphNote").textContent="Invariance atlas: each small multiple is computed in its own language; the central wheel only aligns concepts after the fact.";
+  $("formulaNote").textContent="score = aligned term present AND in that language's FVS";
+}
+function renderLanguageAtlas(){
+  const {w,h}=svgBase(),a=ANALYSES[state.lang],cx=w/2,cy=h/2,max=Math.max(...a.compInfo.map(c=>c.nodes.length));a.compInfo.slice().sort((x,y)=>y.nodes.length-x.nodes.length).forEach((c,i)=>{const ring=i<8?0:i<22?1:2,slot=ring===0?i:ring===1?i-8:i-22,total=ring===0?8:ring===1?14:Math.max(1,a.compInfo.length-22),r=ring===0?Math.min(w,h)*.18:ring===1?Math.min(w,h)*.34:Math.min(w,h)*.45,ang=-Math.PI/2+slot*Math.PI*2/total+ring*.12,x=cx+Math.cos(ang)*r,y=cy+Math.sin(ang)*r,rad=18+45*Math.sqrt(c.nodes.length/max);add("circle",{cx:x,cy:y,r:rad,fill:modeColor(c.mode),class:"continent"});add("text",{x:x,y:y-3,class:"continent-label"}).textContent=c.nodes[0].slice(0,14);add("text",{x:x,y:y+11,"font-size":"9","text-anchor":"middle",fill:"#575248"}).textContent=`${c.nodes.length} / fvs ${c.bearing.size}`;c.nodes.slice(0,38).forEach((n,j)=>{const aa=j*Math.PI*2/Math.min(38,c.nodes.length),rr=rad*.65,klass=n===state.word?"selected":a.bearing.has(n)?"bearing":"kernel",dot=add("circle",{cx:x+Math.cos(aa)*rr,cy:y+Math.sin(aa)*rr,r:n===state.word?3.5:a.bearing.has(n)?2.8:2,class:"micro "+klass});dot.onclick=()=>{state.word=n;const con=a.entries[n].concept;if(con)state.concept=con;syncWords();render();};dot.style.cursor="pointer";});});
+  $("graphNote").textContent=`${a.lang.name} atlas: ${a.comps.length} circular continents and ${a.bearing.size} removal-verified load-bearing terms.`;
+  $("formulaNote").textContent=`${a.lang.family}; FVS verified=${a.compInfo.every(c=>c.verified)}`;
+}
+function renderProbe(){
+  const {w,h}=svgBase(),la=localAnalysis(),data=la.data,cx=w/2,cy=h/2,pos=new Map();pos.set(state.word,{x:cx,y:cy});const rings=new Map();data.nodes.filter(n=>n!==state.word).forEach(n=>{const d=data.depth.get(n)||1;if(!rings.has(d))rings.set(d,[]);rings.get(d).push(n);});[...rings.entries()].forEach(([d,arr])=>arr.sort().forEach((n,i)=>{const r=Math.min(w,h)*(.12+d*.085),ang=-Math.PI/2+i*Math.PI*2/arr.length+(d*.19);pos.set(n,{x:cx+Math.cos(ang)*r,y:cy+Math.sin(ang)*r});}));data.edges.forEach(([a,b])=>{const pa=pos.get(a),pb=pos.get(b);if(!pa||!pb)return;add("path",{d:`M ${pa.x} ${pa.y} Q ${(pa.x+pb.x)/2+(pb.y-pa.y)*.05} ${(pa.y+pb.y)/2-(pb.x-pa.x)*.05} ${pb.x} ${pb.y}`,class:"edge "+(la.bearing.has(a)&&la.bearing.has(b)?"bearing":la.kernel.has(a)&&la.kernel.has(b)?"hot":"")});});data.nodes.forEach(n=>{const p=pos.get(n),e=ANALYSES[state.lang].entries[n],klass=n===state.word?"root":la.bearing.has(n)?"bearing":la.kernel.has(n)?"kernel":STOP_MODES.has(e.mode)?"exit":"";const g=add("g",{class:"node "+klass,transform:`translate(${p.x},${p.y})`});g.style.cursor="pointer";g.onclick=()=>{state.word=n;if(e.concept)state.concept=e.concept;syncWords();render();};add("circle",{r:n===state.word?31:la.bearing.has(n)?28:la.kernel.has(n)?26:22},g);add("text",{},g).textContent=n.length>12?n.slice(0,11)+".":n;add("text",{class:"mode"},g).textContent=e.mode;});
+  $("graphNote").textContent=`Local probe: ${data.nodes.length} reached entries, ${la.comps.length} local SCCs, ${data.missing.length} omitted dependency strings.`;
+  $("formulaNote").textContent=`depth ${state.depth}; local FVS ${la.bearing.size}/${la.kernel.size}`;
+}
+function renderTheorySurgery(){
+  const {w,h}=svgBase(),cx=w/2,cy=h/2,ts=theoryScore(state.theory);LANGS.forEach((l,i)=>{const a=ANALYSES[l.id],x=120+(w-240)*(i/(LANGS.length-1)),base=h*.53,ratio=ts.per.find(p=>p.lang.id===l.id).ratio;add("text",{x:x,y:38,"font-size":"12","font-weight":"700","text-anchor":"middle"}).textContent=l.name;add("rect",{x:x-42,y:58,width:84,height:h-135,fill:"#fff",stroke:"#b8b19f"});a.compInfo.slice().sort((m,n)=>n.nodes.length-m.nodes.length).slice(0,28).forEach((c,j)=>{const theoryHits=theoryConcepts(state.theory).filter(cid=>c.nodes.includes(conceptById[cid]?.[l.id])).length,remaining=isCyclic(c.nodes.filter(n=>!theoryConcepts(state.theory).some(cid=>conceptById[cid]?.[l.id]===n)),c.edges.filter(([aa,b])=>!theoryConcepts(state.theory).some(cid=>conceptById[cid]?.[l.id]===aa)&&!theoryConcepts(state.theory).some(cid=>conceptById[cid]?.[l.id]===b))),klass=theoryHits?remaining?"part":"cut":"fail";add("rect",{x:x-35,y:66+j*((h-155)/28),width:70,height:Math.max(4,(h-170)/30),class:"continent "+klass});});add("text",{x:x,y:h-50,"font-size":"22","font-family":"Georgia,serif","font-weight":"700","text-anchor":"middle",fill:ratio>.45?"#315d24":ratio>.18?"#805d10":"#9b302b"}).textContent=Math.round(ratio*100)+"%";});
+  $("graphNote").textContent=`Theory surgery: remove ${THEORIES[state.theory].name} where lexicalized in each language, then inspect which original continents remain cyclic.`;
+  $("formulaNote").textContent="floor = weakest language bearing-rate, not average";
+}
+function renderMatrixGraph(){
+  const {w,h}=svgBase(),rows=sortedConcepts(),left=86,top=36,cw=(w-left-30)/LANGS.length,rh=Math.min(24,(h-80)/rows.length);LANGS.forEach((l,i)=>add("text",{x:left+i*cw+cw/2,y:20,"font-size":"11","font-weight":"700","text-anchor":"middle"}).textContent=l.name);rows.forEach((c,r)=>{const y=top+r*rh;add("text",{x:6,y:y+rh*.65,"font-size":"9",fill:c.id===state.concept?"#a43831":"#222"}).textContent=c.id;LANGS.forEach((l,i)=>{const a=ANALYSES[l.id],t=c[l.id],present=!!a.entries[t],bearing=present&&a.bearing.has(t),kernel=present&&a.kernel.has(t),x=left+i*cw;add("rect",{x:x+2,y:y+2,width:cw-4,height:rh-3,fill:bearing?"#fff0ae":kernel?"#f4dcd8":present?"#eef0e7":"#f7f4ec",stroke:"#d6cfbe"});add("text",{x:x+cw/2,y:y+rh*.65,"font-size":"9","text-anchor":"middle"}).textContent=t;});});
+  $("graphNote").textContent="Matrix ledger: every aligned concept across every language, colored by present, circular, and load-bearing status.";
+  $("formulaNote").textContent="gold=bearing; red=kernel; pale=present";
+}
+function renderDeepTime(){
+  const {w,h}=svgBase(),W=w/LANGS.length,selected=state.word,concept=state.concept;
+  LANGS.forEach((l,i)=>{
+    const x0=i*W,cx=x0+W/2,cy=h*.48,maxR=Math.min(W*.43,h*.33),sum=escapeSummary(l.id),sel=conceptById[concept]?.[l.id]||selected,chain=descentChain(l.id,sel);
+    add("text",{x:cx,y:24,"font-size":"12","font-weight":"700","text-anchor":"middle"}).textContent=l.name;
+    [maxR,maxR*.66,maxR*.32].forEach((r,j)=>{add("circle",{cx,cy,r,fill:j===0?"#fffdf8":j===1?"#f7f1dd":"#eef2e8",stroke:"#b8b19f","stroke-width":1});add("text",{x:cx,y:cy-r-5,class:"era-label"}).textContent=ERAS[l.id][j];});
+    const temporal=TEMPORAL[l.id],modern=ANALYSES[l.id],pts=new Map();
+    CONCEPTS.forEach((c,j)=>{
+      const ang=-Math.PI/2+j*Math.PI*2/CONCEPTS.length,modernTerm=c[l.id],old=OLD[l.id][c.id],root=rootName(l.id,c.id);
+      pts.set(`modern:${modernTerm}`,{x:cx+Math.cos(ang)*maxR,y:cy+Math.sin(ang)*maxR,ang});
+      pts.set(`old:${old}`,{x:cx+Math.cos(ang)*maxR*.66,y:cy+Math.sin(ang)*maxR*.66,ang});
+      pts.set(`root:${root}`,{x:cx+Math.cos(ang)*maxR*.32,y:cy+Math.sin(ang)*maxR*.32,ang});
+      const m=pts.get(`modern:${modernTerm}`),o=pts.get(`old:${old}`),r=pts.get(`root:${root}`),rootNode=temporal.nodes.get(`root:${root}`),bearing=modern.bearing.has(modernTerm),kernel=modern.kernel.has(modernTerm),isSel=c.id===concept;
+      add("line",{x1:m.x,y1:m.y,x2:o.x,y2:o.y,stroke:isSel?"#222":"#c9c1af","stroke-width":isSel?1.8:.8});
+      add("line",{x1:o.x,y1:o.y,x2:r.x,y2:r.y,stroke:isSel?"#222":"#d3ccbc","stroke-width":isSel?1.8:.8});
+      add("circle",{cx:m.x,cy:m.y,r:isSel?5:bearing?3.7:kernel?3:2.3,class:"micro "+(isSel?"selected":bearing?"bearing":kernel?"kernel":"")});
+      add("circle",{cx:o.x,cy:o.y,r:isSel?4:2.5,fill:temporal.kernel.has(`old:${old}`)?"#f4dcd8":"#fff",stroke:temporal.kernel.has(`old:${old}`)?"#a43831":"#777164"});
+      add("circle",{cx:r.x,cy:r.y,r:isSel?6:3.2,class:"root-glyph "+(rootNode.motivation==="arbitrary"?"deferred":"escaped")});
+      if(isSel){add("text",{x:m.x,y:m.y-8,"font-size":"9","text-anchor":"middle","font-weight":"700"}).textContent=modernTerm;add("text",{x:r.x,y:r.y+16,"font-size":"8","text-anchor":"middle"}).textContent=rootNode.motivation;}
+    });
+    const cpts=chain.chain.map(n=>pts.get(n)).filter(Boolean);if(cpts.length>1){let d=`M ${cpts[0].x} ${cpts[0].y}`;cpts.slice(1).forEach(p=>d+=` L ${p.x} ${p.y}`);add("path",{d,class:`spoke ${chain.status}`});}
+    add("rect",{x:x0+8,y:h-116,width:W-16,height:94,fill:"#fff",stroke:"#b8b19f"});
+    add("text",{x:x0+16,y:h-96,"font-size":"10","font-weight":"700"}).textContent=`escape ${Math.round(sum.rate*100)}%`;
+    [["escaped",sum.escaped,"#486f38"],["deferred",sum.deferred,"#a43831"],["truncated",sum.truncated,"#646158"]].forEach((r,k)=>{const bw=(W-38)*(sum.total?r[1]/sum.total:0);add("text",{x:x0+16,y:h-75+k*18,"font-size":"9",fill:r[2]}).textContent=`${r[0]} ${r[1]}`;add("rect",{x:x0+82,y:h-84+k*18,width:W-110,height:8,fill:"#f5f2e8",stroke:"#d6cfbe"});add("rect",{x:x0+82,y:h-84+k*18,width:bw,height:8,fill:r[2],opacity:.75});});
+  });
+  $("graphNote").textContent="Deep Time: selected concept spokes descend from modern lexeme to ancestral form to reconstructed root; green roots are motivated, red rings are inherited circularity.";
+  $("formulaNote").textContent="escape = motivated root outside temporal SCC";
+}
+function sortedConcepts(){
+  let arr=CONCEPTS.slice();if(state.sort==="alpha")arr.sort((a,b)=>a.id.localeCompare(b.id));else if(state.sort==="spread")arr.sort((a,b)=>conceptScore(b.id).present-conceptScore(a.id).present||a.id.localeCompare(b.id));else arr.sort((a,b)=>conceptScore(b.id).score-conceptScore(a.id).score||a.id.localeCompare(b.id));return arr;
+}
+function renderSidebars(){
+  const inv=$("invarianceRows");inv.innerHTML="";sortedConcepts().forEach(c=>{const s=conceptScore(c.id),tr=document.createElement("tr");tr.className=c.id===state.concept?"active-row":s.score>=4?"hot-row":"";tr.innerHTML=`<td>${c.id}</td><td><span class="score ${s.score>=4?"good":s.score>=2?"warn":"bad"}">${s.score}/5</span></td>`+s.cells.map(x=>`<td title="${x.gloss}">${x.bearing?"FVS":x.kernel?"SCC":x.present?"in":"-"}</td>`).join("");tr.onclick=()=>{state.concept=c.id;const t=c[state.lang];if(ANALYSES[state.lang].entries[t])state.word=t;syncWords();render();};inv.appendChild(tr);});
+  const th=$("theoryRows");th.innerHTML="";Object.keys(THEORIES).forEach(id=>{const s=theoryScore(id),tr=document.createElement("tr");tr.className=id===state.theory?"active-row":"";tr.innerHTML=`<td>${THEORIES[id].name}</td><td>${s.concepts.length}</td>`+s.per.map(p=>`<td>${p.bearing}/${p.present}</td>`).join("")+`<td><span class="score ${s.floor>.45?"good":s.floor>.18?"warn":"bad"}">${Math.round(s.floor*100)}%</span></td>`;tr.onclick=()=>{state.theory=id;render();};th.appendChild(tr);});
+  renderDetailRows();
+}
+function renderDetailRows(){
+  const head=$("detailHead"),rows=$("detailRows");rows.innerHTML="";
+  if(state.view==="deep"){
+    head.innerHTML="<tr><th>Lang</th><th>Modern FVS term</th><th>Root</th><th>Status</th><th>Motivation</th></tr>";
+    LANGS.forEach(l=>escapeRows(l.id).slice(0,18).forEach(x=>{const root=x.root?TEMPORAL[l.id].nodes.get(x.root):null,tr=document.createElement("tr");tr.className=x.word===state.word&&l.id===state.lang?"active-row":x.status==="escaped"?"":"hot-row";tr.innerHTML=`<td>${l.short}</td><td>${x.word}</td><td>${root?root.label:"-"}</td><td>${x.status}</td><td>${x.motivation||"unknown"}</td>`;tr.onclick=()=>{state.lang=l.id;state.word=x.word;if(ANALYSES[l.id].entries[x.word].concept)state.concept=ANALYSES[l.id].entries[x.word].concept;syncWords();render();};rows.appendChild(tr);}));
+    $("detailTitle").textContent="Escape Ledger";
+  }else if(state.view==="matrix"||state.view==="invariance"){
+    head.innerHTML="<tr><th>Lang</th><th>Term</th><th>Status</th><th>Mode</th><th>Gloss</th></tr>";conceptScore(state.concept).cells.forEach(x=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${x.lang.short}</td><td>${x.term}</td><td>${x.bearing?"load-bearing":x.kernel?"kernel":x.present?"present":"absent"}</td><td>${x.mode}</td><td>${x.gloss}</td>`;tr.onclick=()=>{if(x.present){state.lang=x.lang.id;state.word=x.term;syncWords();render();}};rows.appendChild(tr);});$("detailTitle").textContent=`Concept Detail: ${state.concept}`;
+  }else{
+    const a=ANALYSES[state.lang];head.innerHTML="<tr><th>Kernel</th><th>Terms</th><th>FVS</th><th>Mode</th></tr>";a.compInfo.slice().sort((x,y)=>y.nodes.length-x.nodes.length).slice(0,36).forEach(c=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${c.nodes.slice(0,3).join(", ")}</td><td>${c.nodes.length}</td><td>${c.bearing.size}</td><td>${c.mode}</td>`;tr.onclick=()=>{state.word=[...c.bearing][0]||c.nodes[0];syncWords();render();};rows.appendChild(tr);});$("detailTitle").textContent=`${a.lang.name} Continents`;
+  }
+}
+function renderWall(){
+  const cs=conceptScore(state.concept),ts=theoryScore(state.theory),a=ANALYSES[state.lang],local=localAnalysis();
+  if(state.view==="deep"){
+    const s=escapeSummary(state.lang),d=descentChain(state.lang,state.word),tem=TEMPORAL[state.lang];
+    fill("factsList",[
+      `${tem.nodes.size} temporal nodes and ${tem.edges.length} definition/descent edges are embedded for ${a.lang.name}.`,
+      `${tem.comps.length} temporal SCCs are computed over modern, ancestral, and root layers together.`,
+      `${s.total} modern FVS terms are classified: ${s.escaped} escaped, ${s.deferred} deferred, ${s.truncated} truncated.`,
+      `"${state.word}" descends through ${d.chain.length} attested model layers and is classified ${d.status}.`,
+      `The classification uses only descent links, root motivation tags, and temporal SCC membership.`
+    ]);
+    fill("readingList",[
+      d.status==="escaped"?`This selected lineage reaches a motivated acyclic root in the model.`:d.status==="deferred"?`This selected lineage does not ground out; it relocates the loop into older material.`:`This selected lineage runs beyond the modeled evidence before a motivated acyclic root appears.`,
+      `Root motivation is an interpretive historical tag; SCC membership and escape/defer/truncate status are mechanical once the tag is present.`,
+      `The compressed historical layer is a test harness, not a full etymological dictionary.`,
+      `Deep time strengthens the atlas by testing the common claim that etymology supplies the missing ground.`
+    ]);
+    return;
+  }
+  fill("factsList",[
+    `${TOTAL.entries} entries and ${TOTAL.edges} dependency edges are embedded across five corpora.`,
+    `${TOTAL.comps} non-trivial SCCs are computed by Tarjan independently per language.`,
+    `"${state.concept}" is load-bearing in ${cs.score} of 5 languages and present in ${cs.present} of 5.`,
+    `${THEORIES[state.theory].name} has weakest-language FVS coverage of ${Math.round(ts.floor*100)}%.`,
+    `${a.lang.name} local probe reaches ${local.data.nodes.length} entries at depth ${state.depth}.`
+  ]);
+  fill("readingList",[
+    cs.score>=4?`${state.concept} behaves like an invariance candidate in this corpus family.`:cs.score<=1?`${state.concept} looks parochial or under-covered here, not universally load-bearing.`:`${state.concept} is mixed: structurally important in some lexicons and optional in others.`,
+    `A low score does not refute a semantic theory by itself; it exposes exactly where the corpus fails to support the universality claim.`,
+    `The alignment table compares concepts after analysis, so shared structure is not manufactured by translation edges.`,
+    `The stronger next leap is cross-linguistic falsification, with surgery retained as the scoring method.`
+  ]);
+}
+function fill(id,items){const ul=$(id);ul.innerHTML="";items.forEach(t=>{const li=document.createElement("li");li.textContent=t;ul.appendChild(li);});}
+init();
+</script>
+</body>
+</html>
