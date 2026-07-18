@@ -13,9 +13,22 @@
 
 1. Drop a `manifests/<slug>.json` conforming to the schema below (validate against
    `manifests/_schema.json`).
-2. Put its thumbnail + screenshots under `assets/<slug>/`.
-3. Run `python build/build_showcase.py`. It regenerates `index.html` + `detail/<slug>.html`.
-4. Commit and deploy (`build/deploy.sh` — rsync to the box, leaving item app dirs untouched).
+2. Put its thumbnail + screenshots under `assets/<slug>/`. To capture a live standalone item as a
+   card thumbnail, use `build/shot_urls.js` (a JSON list of `{url, out}`); items serve directly over
+   the Tailscale mirror at `http://100.74.37.45:8090/<slug>/` with no Access gate. A backend-off
+   item (its `standalone` is `false` and its server is down) has no real screenshot — omit
+   `thumbnail` and the generator renders an honest title placeholder. **Never fabricate a screenshot.**
+3. Run `python build/build_showcase.py`. It validates every manifest (failing loudly on a bad one),
+   then regenerates `index.html` + `detail/<slug>.html` + syncs `showcase.css`.
+4. Commit, then deploy with `bash build/deploy.sh`. It rebuilds, backs up the box `index.html`, and
+   `scp`s ONLY the generated artifacts (`index.html`, `showcase.css`, `detail/`, `assets/`) to the
+   box — leaving every item application directory untouched. Source of truth is this git repo; the
+   box (and GitHub Pages) are deploy targets. When the box retires, only `BOX_HOST`/`BOX_DIR` in
+   `deploy.sh` change.
+
+The matchmaker item is special: its whole contribution (manifest, bespoke `custom_detail` page,
+screenshots, reading cards) is generated in the sibling `big-five-to-philosopher-matchmaker` repo
+under `showcase/` and staged here by that repo's `showcase/publish.py`. Re-run that to refresh it.
 
 The generator **never touches item application directories** (`/big-five-matchmaker/`,
 `/yuyu-linguistic-risk-detector/`, `/foundry/`, …). It writes only the root `index.html`, the
