@@ -1,0 +1,27 @@
+{
+  "slug": "yuyu-linguistic-risk-detector",
+  "title": "Yuyu — Linguistic Risk Detector",
+  "tagline": "Paste any writing; 127 deterministic detectors map every span where a reader could be misled — facts and judgments never merged.",
+  "category": "flagship",
+  "standalone": false,
+  "substance_rank": 100,
+  "badges": [
+    {"label": "★ flagship", "kind": "flag"},
+    {"label": "live scan needs backend", "kind": "backend"}
+  ],
+  "thumbnail": "assets/yuyu-linguistic-risk-detector/thumb.png",
+  "links": {
+    "open": "./yuyu-linguistic-risk-detector/"
+  },
+  "functionality": [
+    {"name": "Determinism wall", "blurb": "127 span-anchored detectors across 14 families emit content-hashed machine facts; identical input yields a byte-identical result."},
+    {"name": "Thinking-machine bridge", "blurb": "Formalizes a passage into span-anchored logic, gates faithfulness verbatim, proves consistency by SAT+SMT cross-solver consensus."},
+    {"name": "Educational sidecar", "blurb": "A prerequisite ladder from primitive concepts up to the exact idea a finding turns on, each rung Wikipedia-grounded and provenance-graded."}
+  ],
+  "ops_note": "The app opens and browses fine on its own (pre-analysed texts, the learn ladder). Live 'paste your own text and scan' calls the uvicorn engine on the box — if a fresh scan just spins, the API is off.",
+  "detail_body": [
+    "Paste in any piece of writing and the engine reads it the way a careful, literal analyst would &mdash; surfacing, span by span, every place a reader could reasonably be misled. Its foundation is a hard <b>determinism wall</b>: 127 deterministic detectors emit reproducible, content-hashed machine <em>facts</em> about the text, while a strictly separate, always-graded language-model layer renders <em>interpretation</em> on top. Facts and judgments are never merged.",
+    "Its newest capability is a <b>thinking-machine bridge</b> that carries a claim from messy prose into formal logic and back &mdash; a span-anchored logical form, a deterministic faithfulness gate that requires every proposition to slice back out of the source verbatim, then consistency proven by cross-solver consensus between an independent SAT and SMT encoding.",
+    "<b>Stack</b> &middot; Python 3.13 &middot; FastAPI &middot; spaCy &middot; wn/OEWN &middot; NetworkX &middot; z3-solver &middot; python-sat &middot; React 18 &middot; Vite 6 &middot; TypeScript &middot; 1,025 automated tests."
+  ]
+}

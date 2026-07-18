@@ -1,0 +1,14 @@
+{
+  "slug": "grounding-atlas",
+  "title": "Grounding Atlas",
+  "tagline": "Every definition uses words you'd also have to look up. This maps that circularity across ~500 real definitions and isolates the primitives.",
+  "category": "standalone",
+  "standalone": true,
+  "substance_rank": 70,
+  "badges": [{"label": "standalone", "kind": "ok"}],
+  "thumbnail": "assets/grounding-atlas/thumb.png",
+  "links": {"open": "./grounding-atlas/"},
+  "detail_body": [
+    "If you look up a word, the definition uses other words &mdash; which you also have to look up. This maps that circularity across ~500 real dictionary definitions, finds the loops, and isolates the small set of primitive words everything else is ultimately defined in terms of."
+  ]
+}

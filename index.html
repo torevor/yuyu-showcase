@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yuyu Cloud &middot; Showcase</title>
+<link rel="stylesheet" href="showcase.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <p class="kicker">yuyu-cloud &middot; a linguistics &amp; interpretive-risk research engine</p>
+    <h1>Showcase</h1>
+    <p class="lede">A working gallery of the apps and prototypes built on the yuyu system &mdash;
+      the research engine and the visual tools around it. <strong>Each card is one glance:</strong>
+      a picture, a title, a one-line hook. Tap any card for the full detail page. The flagship sits
+      up top; everything is ordered by how substantial it is.</p>
+    <p class="metaline">Served from <code>yuyu-cloud-box</code> &middot; Cloudflare Tunnel
+      (Access-gated) + Tailscale mirror. <strong>Read the badge before a demo:</strong> a
+      <span style="color:var(--ok-ink);font-weight:700">green</span> tile runs on its own in any
+      browser; an <span style="color:var(--back-ink);font-weight:700">amber</span> tile needs a
+      backend server switched on first, or its screen stays blank.</p>
+    <div class="controls">
+      <div class="filter" role="group" aria-label="Filter by how it runs">
+        <button data-filter="all" aria-pressed="true">All</button>
+        <button data-filter="standalone" aria-pressed="false">Runs in your browser</button>
+        <button data-filter="backend" aria-pressed="false">Needs a backend</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot ok"></i> Runs standalone</span>
+        <span><i class="dot backend"></i> Backend required</span>
+        <span><i class="dot ext"></i> Runs on ps14 &middot; tunnel</span>
+      </div>
+    </div>
+  </header>
+
+    <section class="section" data-cat="flagship">
+      <h2>Flagship <span class="n">&mdash; the core research engine</span></h2>
+      <div class="grid">
+      <a class="card hero" href="detail/yuyu-linguistic-risk-detector.html" data-standalone="false">
+        <img class="thumb" src="assets/yuyu-linguistic-risk-detector/thumb.png" alt="Yuyu — Linguistic Risk Detector — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">Yuyu — Linguistic Risk Detector</div>
+          <p class="chook">Paste any writing; 127 deterministic detectors map every span where a reader could be misled — facts and judgments never merged.</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge flag">★ flagship</span><span class="badge backend">live scan needs backend</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      </div>
+    </section>
+    <section class="section" data-cat="standalone">
+      <h2>Standalone apps <span class="n">&mdash; open and go, nothing to start</span></h2>
+      <div class="grid">
+      <a class="card" href="detail/grounding-atlas.html" data-standalone="true">
+        <img class="thumb" src="assets/grounding-atlas/thumb.png" alt="Grounding Atlas — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">Grounding Atlas</div>
+          <p class="chook">Every definition uses words you'd also have to look up. This maps that circularity across ~500 real definitions and isolates the primitives.</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge ok">standalone</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      </div>
+    </section>
+
+  <p class="foot">Ordered by substance: flagship first, then power-apps that need a server, then
+    everything that just runs. Badges are honest &mdash; an amber tile whose backend is off will
+    render blank. This page is <strong>generated</strong> from
+    <code>manifests/*.json</code> by <code>build/build_showcase.py</code>; it is not hand-edited.</p>
+</div>
+<script>
+(function(){
+  var btns=[].slice.call(document.querySelectorAll('.filter button'));
+  var cards=[].slice.call(document.querySelectorAll('.card'));
+  var secs=[].slice.call(document.querySelectorAll('.section'));
+  function apply(f){
+    cards.forEach(function(c){
+      var s=c.getAttribute('data-standalone')==='true';
+      var show = f==='all' || (f==='standalone'&&s) || (f==='backend'&&!s);
+      c.hidden=!show;
+    });
+    secs.forEach(function(sec){
+      var vis=[].slice.call(sec.querySelectorAll('.card')).some(function(c){return !c.hidden;});
+      sec.hidden=!vis;
+    });
+    btns.forEach(function(b){b.setAttribute('aria-pressed', b.getAttribute('data-filter')===f);});
+  }
+  btns.forEach(function(b){b.addEventListener('click',function(){apply(b.getAttribute('data-filter'));});});
+})();
+</script>
+</body>
+</html>
