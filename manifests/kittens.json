@@ -1,0 +1,36 @@
+{
+  "slug": "kittens",
+  "title": "Roaming Kittens",
+  "tagline": "Animated pixel-cats wander the yuyu knowledge graph — a cute skin that doubles as a real graph-rendering stress-test",
+  "category": "standalone",
+  "standalone": true,
+  "substance_rank": 52,
+  "badges": [
+    {
+      "label": "standalone",
+      "kind": "ok"
+    }
+  ],
+  "thumbnail": "assets/kittens/thumb.jpg",
+  "links": {
+    "open": "./kittens/"
+  },
+  "functionality": [
+    {
+      "name": "Roaming pixel-cats",
+      "blurb": "Animated pixel-cats wander across the yuyu knowledge graph."
+    },
+    {
+      "name": "Cute skin harness",
+      "blurb": "The project's playful \"serious tool, cute skin\" visual harness."
+    },
+    {
+      "name": "Graph render stress-test",
+      "blurb": "A genuine stress-test of the graph rendering."
+    }
+  ],
+  "detail_body": [
+    "Animated pixel-cats wander across the <b>yuyu knowledge graph</b> — the project's playful \"serious tool, cute skin\" visual harness.",
+    "It's charming, and at the same time a genuine <em>stress-test</em> of the graph rendering."
+  ]
+}

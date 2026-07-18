@@ -106,6 +106,10 @@ a:hover{text-decoration:underline}
   box-shadow:0 16px 34px -20px rgba(30,20,10,.55)}
 .card .thumb{aspect-ratio:16/10;width:100%;object-fit:cover;object-position:top center;
   background:var(--panel2);border-bottom:1px solid var(--hair2);display:block}
+.card .thumb.themed{aspect-ratio:16/10;overflow:hidden}
+.card .thumb.themed img{aspect-ratio:16/10;object-fit:cover;object-position:top center;border-bottom:0}
+.card.hero .thumb.themed{aspect-ratio:auto}
+.card.hero .thumb.themed img{aspect-ratio:auto;height:100%}
 .card .thumb.placeholder{display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,var(--panel2),var(--panel));color:var(--faint);
   font-family:var(--serif);font-size:1.3rem;text-align:center;padding:var(--s4)}
@@ -161,14 +165,31 @@ a:hover{text-decoration:underline}
 @media (prefers-color-scheme:dark){.btn{color:#0c1512}}
 .btn.ghost{background:transparent;color:var(--accent-ink)}
 
+/* theme-aware screenshots: show the light shot in light mode, the dark shot in dark mode.
+   Both are in the DOM; CSS reveals the matching one so a card never renders in the wrong theme. */
+.themed{display:block;position:relative}
+.themed img{display:block;width:100%}
+.themed .dk{display:none}
+@media (prefers-color-scheme:dark){ .themed .lt{display:none} .themed .dk{display:block} }
+:root[data-theme="light"] .themed .lt{display:block}
+:root[data-theme="light"] .themed .dk{display:none}
+:root[data-theme="dark"] .themed .lt{display:none}
+:root[data-theme="dark"] .themed .dk{display:block}
+
 /* carousel */
 .carousel{margin:var(--s5) 0}
 .carousel .frame{position:relative;background:var(--panel2);border:1px solid var(--hair);
   border-radius:var(--radius);overflow:hidden}
 .carousel .slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
   scrollbar-width:thin}
-.carousel .slides img{width:100%;flex:0 0 100%;scroll-snap-align:center;object-fit:contain;
-  background:var(--panel);display:block;max-height:78vh}
+.carousel .slides > *{flex:0 0 100%;scroll-snap-align:center}
+/* cap slide height and show the TOP of each card (hero + problem + ranking); tap opens the full
+   card. NB: do NOT set `display` here — the theme rules (.themed .lt/.dk) own display so a light
+   card never stacks under its dark twin. */
+.carousel .slides .themed{height:min(72vh,640px);overflow:hidden;background:var(--panel)}
+.carousel .slides img{width:100%;height:100%;object-fit:cover;object-position:top center;
+  background:var(--panel)}
+.carousel .slides a{display:block}
 .carousel .cbtn{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;
   border-radius:999px;border:1px solid var(--hair);background:var(--panel);color:var(--ink);
   font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;

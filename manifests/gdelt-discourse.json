@@ -1,0 +1,45 @@
+{
+  "slug": "gdelt-discourse",
+  "title": "Discourse Live — a real-time window on the world’s press",
+  "tagline": "The world's press, live: every 15 minutes GDELT's news firehose becomes headlines you query in plain English",
+  "category": "backend",
+  "standalone": false,
+  "substance_rank": 88,
+  "badges": [
+    {
+      "label": "requires backend",
+      "kind": "backend"
+    },
+    {
+      "label": "runs on ps14 · tunnel",
+      "kind": "ext"
+    }
+  ],
+  "links": {
+    "open": "https://gdelt.elua2.org/app/",
+    "how_it_works": "https://claude.ai/code/artifact/e1b4fe3f-6766-47f1-950c-e6ae011814c7"
+  },
+  "functionality": [
+    {
+      "name": "Live GDELT stream",
+      "blurb": "Every 15 minutes it streams what the world's media just wrote into a fast analytics database, roughly 120,000+ articles a day."
+    },
+    {
+      "name": "Rich article tagging",
+      "blurb": "Each article is tagged with themes, named entities, a six-axis emotional tone, and ~2,300 affect dimensions."
+    },
+    {
+      "name": "Plain-English querying",
+      "blurb": "Ask a question in plain English and it writes a safe database query in front of you, returning fresh headlines within minutes of publication."
+    },
+    {
+      "name": "Planetary mood map",
+      "blurb": "It paints the planet's mood as a clay-to-teal spectrum."
+    }
+  ],
+  "ops_note": "The ClickHouse + Postgres stack is always-on, but the public gdelt.elua2.org address is a Cloudflare tunnel — on ps14 run gdelt-tunnel once per boot and keep the window open.",
+  "detail_body": [
+    "The global news firehose, live. Every 15 minutes <b>GDELT</b> publishes what the world's media just wrote, and this app streams that into a fast analytics database — roughly <b>120,000+ articles a day</b>. Each is tagged with themes, named entities, a six-axis emotional tone, and <b>~2,300 affect dimensions</b>.",
+    "Ask a question in plain English and it writes a <em>safe</em> database query in front of you, returns fresh headlines within minutes of publication, and paints the planet's mood as a <b>clay-to-teal spectrum</b>."
+  ]
+}

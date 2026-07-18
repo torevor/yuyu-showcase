@@ -1,0 +1,12 @@
+{
+  "slug": "apps-drift",
+  "title": "Semantic Drift",
+  "tagline": "How a word's meaning slides over time and context — the same term quietly coming to mean something else.",
+  "category": "prototype",
+  "standalone": true,
+  "substance_rank": 39,
+  "badges": [{"label": "prototype", "kind": "art"}],
+  "thumbnail": "assets/apps-drift/thumb.jpg",
+  "links": {"open": "./apps/drift.html"},
+  "detail_body": ["A single-page sketch of how a word's meaning slides over time and context — the same term quietly coming to mean something else."]
+}

@@ -1,0 +1,12 @@
+{
+  "slug": "server-control-panel",
+  "title": "Server Control Panel",
+  "tagline": "One dashboard that starts and stops the heavy laptop apps, with a concurrency budget that refuses to overload the machine.",
+  "category": "ops",
+  "standalone": false,
+  "substance_rank": 30,
+  "badges": [{"label": "live · laptop", "kind": "ok"}, {"label": "runs on ps14", "kind": "ext"}],
+  "links": {"open": "http://100.67.174.108:8770/"},
+  "ops_note": "Runs on the laptop (ps14), binds to the Tailscale interface — the tailnet is the trust boundary. The link works only when you are on the tailnet and the launcher is up.",
+  "detail_body": ["A single dashboard that starts and stops the heavy laptop apps — GDELT Discourse Live, Fulcrum — with live per-step progress and streaming logs. Its load-bearing trick is a <b>concurrency budget</b> that refuses to launch two resource-hungry apps at once, so the laptop never falls over mid-demo. On boot it reconciles reality, adopting whatever is already running rather than falsely reporting it stopped."]
+}

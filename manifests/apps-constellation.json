@@ -1,0 +1,12 @@
+{
+  "slug": "apps-constellation",
+  "title": "The Constellation of Language",
+  "tagline": "Words and meanings arranged as a night sky of constellations — relationships drawn as the lines between stars.",
+  "category": "prototype",
+  "standalone": true,
+  "substance_rank": 37,
+  "badges": [{"label": "prototype", "kind": "art"}],
+  "thumbnail": "assets/apps-constellation/thumb.jpg",
+  "links": {"open": "./apps/constellation.html"},
+  "detail_body": ["A single-page sketch: words and meanings arranged as a night sky of constellations, with relationships drawn as the lines between stars."]
+}

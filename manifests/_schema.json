@@ -10,6 +10,7 @@
     "tagline": { "type": "string", "minLength": 1, "maxLength": 140 },
     "category": { "enum": ["flagship", "backend", "standalone", "prototype", "ops"] },
     "standalone": { "type": "boolean" },
+    "featured": { "type": "boolean" },
     "substance_rank": { "type": "number" },
     "badges": {
       "type": "array",
@@ -24,6 +25,7 @@
       }
     },
     "thumbnail": { "type": "string" },
+    "thumbnail_dark": { "type": "string" },
     "screenshots": { "type": "array", "items": { "type": "string" } },
     "functionality": {
       "type": "array",

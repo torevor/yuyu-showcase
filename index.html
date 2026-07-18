@@ -13,8 +13,8 @@
     <h1>Showcase</h1>
     <p class="lede">A working gallery of the apps and prototypes built on the yuyu system &mdash;
       the research engine and the visual tools around it. <strong>Each card is one glance:</strong>
-      a picture, a title, a one-line hook. Tap any card for the full detail page. The flagship sits
-      up top; everything is ordered by how substantial it is.</p>
+      a picture, a title, a one-line hook. Tap any card for the full detail page. The featured
+      project and the flagship sit up top; everything else is ordered by how substantial it is.</p>
     <p class="metaline">Served from <code>yuyu-cloud-box</code> &middot; Cloudflare Tunnel
       (Access-gated) + Tailscale mirror. <strong>Read the badge before a demo:</strong> a
       <span style="color:var(--ok-ink);font-weight:700">green</span> tile runs on its own in any
@@ -34,11 +34,40 @@
     </div>
   </header>
 
+    <section class="section featured" data-cat="featured">
+      <h2>Featured <span class="n">&mdash; the most built-out project right now</span></h2>
+      <div class="grid">
+      <a class="card hero" href="detail/big-five-matchmaker.html" data-standalone="true">
+        <span class="thumb themed"><img class="lt" src="assets/big-five-matchmaker/thumb.light.jpg" alt="The Philosopher Matchmaker — screenshot" loading="lazy"><img class="dk" src="assets/big-five-matchmaker/thumb.dark.jpg" alt="The Philosopher Matchmaker — screenshot" loading="lazy"></span>
+        <div class="cbody">
+          <div class="ctitle">The Philosopher Matchmaker</div>
+          <p class="chook">Give it a Big-Five profile; it ranks the philosophers you'd resonate with — and shows the number behind every reason.</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge ok">standalone</span><span class="badge art">44 real readings</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      </div>
+    </section>
+    <section class="section" data-cat="ops">
+      <h2>Operations <span class="n">&mdash; live infrastructure</span></h2>
+      <div class="grid">
+        <a class="card" href="detail/server-control-panel.html" data-standalone="false">
+          <div class="thumb placeholder">Server Control Panel</div>
+          <div class="cbody">
+            <div class="ctitle">Server Control Panel</div>
+            <p class="chook">One dashboard that starts and stops the heavy laptop apps, with a concurrency budget that refuses to overload the machine.</p>
+            <div class="cfoot"><div class="badges"><span class="badge ok">live · laptop</span><span class="badge ext">runs on ps14</span></div><span class="more">details &rarr;</span></div>
+          </div>
+        </a>
+      </div>
+    </section>
     <section class="section" data-cat="flagship">
       <h2>Flagship <span class="n">&mdash; the core research engine</span></h2>
       <div class="grid">
       <a class="card hero" href="detail/yuyu-linguistic-risk-detector.html" data-standalone="false">
-        <img class="thumb" src="assets/yuyu-linguistic-risk-detector/thumb.png" alt="Yuyu — Linguistic Risk Detector — screenshot" loading="lazy">
+        <img class="thumb" src="assets/yuyu-linguistic-risk-detector/thumb.jpg" alt="Yuyu — Linguistic Risk Detector — screenshot" loading="lazy">
         <div class="cbody">
           <div class="ctitle">Yuyu — Linguistic Risk Detector</div>
           <p class="chook">Paste any writing; 127 deterministic detectors map every span where a reader could be misled — facts and judgments never merged.</p>
@@ -50,16 +79,147 @@
       </a>
       </div>
     </section>
+    <section class="section" data-cat="backend">
+      <h2>Data-intensive apps <span class="n">&mdash; powerful — but a server must be switched on first</span></h2>
+      <div class="grid">
+      <a class="card" href="detail/gdelt-discourse.html" data-standalone="false">
+        <div class="thumb placeholder">Discourse Live — a real-time window on the world’s press</div>
+        <div class="cbody">
+          <div class="ctitle">Discourse Live — a real-time window on the world’s press</div>
+          <p class="chook">The world's press, live: every 15 minutes GDELT's news firehose becomes headlines you query in plain English</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge backend">requires backend</span><span class="badge ext">runs on ps14 · tunnel</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="detail/fulcrum.html" data-standalone="false">
+        <div class="thumb placeholder">Fulcrum Enterprise Graph — a whole company, queried in plain English</div>
+        <div class="cbody">
+          <div class="ctitle">Fulcrum Enterprise Graph — a whole company, queried in plain English</div>
+          <p class="chook">A whole mining enterprise as one living graph — ask it anything in plain English, get a WebGL graph or a table back</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge backend">requires backend</span><span class="badge ext">runs on ps14 · tunnel</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      </div>
+    </section>
     <section class="section" data-cat="standalone">
       <h2>Standalone apps <span class="n">&mdash; open and go, nothing to start</span></h2>
       <div class="grid">
       <a class="card" href="detail/grounding-atlas.html" data-standalone="true">
-        <img class="thumb" src="assets/grounding-atlas/thumb.png" alt="Grounding Atlas — screenshot" loading="lazy">
+        <img class="thumb" src="assets/grounding-atlas/thumb.jpg" alt="Grounding Atlas — screenshot" loading="lazy">
         <div class="cbody">
           <div class="ctitle">Grounding Atlas</div>
-          <p class="chook">Every definition uses words you'd also have to look up. This maps that circularity across ~500 real definitions and isolates the primitives.</p>
+          <p class="chook">Every definition is made of words you also have to look up — this maps the loops and finds the words underneath them all</p>
           <div class="cfoot">
             <div class="badges"><span class="badge ok">standalone</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="detail/two-ai.html" data-standalone="true">
+        <img class="thumb" src="assets/two-ai/thumb.jpg" alt="Two-AI — three views inside a language model — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">Two-AI — three views inside a language model</div>
+          <p class="chook">A small GPT-style AI running live in your browser, cracked open three ways so you can watch what an LLM is actually doing</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge ok">standalone</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="detail/causal-graph.html" data-standalone="true">
+        <img class="thumb" src="assets/causal-graph/thumb.jpg" alt="Causal Decomposition — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">Causal Decomposition</div>
+          <p class="chook">An interactive tree that pulls an event into cause and effect on two axes at once — with cycles where causes feed back on themselves</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge ok">standalone</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="detail/foundry.html" data-standalone="true">
+        <img class="thumb" src="assets/foundry/thumb.jpg" alt="Foundry Gallery — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">Foundry Gallery</div>
+          <p class="chook">~23 tiny, self-contained linguistics toys — etymology timelines to phonetics visualisers — spun up by the build system</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge ok">standalone</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="detail/kittens.html" data-standalone="true">
+        <img class="thumb" src="assets/kittens/thumb.jpg" alt="Roaming Kittens — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">Roaming Kittens</div>
+          <p class="chook">Animated pixel-cats wander the yuyu knowledge graph — a cute skin that doubles as a real graph-rendering stress-test</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge ok">standalone</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="detail/creature-gallery.html" data-standalone="true">
+        <img class="thumb" src="assets/creature-gallery/thumb.jpg" alt="Creature Gallery — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">Creature Gallery</div>
+          <p class="chook">The pixel-cat casting call behind Roaming Kittens — every candidate sprite with its preview, licence, and keep/reject verdict</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge ok">standalone</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      </div>
+    </section>
+    <section class="section" data-cat="prototype">
+      <h2>Concept prototypes <span class="n">&mdash; single-page visual sketches from the engine</span></h2>
+      <div class="grid">
+      <a class="card" href="detail/apps-prism.html" data-standalone="true">
+        <img class="thumb" src="assets/apps-prism/thumb.jpg" alt="The Interpretation Prism — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">The Interpretation Prism</div>
+          <p class="chook">One sentence, split like light through a prism into the several different meanings a reader could take from it.</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge art">prototype</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="detail/apps-drift.html" data-standalone="true">
+        <img class="thumb" src="assets/apps-drift/thumb.jpg" alt="Semantic Drift — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">Semantic Drift</div>
+          <p class="chook">How a word's meaning slides over time and context — the same term quietly coming to mean something else.</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge art">prototype</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="detail/apps-begriff.html" data-standalone="true">
+        <img class="thumb" src="assets/apps-begriff/thumb.jpg" alt="Begriffsschrift, Rendered — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">Begriffsschrift, Rendered</div>
+          <p class="chook">Frege's 19th-century “concept-writing” — the ancestor of modern logic notation — as an interactive diagram.</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge art">prototype</span></div>
+            <span class="more">details &rarr;</span>
+          </div>
+        </div>
+      </a>
+      <a class="card" href="detail/apps-constellation.html" data-standalone="true">
+        <img class="thumb" src="assets/apps-constellation/thumb.jpg" alt="The Constellation of Language — screenshot" loading="lazy">
+        <div class="cbody">
+          <div class="ctitle">The Constellation of Language</div>
+          <p class="chook">Words and meanings arranged as a night sky of constellations — relationships drawn as the lines between stars.</p>
+          <div class="cfoot">
+            <div class="badges"><span class="badge art">prototype</span></div>
             <span class="more">details &rarr;</span>
           </div>
         </div>

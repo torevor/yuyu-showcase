@@ -1,0 +1,49 @@
+{
+  "slug": "fulcrum",
+  "title": "Fulcrum Enterprise Graph — a whole company, queried in plain English",
+  "tagline": "A whole mining enterprise as one living graph — ask it anything in plain English, get a WebGL graph or a table back",
+  "category": "backend",
+  "standalone": false,
+  "substance_rank": 86,
+  "badges": [
+    {
+      "label": "requires backend",
+      "kind": "backend"
+    },
+    {
+      "label": "runs on ps14 · tunnel",
+      "kind": "ext"
+    }
+  ],
+  "links": {
+    "open": "https://fulcrum.elua2.org/"
+  },
+  "functionality": [
+    {
+      "name": "Polyglot two-store model",
+      "blurb": "An embedded Kuzu property graph (23 node labels, 32 relationship types) holds who-relates-to-whom while a ClickHouse analytical plane (117 tables and views) is a bitemporal, source-precedence event store of what actually happened."
+    },
+    {
+      "name": "Natural-language ask() seam",
+      "blurb": "A single opaque callable clarifies, routes between graph/facts/hybrid, executes across both stores, and renders results as a WebGL graph or a table."
+    },
+    {
+      "name": "Structural read-only guard",
+      "blurb": "Every query path is enforced read-only — it strips fences, rejects write/DDL/CALL, blocks smuggled statements, and forces a LIMIT."
+    },
+    {
+      "name": "Typed-empty contract",
+      "blurb": "A declarative tenant-scoped metadata catalog and bidirectional reconciler give every zero-row result a reason, so only a genuine true_none shows as \"none\"."
+    },
+    {
+      "name": "Analytical IAM platform",
+      "blurb": "The fact plane adds row-level security, a full IAM/IGA layer, UEBA baselines, an ILP knapsack optimizer, an offboarding blast-radius simulator, and access-graph reachability."
+    }
+  ],
+  "ops_note": "Gated by Cloudflare Access; the engine and tunnel are on-demand, so run deploy/stage-ps14.ps1 on ps14 and keep the window open — nothing serves unless a demo is live.",
+  "detail_body": [
+    "Fulcrum is a living, declaratively-bound model of a whole mining enterprise — people and identities, SaaS accounts and cost, OAuth grants, entitlements and segregation-of-duties, mine operations and OT/SCADA telemetry, equipment, geography, country risk, the gold price, workforce and safety, and legal/M&A history.",
+    "It is a genuine polyglot system over two stores: an embedded <b>Kuzu</b> property graph (Cypher — 23 node labels, 32 relationship types) for the who-relates-to-whom, and a <b>ClickHouse</b> analytical plane (117 tables and views) as a bitemporal, source-precedence event store. A single natural-language seam sits on top: one <code>ask()</code> callable clarifies, routes, guards read-only, executes across both stores, and renders as a WebGL graph or a table.",
+    "Discipline throughout: a deterministic core with the LLM only at the edges, <em>never-fabricate</em> epistemics, and ~1,400 tests. The public build runs entirely on sanitized fixtures — no PII, ever."
+  ]
+}

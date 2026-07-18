@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Server Control Panel &middot; Yuyu Showcase</title>
+<link rel="stylesheet" href="../showcase.css">
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="../index.html">&#8592; all projects</a>
+  <header class="detail-hero">
+    <div class="badges"><span class="badge ok">live · laptop</span><span class="badge ext">runs on ps14</span></div>
+    <h1>Server Control Panel</h1>
+    <p class="tagline">One dashboard that starts and stops the heavy laptop apps, with a concurrency budget that refuses to overload the machine.</p>
+    <div class="actions"><a class="btn" href="http://100.67.174.108:8770/">&#9654; Open it</a></div>
+  </header>
+
+
+  <div class="ops-note"><b>&#9656; ops</b> &middot; Runs on the laptop (ps14), binds to the Tailscale interface — the tailnet is the trust boundary. The link works only when you are on the tailnet and the launcher is up.</div>
+<section class="detail-body">
+      <p>A single dashboard that starts and stops the heavy laptop apps — GDELT Discourse Live, Fulcrum — with live per-step progress and streaming logs. Its load-bearing trick is a <b>concurrency budget</b> that refuses to launch two resource-hungry apps at once, so the laptop never falls over mid-demo. On boot it reconciles reality, adopting whatever is already running rather than falsely reporting it stopped.</p>
+    </section>
+</div>
+
+</body>
+</html>

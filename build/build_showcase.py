@@ -118,8 +118,15 @@ def badges_html(m: dict) -> str:
 
 def thumb_html(m: dict, base: str = "") -> str:
     t = m.get("thumbnail")
+    td = m.get("thumbnail_dark")
+    alt = esc(m["title"]) + " — screenshot"
+    if t and td:
+        # theme-aware: light shot in light mode, dark shot in dark mode
+        return (f'<span class="thumb themed">'
+                f'<img class="lt" src="{base}{esc(t)}" alt="{alt}" loading="lazy">'
+                f'<img class="dk" src="{base}{esc(td)}" alt="{alt}" loading="lazy"></span>')
     if t:
-        return f'<img class="thumb" src="{base}{esc(t)}" alt="{esc(m["title"])} — screenshot" loading="lazy">'
+        return f'<img class="thumb" src="{base}{esc(t)}" alt="{alt}" loading="lazy">'
     # honest placeholder: no fabricated image, just the title on paper
     return f'<div class="thumb placeholder">{esc_text(m["title"])}</div>'
 
@@ -168,12 +175,30 @@ def ops_strip_html(ops_items: list[dict]) -> str:
 # ---------------------------------------------------------------------------------------
 # INDEX
 # ---------------------------------------------------------------------------------------
+def featured_section_html(items: list[dict]) -> str:
+    """Items with featured:true render FIRST, as hero cards, above every category section.
+    This is how one item is pushed 'above every other item' without disturbing which item is
+    the fleet's flagship."""
+    feats = [m for m in items if m.get("featured")]
+    if not feats:
+        return ""
+    cards = "".join(card_html(m, hero=True) for m in feats)
+    return f"""
+    <section class="section featured" data-cat="featured">
+      <h2>Featured <span class="n">&mdash; the most built-out project right now</span></h2>
+      <div class="grid">{cards}
+      </div>
+    </section>"""
+
+
 def render_index(items: list[dict]) -> str:
     items = sorted(items, key=sort_key)
     ops = [m for m in items if m.get("category") == "ops"]
+    featured = featured_section_html(items)
     sections = ""
     for cat in CATEGORY_ORDER:
-        group = [m for m in items if m.get("category") == cat]
+        # featured items are shown in the Featured section only, not repeated in their category
+        group = [m for m in items if m.get("category") == cat and not m.get("featured")]
         if not group:
             continue
         title, sub = CATEGORY_META[cat]
@@ -202,8 +227,8 @@ def render_index(items: list[dict]) -> str:
     <h1>Showcase</h1>
     <p class="lede">A working gallery of the apps and prototypes built on the yuyu system &mdash;
       the research engine and the visual tools around it. <strong>Each card is one glance:</strong>
-      a picture, a title, a one-line hook. Tap any card for the full detail page. The flagship sits
-      up top; everything is ordered by how substantial it is.</p>
+      a picture, a title, a one-line hook. Tap any card for the full detail page. The featured
+      project and the flagship sit up top; everything else is ordered by how substantial it is.</p>
     <p class="metaline">Served from <code>yuyu-cloud-box</code> &middot; Cloudflare Tunnel
       (Access-gated) + Tailscale mirror. <strong>Read the badge before a demo:</strong> a
       <span style="color:var(--ok-ink);font-weight:700">green</span> tile runs on its own in any
@@ -222,7 +247,7 @@ def render_index(items: list[dict]) -> str:
       </div>
     </div>
   </header>
-{ops_strip_html(ops)}{sections}
+{featured}{ops_strip_html(ops)}{sections}
 
   <p class="foot">Ordered by substance: flagship first, then power-apps that need a server, then
     everything that just runs. Badges are honest &mdash; an amber tile whose backend is off will

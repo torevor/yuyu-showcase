@@ -1,0 +1,17 @@
+{
+  "slug": "big-five-matchmaker",
+  "title": "The Philosopher Matchmaker",
+  "tagline": "Give it a Big-Five profile; it ranks the philosophers you'd resonate with — and shows the number behind every reason.",
+  "category": "standalone",
+  "standalone": true,
+  "featured": true,
+  "substance_rank": 95,
+  "badges": [
+    {"label": "standalone", "kind": "ok"},
+    {"label": "44 real readings", "kind": "art"}
+  ],
+  "thumbnail": "assets/big-five-matchmaker/thumb.light.jpg",
+  "thumbnail_dark": "assets/big-five-matchmaker/thumb.dark.jpg",
+  "links": {"open": "detail/big-five-matchmaker.html"},
+  "custom_detail": "detail-src/big-five-matchmaker.html"
+}

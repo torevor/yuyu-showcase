@@ -1,0 +1,40 @@
+{
+  "slug": "creature-gallery",
+  "title": "Creature Gallery",
+  "tagline": "The pixel-cat casting call behind Roaming Kittens — every candidate sprite with its preview, licence, and keep/reject verdict",
+  "category": "standalone",
+  "standalone": true,
+  "substance_rank": 50,
+  "badges": [
+    {
+      "label": "standalone",
+      "kind": "ok"
+    }
+  ],
+  "thumbnail": "assets/creature-gallery/thumb.jpg",
+  "links": {
+    "open": "./creature-gallery/"
+  },
+  "functionality": [
+    {
+      "name": "Candidate sprite previews",
+      "blurb": "Shows the pixel-cat sprites that were considered for Roaming Kittens, each with a preview."
+    },
+    {
+      "name": "Licence on record",
+      "blurb": "Records the licence for each candidate sprite alongside its preview."
+    },
+    {
+      "name": "Keep/reject verdict",
+      "blurb": "Gives an explicit keep or reject verdict on every candidate sprite."
+    },
+    {
+      "name": "Honest research trail",
+      "blurb": "Presents the casting-call research trail openly rather than hiding it."
+    }
+  ],
+  "detail_body": [
+    "This is the pixel-cat <b>casting call</b> behind <em>Roaming Kittens</em>: the candidate sprites that were auditioned to become its cats.",
+    "Each candidate is shown with its <b>preview</b>, its <b>licence</b>, and a <b>keep/reject verdict</b> — the research trail shown honestly rather than tidied away."
+  ]
+}

@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Philosopher Matchmaker &middot; Yuyu Showcase</title>
+<link rel="stylesheet" href="../showcase.css">
+<style>
+  .mm-intro{font-size:var(--t-body);color:var(--ink2);max-width:70ch;line-height:1.62;margin:0 0 var(--s4)}
+  .mm-stats{display:flex;flex-wrap:wrap;gap:var(--s5);margin:var(--s4) 0 0}
+  .mm-stat b{font-family:var(--serif);font-size:1.8rem;color:var(--accent-ink);display:block;line-height:1}
+  .mm-stat span{font-size:var(--t-small);color:var(--muted)}
+  .cslide figcaption{padding:var(--s3) var(--s4);border-top:1px solid var(--hair2)}
+  .cslide .cwhy{display:block;font-family:var(--serif);font-size:var(--t-body);color:var(--ink);margin-bottom:var(--s1)}
+  .cslide .cmeta{display:block;font-size:var(--t-small);color:var(--muted)}
+  .cslide{margin:0}
+  .cslide .themed{border-bottom:0}
+  .funclink{display:inline-block;margin-top:var(--s2);font-size:var(--t-small);font-weight:600}
+  .gallery-filter{display:flex;flex-wrap:wrap;gap:6px;margin:var(--s3) 0 var(--s4)}
+  .gallery-filter button{font-size:var(--t-small);font-weight:600;color:var(--muted);background:var(--panel2);
+    border:1px solid var(--hair);border-radius:999px;padding:5px 12px;cursor:pointer}
+  .gallery-filter button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .gwall{display:grid;gap:var(--s3);grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .gtile{display:block;border:1px solid var(--hair);border-radius:var(--radius-sm);overflow:hidden;
+    background:var(--panel);color:inherit;text-decoration:none;transition:transform .12s,border-color .12s}
+  .gtile:hover{transform:translateY(-2px);border-color:var(--accent);text-decoration:none}
+  .gthumb{aspect-ratio:16/10;overflow:hidden}
+  .gthumb img{aspect-ratio:16/10;object-fit:cover;object-position:top center}
+  .gtile figcaption{padding:var(--s2) var(--s3) var(--s3);font-size:var(--t-hook);color:var(--ink)}
+  .gtile .gmeta{display:block;font-size:var(--t-micro);color:var(--muted);margin-top:3px}
+  .gtile[hidden]{display:none}
+  .tryit{background:var(--panel);border:1px solid var(--hair);border-radius:var(--radius);padding:var(--s4) var(--s5)}
+  .tryit pre{background:var(--panel2);border:1px solid var(--hair2);border-radius:var(--radius-sm);
+    padding:var(--s3) var(--s4);overflow-x:auto;font-family:var(--mono);font-size:var(--t-small);
+    line-height:1.6;color:var(--ink);margin:var(--s3) 0}
+  .tryit code{font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="../index.html">&#8592; all projects</a>
+
+  <header class="detail-hero">
+    <div class="badges"><span class="badge ok">standalone</span><span class="badge art">44 real readings</span></div>
+    <h1>The Philosopher Matchmaker</h1>
+    <p class="tagline">Tell it who you are &mdash; a Big-Five profile &mdash; and it ranks the
+      philosophers you'd resonate with, who you cannot yet read, and the one who will fight you.
+      Every reason traces to a number you can see.</p>
+    <div class="actions">
+      <a class="btn" href="#gallery">Browse the readings &darr;</a>
+      <a class="btn ghost" href="../assets/big-five-matchmaker/the-reading.html">The five case-files &rarr;</a>
+    </div>
+    <div class="mm-stats">
+      <div class="mm-stat"><b>44</b><span>real readings, generated</span></div>
+      <div class="mm-stat"><b>9</b><span>philosopher-modes reached</span></div>
+      <div class="mm-stat"><b>3</b><span>match operators &middot; resonance, aptness, gate</span></div>
+      <div class="mm-stat"><b>0</b><span>numbers hand-written</span></div>
+    </div>
+  </header>
+
+  <p class="mm-intro">This is not a lookup table. It decomposes both <em>you</em> and each thinker
+    into one shared attribute space &mdash; thirty disposition facets, the problem you bring, the
+    competencies a text demands &mdash; and crosses them. The result is a ranked set, each with a
+    concrete, sometimes hostile reason. The cards below are 44 genuine outputs of that computation;
+    nothing on them was written by hand.</p>
+
+  <section>
+    <p class="eyebrow">Real readings &middot; a carousel</p>
+    <div class="carousel">
+      <div class="frame">
+        <div class="slides">
+          <figure class="cslide">
+            <a href="../assets/big-five-matchmaker/cards/p-the-rigorist--the-good-life--stretch.html" target="_blank" rel="noopener"><span class="themed"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-rigorist--the-good-life--stretch.full.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-rigorist--the-good-life--stretch.full.dark.jpg" alt="russell — logical-atomist"></span></a>
+            <figcaption><span class="cwhy">Aptness can contradict temperament — Russell fits her mind (0.92) yet scores near-zero on the life-question she brought; Spinoza, further from her, scores 0.90.</span><span class="cmeta">the-rigorist &middot; brought <em>The good life / eudaimonia</em> &middot; stance stretch-me &rarr; <strong>russell — logical-atomist</strong> (fit 0.92)</span></figcaption>
+          </figure>
+          <figure class="cslide">
+            <a href="../assets/big-five-matchmaker/cards/tender-seeker-no-logic--meaning-of-life--stretch.html" target="_blank" rel="noopener"><span class="themed"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/tender-seeker-no-logic--meaning-of-life--stretch.full.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/tender-seeker-no-logic--meaning-of-life--stretch.full.dark.jpg" alt="camus — the-myth-of-sisyphus"></span></a>
+            <figcaption><span class="cwhy">The admissibility gate: a reader who cannot yet read formal notation is refused the modes she cannot open — a filter, never a penalty.</span><span class="cmeta">The tender seeker &middot; brought <em>The meaning of life / the absurd</em> &middot; stance stretch-me &rarr; <strong>camus — the-myth-of-sisyphus</strong> (fit 0.79)</span></figcaption>
+          </figure>
+          <figure class="cslide">
+            <a href="../assets/big-five-matchmaker/cards/comfortable-dogmatist--source-of-value--break.html" target="_blank" rel="noopener"><span class="themed"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/comfortable-dogmatist--source-of-value--break.full.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/comfortable-dogmatist--source-of-value--break.full.dark.jpg" alt="camus — the-myth-of-sisyphus"></span></a>
+            <figcaption><span class="cwhy">Productive friction, under the break-me stance: it deliberately hands a settled reader the thinker who will fight them.</span><span class="cmeta">The comfortable dogmatist &middot; brought <em>The source of value after God</em> &middot; stance break-me &rarr; <strong>camus — the-myth-of-sisyphus</strong> (fit 0.27)</span></figcaption>
+          </figure>
+          <figure class="cslide">
+            <a href="../assets/big-five-matchmaker/cards/existential-dreader--facing-death--stretch.html" target="_blank" rel="noopener"><span class="themed"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/existential-dreader--facing-death--stretch.full.light.jpg" alt="nietzsche — the-genealogist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/existential-dreader--facing-death--stretch.full.dark.jpg" alt="nietzsche — the-genealogist"></span></a>
+            <figcaption><span class="cwhy">A clean resonance match: high openness and an appetite for corrosion line up with the genealogist.</span><span class="cmeta">The existential dreader &middot; brought <em>How to face death / mortality</em> &middot; stance stretch-me &rarr; <strong>nietzsche — the-genealogist</strong> (fit 0.89)</span></figcaption>
+          </figure>
+          <figure class="cslide">
+            <a href="../assets/big-five-matchmaker/cards/geometric-consoler--the-good-life--stretch.html" target="_blank" rel="noopener"><span class="themed"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/geometric-consoler--the-good-life--stretch.full.light.jpg" alt="spinoza — the-geometer-of-blessedness"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/geometric-consoler--the-good-life--stretch.full.dark.jpg" alt="spinoza — the-geometer-of-blessedness"></span></a>
+            <figcaption><span class="cwhy">A rarer landing — a formal reader who wants blessedness by proof meets Spinoza's geometry of the good life.</span><span class="cmeta">The geometric consoler &middot; brought <em>The good life / eudaimonia</em> &middot; stance stretch-me &rarr; <strong>spinoza — the-geometer-of-blessedness</strong> (fit 0.85)</span></figcaption>
+          </figure>
+          <figure class="cslide">
+            <a href="../assets/big-five-matchmaker/cards/grieving-pragmatist--facing-death--comfort.html" target="_blank" rel="noopener"><span class="themed"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/grieving-pragmatist--facing-death--comfort.full.light.jpg" alt="epictetus — the-handbook"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/grieving-pragmatist--facing-death--comfort.full.dark.jpg" alt="epictetus — the-handbook"></span></a>
+            <figcaption><span class="cwhy">The comfort stance, weighted toward what a mode hands you: consolation and a handbook for the morning after.</span><span class="cmeta">The grieving pragmatist &middot; brought <em>How to face death / mortality</em> &middot; stance comfort-me &rarr; <strong>epictetus — the-handbook</strong> (fit 0.75)</span></figcaption>
+          </figure>
+          <figure class="cslide">
+            <a href="../assets/big-five-matchmaker/cards/restless-doubter--reliability-of-reason--stretch.html" target="_blank" rel="noopener"><span class="themed"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/restless-doubter--reliability-of-reason--stretch.full.light.jpg" alt="nietzsche — the-genealogist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/restless-doubter--reliability-of-reason--stretch.full.dark.jpg" alt="nietzsche — the-genealogist"></span></a>
+            <figcaption><span class="cwhy">Nine modes admitted, one refused: a high-competency reader who wants their assumptions dismantled.</span><span class="cmeta">The restless doubter &middot; brought <em>Skepticism / the reliability of reason</em> &middot; stance stretch-me &rarr; <strong>nietzsche — the-genealogist</strong> (fit 0.93)</span></figcaption>
+          </figure>
+          <figure class="cslide">
+            <a href="../assets/big-five-matchmaker/cards/mystic-leaning--meaning-of-life--stretch.html" target="_blank" rel="noopener"><span class="themed"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/mystic-leaning--meaning-of-life--stretch.full.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/mystic-leaning--meaning-of-life--stretch.full.dark.jpg" alt="camus — the-myth-of-sisyphus"></span></a>
+            <figcaption><span class="cwhy">Aesthetic, ambiguity-tolerant, self dissolving at the edges — the reading leans toward absurdist and Daoist registers.</span><span class="cmeta">The mystic-leaning &middot; brought <em>The meaning of life / the absurd</em> &middot; stance stretch-me &rarr; <strong>camus — the-myth-of-sisyphus</strong> (fit 0.86)</span></figcaption>
+          </figure>
+        </div>
+        <button class="cbtn prev" aria-label="previous">&#8249;</button>
+        <button class="cbtn next" aria-label="next">&#8250;</button>
+      </div>
+      <div class="dots"><button data-i="0" aria-current="true" aria-label="reading 1"></button><button data-i="1" aria-current="false" aria-label="reading 2"></button><button data-i="2" aria-current="false" aria-label="reading 3"></button><button data-i="3" aria-current="false" aria-label="reading 4"></button><button data-i="4" aria-current="false" aria-label="reading 5"></button><button data-i="5" aria-current="false" aria-label="reading 6"></button><button data-i="6" aria-current="false" aria-label="reading 7"></button><button data-i="7" aria-current="false" aria-label="reading 8"></button></div>
+      <p class="cap">Tap any reading to open the full card in a new tab.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">How it works &middot; the five operators</p>
+    <div class="funcs">
+        <div class="func">
+          <h3>Temperament resonance</h3>
+          <p>A signed cosine over 30 disposition facets — need-for-cognition, tolerance-for-ambiguity, method-formality, the registers you want handed to you. This is <em>fit my mind</em>: how close a thinker's demands sit to your dispositions.</p>
+          <a class="funclink" href="../assets/big-five-matchmaker/cards/existential-dreader--facing-death--stretch.html" target="_blank" rel="noopener">see a reading that shows this &rarr;</a>
+        </div>
+        <div class="func">
+          <h3>Aptness</h3>
+          <p>A separate score for whether a thinker is any good on the <em>problem you actually brought</em> — which can flatly contradict temperament. The matcher shows both numbers rather than blending them into one flattering average.</p>
+          <a class="funclink" href="../assets/big-five-matchmaker/cards/p-the-rigorist--the-good-life--stretch.html" target="_blank" rel="noopener">see a reading that shows this &rarr;</a>
+        </div>
+        <div class="func">
+          <h3>The admissibility gate</h3>
+          <p>Competency is a <strong>gate, not a distance</strong>. If you cannot yet read the notation a mode requires, it is refused — you are not a partial match for a text you cannot open. The gap is reported as a curriculum, never folded into the score.</p>
+          <a class="funclink" href="../assets/big-five-matchmaker/cards/tender-seeker-no-logic--meaning-of-life--stretch.html" target="_blank" rel="noopener">see a reading that shows this &rarr;</a>
+        </div>
+        <div class="func">
+          <h3>Productive friction</h3>
+          <p>High aptness + high admissibility + <em>deliberate</em> dispositional distance. Under the break-me stance the instrument stops flattering you and hands you the thinker who will fight you — because that is where the work is.</p>
+          <a class="funclink" href="../assets/big-five-matchmaker/cards/comfortable-dogmatist--source-of-value--break.html" target="_blank" rel="noopener">see a reading that shows this &rarr;</a>
+        </div>
+        <div class="func">
+          <h3>It shows its work</h3>
+          <p>Every reason traces to a number on the page, and every stipulated reading carries its own falsifier. The philosopher vectors are labelled <strong>our interpretations, never facts</strong> — an evidential marker no assertion here is constructible without.</p>
+          <a class="funclink" href="../assets/big-five-matchmaker/cards/p-the-rigorist--the-good-life--stretch.html" target="_blank" rel="noopener">see a reading that shows this &rarr;</a>
+        </div>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <p class="eyebrow">Every reading &middot; 44 of them</p>
+    <p class="mm-intro">Filter by who the reader landed on. Each tile opens the full, self-contained
+      card &mdash; ranked list, the full reason, the admissibility gate, and the captured-but-not-scored
+      block, exactly as the instrument produced it.</p>
+    <div class="gallery-filter"><button data-f="all" aria-pressed="true">All</button><button data-f="camus" aria-pressed="false">camus</button><button data-f="de-beauvoir" aria-pressed="false">de-beauvoir</button><button data-f="epictetus" aria-pressed="false">epictetus</button><button data-f="kierkegaard" aria-pressed="false">kierkegaard</button><button data-f="marcus-aurelius" aria-pressed="false">marcus-aurelius</button><button data-f="nietzsche" aria-pressed="false">nietzsche</button><button data-f="russell" aria-pressed="false">russell</button><button data-f="spinoza" aria-pressed="false">spinoza</button><button data-f="zhuangzi" aria-pressed="false">zhuangzi</button></div>
+    <div class="gwall">
+        <a class="gtile" data-thinker="camus" href="../assets/big-five-matchmaker/cards/comfortable-dogmatist--source-of-value--break.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/comfortable-dogmatist--source-of-value--break.thumb.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/comfortable-dogmatist--source-of-value--break.thumb.dark.jpg" alt="camus — the-myth-of-sisyphus"></span>
+          <figcaption>The comfortable dogmatist &rarr; <strong>camus — the-myth-of-sisyphus</strong><span class="gmeta">The source of value after God &middot; break-me &middot; fit 0.27 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="camus" href="../assets/big-five-matchmaker/cards/comfortable-dogmatist--the-good-life--break.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/comfortable-dogmatist--the-good-life--break.thumb.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/comfortable-dogmatist--the-good-life--break.thumb.dark.jpg" alt="camus — the-myth-of-sisyphus"></span>
+          <figcaption>The comfortable dogmatist &rarr; <strong>camus — the-myth-of-sisyphus</strong><span class="gmeta">The good life / eudaimonia &middot; break-me &middot; fit 0.3 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="camus" href="../assets/big-five-matchmaker/cards/mystic-leaning--facing-death--comfort.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/mystic-leaning--facing-death--comfort.thumb.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/mystic-leaning--facing-death--comfort.thumb.dark.jpg" alt="camus — the-myth-of-sisyphus"></span>
+          <figcaption>The mystic-leaning &rarr; <strong>camus — the-myth-of-sisyphus</strong><span class="gmeta">How to face death / mortality &middot; comfort-me &middot; fit 0.86 &middot; 4 admitted / 6 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="camus" href="../assets/big-five-matchmaker/cards/mystic-leaning--meaning-of-life--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/mystic-leaning--meaning-of-life--stretch.thumb.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/mystic-leaning--meaning-of-life--stretch.thumb.dark.jpg" alt="camus — the-myth-of-sisyphus"></span>
+          <figcaption>The mystic-leaning &rarr; <strong>camus — the-myth-of-sisyphus</strong><span class="gmeta">The meaning of life / the absurd &middot; stretch-me &middot; fit 0.86 &middot; 4 admitted / 6 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="camus" href="../assets/big-five-matchmaker/cards/p-the-seeker--meaning-of-life--break.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-seeker--meaning-of-life--break.thumb.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-seeker--meaning-of-life--break.thumb.dark.jpg" alt="camus — the-myth-of-sisyphus"></span>
+          <figcaption>the-seeker &rarr; <strong>camus — the-myth-of-sisyphus</strong><span class="gmeta">The meaning of life / the absurd &middot; break-me &middot; fit 0.12 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="camus" href="../assets/big-five-matchmaker/cards/plain-living-doer--nature-of-freedom--break.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/plain-living-doer--nature-of-freedom--break.thumb.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/plain-living-doer--nature-of-freedom--break.thumb.dark.jpg" alt="camus — the-myth-of-sisyphus"></span>
+          <figcaption>The plain-living doer &rarr; <strong>camus — the-myth-of-sisyphus</strong><span class="gmeta">The nature of freedom / bad faith &middot; break-me &middot; fit 0.14 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="camus" href="../assets/big-five-matchmaker/cards/tender-seeker-no-logic--facing-death--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/tender-seeker-no-logic--facing-death--stretch.thumb.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/tender-seeker-no-logic--facing-death--stretch.thumb.dark.jpg" alt="camus — the-myth-of-sisyphus"></span>
+          <figcaption>The tender seeker &rarr; <strong>camus — the-myth-of-sisyphus</strong><span class="gmeta">How to face death / mortality &middot; stretch-me &middot; fit 0.79 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="camus" href="../assets/big-five-matchmaker/cards/tender-seeker-no-logic--meaning-of-life--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/tender-seeker-no-logic--meaning-of-life--stretch.thumb.light.jpg" alt="camus — the-myth-of-sisyphus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/tender-seeker-no-logic--meaning-of-life--stretch.thumb.dark.jpg" alt="camus — the-myth-of-sisyphus"></span>
+          <figcaption>The tender seeker &rarr; <strong>camus — the-myth-of-sisyphus</strong><span class="gmeta">The meaning of life / the absurd &middot; stretch-me &middot; fit 0.79 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="de-beauvoir" href="../assets/big-five-matchmaker/cards/p-the-aesthete--source-of-value--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-aesthete--source-of-value--stretch.thumb.light.jpg" alt="de-beauvoir — the-ethics-of-ambiguity"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-aesthete--source-of-value--stretch.thumb.dark.jpg" alt="de-beauvoir — the-ethics-of-ambiguity"></span>
+          <figcaption>the-aesthete &rarr; <strong>de-beauvoir — the-ethics-of-ambiguity</strong><span class="gmeta">The source of value after God &middot; stretch-me &middot; fit 0.89 &middot; 8 admitted / 2 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="epictetus" href="../assets/big-five-matchmaker/cards/grieving-pragmatist--facing-death--comfort.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/grieving-pragmatist--facing-death--comfort.thumb.light.jpg" alt="epictetus — the-handbook"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/grieving-pragmatist--facing-death--comfort.thumb.dark.jpg" alt="epictetus — the-handbook"></span>
+          <figcaption>The grieving pragmatist &rarr; <strong>epictetus — the-handbook</strong><span class="gmeta">How to face death / mortality &middot; comfort-me &middot; fit 0.75 &middot; 5 admitted / 5 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="epictetus" href="../assets/big-five-matchmaker/cards/p-the-devastated--facing-death--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-devastated--facing-death--stretch.thumb.light.jpg" alt="epictetus — the-handbook"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-devastated--facing-death--stretch.thumb.dark.jpg" alt="epictetus — the-handbook"></span>
+          <figcaption>the-devastated &rarr; <strong>epictetus — the-handbook</strong><span class="gmeta">How to face death / mortality &middot; stretch-me &middot; fit 0.78 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="epictetus" href="../assets/big-five-matchmaker/cards/plain-living-doer--reliability-of-reason--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/plain-living-doer--reliability-of-reason--stretch.thumb.light.jpg" alt="epictetus — the-handbook"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/plain-living-doer--reliability-of-reason--stretch.thumb.dark.jpg" alt="epictetus — the-handbook"></span>
+          <figcaption>The plain-living doer &rarr; <strong>epictetus — the-handbook</strong><span class="gmeta">Skepticism / the reliability of reason &middot; stretch-me &middot; fit 0.53 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="epictetus" href="../assets/big-five-matchmaker/cards/plain-living-doer--the-good-life--comfort.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/plain-living-doer--the-good-life--comfort.thumb.light.jpg" alt="epictetus — the-handbook"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/plain-living-doer--the-good-life--comfort.thumb.dark.jpg" alt="epictetus — the-handbook"></span>
+          <figcaption>The plain-living doer &rarr; <strong>epictetus — the-handbook</strong><span class="gmeta">The good life / eudaimonia &middot; comfort-me &middot; fit 0.63 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="kierkegaard" href="../assets/big-five-matchmaker/cards/identity-puzzler--free-will--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/identity-puzzler--free-will--stretch.thumb.light.jpg" alt="kierkegaard — anti-climacus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/identity-puzzler--free-will--stretch.thumb.dark.jpg" alt="kierkegaard — anti-climacus"></span>
+          <figcaption>The identity-puzzler &rarr; <strong>kierkegaard — anti-climacus</strong><span class="gmeta">Free will vs determinism &middot; stretch-me &middot; fit 0.87 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="kierkegaard" href="../assets/big-five-matchmaker/cards/identity-puzzler--personal-identity--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/identity-puzzler--personal-identity--stretch.thumb.light.jpg" alt="kierkegaard — anti-climacus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/identity-puzzler--personal-identity--stretch.thumb.dark.jpg" alt="kierkegaard — anti-climacus"></span>
+          <figcaption>The identity-puzzler &rarr; <strong>kierkegaard — anti-climacus</strong><span class="gmeta">Personal identity / the nature of the self &middot; stretch-me &middot; fit 0.87 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="kierkegaard" href="../assets/big-five-matchmaker/cards/silent-mystic-logician--limits-of-language--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/silent-mystic-logician--limits-of-language--stretch.thumb.light.jpg" alt="kierkegaard — anti-climacus"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/silent-mystic-logician--limits-of-language--stretch.thumb.dark.jpg" alt="kierkegaard — anti-climacus"></span>
+          <figcaption>The silent mystic-logician &rarr; <strong>kierkegaard — anti-climacus</strong><span class="gmeta">The limits of language and sense &middot; stretch-me &middot; fit 0.84 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="marcus-aurelius" href="../assets/big-five-matchmaker/cards/p-the-devastated--facing-death--comfort.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-devastated--facing-death--comfort.thumb.light.jpg" alt="marcus-aurelius — the-meditations"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-devastated--facing-death--comfort.thumb.dark.jpg" alt="marcus-aurelius — the-meditations"></span>
+          <figcaption>the-devastated &rarr; <strong>marcus-aurelius — the-meditations</strong><span class="gmeta">How to face death / mortality &middot; comfort-me &middot; fit 0.77 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="marcus-aurelius" href="../assets/big-five-matchmaker/cards/p-the-seeker--meaning-of-life--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-seeker--meaning-of-life--stretch.thumb.light.jpg" alt="marcus-aurelius — the-meditations"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-seeker--meaning-of-life--stretch.thumb.dark.jpg" alt="marcus-aurelius — the-meditations"></span>
+          <figcaption>the-seeker &rarr; <strong>marcus-aurelius — the-meditations</strong><span class="gmeta">The meaning of life / the absurd &middot; stretch-me &middot; fit 0.66 &middot; 3 admitted / 7 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="marcus-aurelius" href="../assets/big-five-matchmaker/cards/warm-humanist--the-good-life--comfort.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/warm-humanist--the-good-life--comfort.thumb.light.jpg" alt="marcus-aurelius — the-meditations"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/warm-humanist--the-good-life--comfort.thumb.dark.jpg" alt="marcus-aurelius — the-meditations"></span>
+          <figcaption>The warm humanist &rarr; <strong>marcus-aurelius — the-meditations</strong><span class="gmeta">The good life / eudaimonia &middot; comfort-me &middot; fit 0.78 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="nietzsche" href="../assets/big-five-matchmaker/cards/existential-dreader--facing-death--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/existential-dreader--facing-death--stretch.thumb.light.jpg" alt="nietzsche — the-genealogist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/existential-dreader--facing-death--stretch.thumb.dark.jpg" alt="nietzsche — the-genealogist"></span>
+          <figcaption>The existential dreader &rarr; <strong>nietzsche — the-genealogist</strong><span class="gmeta">How to face death / mortality &middot; stretch-me &middot; fit 0.89 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="nietzsche" href="../assets/big-five-matchmaker/cards/existential-dreader--meaning-of-life--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/existential-dreader--meaning-of-life--stretch.thumb.light.jpg" alt="nietzsche — the-genealogist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/existential-dreader--meaning-of-life--stretch.thumb.dark.jpg" alt="nietzsche — the-genealogist"></span>
+          <figcaption>The existential dreader &rarr; <strong>nietzsche — the-genealogist</strong><span class="gmeta">The meaning of life / the absurd &middot; stretch-me &middot; fit 0.89 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="nietzsche" href="../assets/big-five-matchmaker/cards/freedom-seeker--nature-of-freedom--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/freedom-seeker--nature-of-freedom--stretch.thumb.light.jpg" alt="nietzsche — the-genealogist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/freedom-seeker--nature-of-freedom--stretch.thumb.dark.jpg" alt="nietzsche — the-genealogist"></span>
+          <figcaption>The freedom-seeker &rarr; <strong>nietzsche — the-genealogist</strong><span class="gmeta">The nature of freedom / bad faith &middot; stretch-me &middot; fit 0.96 &middot; 8 admitted / 2 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="nietzsche" href="../assets/big-five-matchmaker/cards/freedom-seeker--source-of-value--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/freedom-seeker--source-of-value--stretch.thumb.light.jpg" alt="nietzsche — the-genealogist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/freedom-seeker--source-of-value--stretch.thumb.dark.jpg" alt="nietzsche — the-genealogist"></span>
+          <figcaption>The freedom-seeker &rarr; <strong>nietzsche — the-genealogist</strong><span class="gmeta">The source of value after God &middot; stretch-me &middot; fit 0.96 &middot; 8 admitted / 2 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="nietzsche" href="../assets/big-five-matchmaker/cards/restless-doubter--free-will--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/restless-doubter--free-will--stretch.thumb.light.jpg" alt="nietzsche — the-genealogist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/restless-doubter--free-will--stretch.thumb.dark.jpg" alt="nietzsche — the-genealogist"></span>
+          <figcaption>The restless doubter &rarr; <strong>nietzsche — the-genealogist</strong><span class="gmeta">Free will vs determinism &middot; stretch-me &middot; fit 0.93 &middot; 9 admitted / 1 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="nietzsche" href="../assets/big-five-matchmaker/cards/restless-doubter--reliability-of-reason--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/restless-doubter--reliability-of-reason--stretch.thumb.light.jpg" alt="nietzsche — the-genealogist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/restless-doubter--reliability-of-reason--stretch.thumb.dark.jpg" alt="nietzsche — the-genealogist"></span>
+          <figcaption>The restless doubter &rarr; <strong>nietzsche — the-genealogist</strong><span class="gmeta">Skepticism / the reliability of reason &middot; stretch-me &middot; fit 0.93 &middot; 9 admitted / 1 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="nietzsche" href="../assets/big-five-matchmaker/cards/silent-mystic-logician--limits-of-language--comfort.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/silent-mystic-logician--limits-of-language--comfort.thumb.light.jpg" alt="nietzsche — the-genealogist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/silent-mystic-logician--limits-of-language--comfort.thumb.dark.jpg" alt="nietzsche — the-genealogist"></span>
+          <figcaption>The silent mystic-logician &rarr; <strong>nietzsche — the-genealogist</strong><span class="gmeta">The limits of language and sense &middot; comfort-me &middot; fit 0.77 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/hard-skeptic--problem-of-evil--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/hard-skeptic--problem-of-evil--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/hard-skeptic--problem-of-evil--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The hard skeptic &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">The problem of evil / suffering &middot; stretch-me &middot; fit 0.85 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/hard-skeptic--reliability-of-reason--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/hard-skeptic--reliability-of-reason--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/hard-skeptic--reliability-of-reason--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The hard skeptic &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">Skepticism / the reliability of reason &middot; stretch-me &middot; fit 0.85 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/language-obsessed--limits-of-language--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/language-obsessed--limits-of-language--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/language-obsessed--limits-of-language--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The language-obsessed &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">The limits of language and sense &middot; stretch-me &middot; fit 0.91 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/language-obsessed--personal-identity--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/language-obsessed--personal-identity--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/language-obsessed--personal-identity--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The language-obsessed &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">Personal identity / the nature of the self &middot; stretch-me &middot; fit 0.91 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/moral-rigorist--meaning-of-life--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/moral-rigorist--meaning-of-life--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/moral-rigorist--meaning-of-life--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The moral rigorist &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">The meaning of life / the absurd &middot; stretch-me &middot; fit 0.9 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/moral-rigorist--source-of-value--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/moral-rigorist--source-of-value--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/moral-rigorist--source-of-value--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The moral rigorist &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">The source of value after God &middot; stretch-me &middot; fit 0.9 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/p-the-rigorist--reliability-of-reason--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-rigorist--reliability-of-reason--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-rigorist--reliability-of-reason--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>the-rigorist &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">Skepticism / the reliability of reason &middot; stretch-me &middot; fit 0.92 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/p-the-rigorist--the-good-life--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-rigorist--the-good-life--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-rigorist--the-good-life--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>the-rigorist &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">The good life / eudaimonia &middot; stretch-me &middot; fit 0.92 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/p-the-skeptic--reliability-of-reason--break.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-skeptic--reliability-of-reason--break.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-skeptic--reliability-of-reason--break.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>the-skeptic &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">Skepticism / the reliability of reason &middot; break-me &middot; fit 0.0 &middot; 8 admitted / 2 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/quiet-formalist--facing-death--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/quiet-formalist--facing-death--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/quiet-formalist--facing-death--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The quiet formalist &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">How to face death / mortality &middot; stretch-me &middot; fit 0.9 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/quiet-formalist--limits-of-language--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/quiet-formalist--limits-of-language--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/quiet-formalist--limits-of-language--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The quiet formalist &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">The limits of language and sense &middot; stretch-me &middot; fit 0.9 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/systems-builder--reliability-of-reason--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/systems-builder--reliability-of-reason--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/systems-builder--reliability-of-reason--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The systems-builder &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">Skepticism / the reliability of reason &middot; stretch-me &middot; fit 0.92 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="russell" href="../assets/big-five-matchmaker/cards/systems-builder--the-good-life--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/systems-builder--the-good-life--stretch.thumb.light.jpg" alt="russell — logical-atomist"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/systems-builder--the-good-life--stretch.thumb.dark.jpg" alt="russell — logical-atomist"></span>
+          <figcaption>The systems-builder &rarr; <strong>russell — logical-atomist</strong><span class="gmeta">The good life / eudaimonia &middot; stretch-me &middot; fit 0.92 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="spinoza" href="../assets/big-five-matchmaker/cards/geometric-consoler--facing-death--comfort.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/geometric-consoler--facing-death--comfort.thumb.light.jpg" alt="spinoza — the-geometer-of-blessedness"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/geometric-consoler--facing-death--comfort.thumb.dark.jpg" alt="spinoza — the-geometer-of-blessedness"></span>
+          <figcaption>The geometric consoler &rarr; <strong>spinoza — the-geometer-of-blessedness</strong><span class="gmeta">How to face death / mortality &middot; comfort-me &middot; fit 0.79 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="spinoza" href="../assets/big-five-matchmaker/cards/geometric-consoler--the-good-life--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/geometric-consoler--the-good-life--stretch.thumb.light.jpg" alt="spinoza — the-geometer-of-blessedness"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/geometric-consoler--the-good-life--stretch.thumb.dark.jpg" alt="spinoza — the-geometer-of-blessedness"></span>
+          <figcaption>The geometric consoler &rarr; <strong>spinoza — the-geometer-of-blessedness</strong><span class="gmeta">The good life / eudaimonia &middot; stretch-me &middot; fit 0.85 &middot; 10 admitted / 0 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="zhuangzi" href="../assets/big-five-matchmaker/cards/grieving-pragmatist--problem-of-evil--break.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/grieving-pragmatist--problem-of-evil--break.thumb.light.jpg" alt="zhuangzi — the-inner-chapters"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/grieving-pragmatist--problem-of-evil--break.thumb.dark.jpg" alt="zhuangzi — the-inner-chapters"></span>
+          <figcaption>The grieving pragmatist &rarr; <strong>zhuangzi — the-inner-chapters</strong><span class="gmeta">The problem of evil / suffering &middot; break-me &middot; fit 0.23 &middot; 5 admitted / 5 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="zhuangzi" href="../assets/big-five-matchmaker/cards/p-the-skeptic--reliability-of-reason--stretch.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-skeptic--reliability-of-reason--stretch.thumb.light.jpg" alt="zhuangzi — the-inner-chapters"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/p-the-skeptic--reliability-of-reason--stretch.thumb.dark.jpg" alt="zhuangzi — the-inner-chapters"></span>
+          <figcaption>the-skeptic &rarr; <strong>zhuangzi — the-inner-chapters</strong><span class="gmeta">Skepticism / the reliability of reason &middot; stretch-me &middot; fit 0.93 &middot; 8 admitted / 2 refused</span></figcaption>
+        </a>
+        <a class="gtile" data-thinker="zhuangzi" href="../assets/big-five-matchmaker/cards/warm-humanist--reliability-of-reason--break.html" target="_blank" rel="noopener">
+          <span class="themed gthumb"><img class="lt" loading="lazy" src="../assets/big-five-matchmaker/shots/warm-humanist--reliability-of-reason--break.thumb.light.jpg" alt="zhuangzi — the-inner-chapters"><img class="dk" loading="lazy" src="../assets/big-five-matchmaker/shots/warm-humanist--reliability-of-reason--break.thumb.dark.jpg" alt="zhuangzi — the-inner-chapters"></span>
+          <figcaption>The warm humanist &rarr; <strong>zhuangzi — the-inner-chapters</strong><span class="gmeta">Skepticism / the reliability of reason &middot; break-me &middot; fit 0.27 &middot; 7 admitted / 3 refused</span></figcaption>
+        </a>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The narrative version</p>
+    <p class="mm-intro">Before this corpus, the matchmaker shipped as five synthetic case-files told
+      as a twenty-slide reading. It is preserved here &mdash; but the cards above are the live product
+      output it was illustrating.</p>
+    <a class="btn ghost" href="../assets/big-five-matchmaker/the-reading.html">Open the five case-files &rarr;</a>
+  </section>
+
+  <section>
+    <p class="eyebrow">Try it yourself</p>
+    <div class="tryit">
+      <p class="mm-intro" style="margin-bottom:0">The matchmaker is a deterministic Python program &mdash;
+        same answers in, same ranking and reason out, no model in the loop. Answer the questionnaire and
+        it writes you a card like the ones above:</p>
+      <pre><code>git clone https://github.com/torevor/big-five-to-philosopher-matchmaker
+cd big-five-to-philosopher-matchmaker/slice
+
+# answer interactively, and write a viewable card:
+python session.py --interactive --stance stretch --html my-reading.html
+
+# or reproduce any card in the gallery from its committed answer-file:
+python session.py ../showcase/readings/&lt;id&gt;.answers.json --stance stretch --html card.html</code></pre>
+      <p class="cap" style="text-align:left">Stances: <code>stretch</code> (fit my mind) &middot;
+        <code>comfort</code> (what it hands me) &middot; <code>break</code> (fight me).</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    A research instrument, not an oracle. The philosopher vectors are <strong>stipulated
+    interpretations</strong> &mdash; our reading of what each mode rewards or presupposes &mdash;
+    labelled as such, never asserted as fact, each carrying a falsifier. Every number on every card
+    was computed by <code>match.py</code>; every sentence of every reason traces to one of those
+    numbers. The readers are synthetic demo profiles; the outputs are real.
+  </footer>
+</div>
+
+<script>
+(function(){
+  // carousel
+  document.querySelectorAll('.carousel').forEach(function(car){
+    var slides=car.querySelector('.slides');
+    var items=[].slice.call(slides.children);
+    var dots=[].slice.call(car.querySelectorAll('.dots button'));
+    var i=0;
+    function go(n){ i=Math.max(0,Math.min(items.length-1,n));
+      slides.scrollTo({left:items[i].offsetLeft,behavior:'smooth'});
+      dots.forEach(function(d,k){d.setAttribute('aria-current',k===i);}); }
+    dots.forEach(function(d,k){d.addEventListener('click',function(){go(k);});});
+    var p=car.querySelector('.prev'), nx=car.querySelector('.next');
+    if(p)p.addEventListener('click',function(){go(i-1);});
+    if(nx)nx.addEventListener('click',function(){go(i+1);});
+    var t; slides.addEventListener('scroll',function(){clearTimeout(t);t=setTimeout(function(){
+      var best=0,bd=1e9; items.forEach(function(im,k){var d=Math.abs(im.offsetLeft-slides.scrollLeft);
+        if(d<bd){bd=d;best=k;}}); i=best;
+      dots.forEach(function(d,k){d.setAttribute('aria-current',k===i);});},90);});
+  });
+  // gallery filter
+  var fbtns=[].slice.call(document.querySelectorAll('.gallery-filter button'));
+  var tiles=[].slice.call(document.querySelectorAll('.gtile'));
+  fbtns.forEach(function(b){b.addEventListener('click',function(){
+    var f=b.getAttribute('data-f');
+    tiles.forEach(function(t){t.hidden = !(f==='all' || t.getAttribute('data-thinker')===f);});
+    fbtns.forEach(function(x){x.setAttribute('aria-pressed', x===b);});
+  });});
+})();
+</script>
+</body>
+</html>

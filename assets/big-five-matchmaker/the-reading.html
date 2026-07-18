@@ -1,0 +1,2528 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>The Reading — a philosopher matchmaker, showing its work</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Five synthetic readings from a philosopher-matchmaker: temperament decomposed into a vector, crossed against thinkers, returned as a ranked recommendation with a legible reason — and an aptness operator that can flatly contradict the fit.">
+<style>
+/* ============================ THE READING — tokens ============================ */
+:root{
+  --paper:#f6f3ec; --paper-2:#efe8da; --card:#fbf8f1;
+  --ink:#1a1d24; --ink-soft:#43485360; --ink-mute:#5f6572;
+  --teal:#17635e; --oxblood:#a5332a; --graphite:#5b616e; --amber:#7a4a12;
+  --line:rgba(26,29,36,.16); --line-soft:rgba(26,29,36,.09);
+  --fit-track:rgba(26,29,36,.10); --fit-fill:#2c313c;
+  --apt-track:rgba(23,99,94,.15); --apt-fill:var(--teal);
+  --pos:var(--teal); --neg:var(--graphite);
+  --shadow:0 1px 0 rgba(26,29,36,.05), 0 18px 40px -28px rgba(26,29,36,.45);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#14161b; --paper-2:#191c22; --card:#1c2027;
+    --ink:#ece7db; --ink-soft:#b7b3a860; --ink-mute:#9a9689;
+    --teal:#4bb3a8; --oxblood:#e2705f; --graphite:#8b909c; --amber:#d29a56;
+    --line:rgba(236,231,219,.16); --line-soft:rgba(236,231,219,.08);
+    --fit-track:rgba(236,231,219,.12); --fit-fill:#c9ccd3;
+    --apt-track:rgba(75,179,168,.16);
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 22px 46px -28px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14161b; --paper-2:#191c22; --card:#1c2027;
+  --ink:#ece7db; --ink-soft:#b7b3a860; --ink-mute:#9a9689;
+  --teal:#4bb3a8; --oxblood:#e2705f; --graphite:#8b909c; --amber:#d29a56;
+  --line:rgba(236,231,219,.16); --line-soft:rgba(236,231,219,.08);
+  --fit-track:rgba(236,231,219,.12); --fit-fill:#c9ccd3;
+  --apt-track:rgba(75,179,168,.16);
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 22px 46px -28px rgba(0,0,0,.8);
+}
+:root[data-theme="light"]{
+  --paper:#f6f3ec; --paper-2:#efe8da; --card:#fbf8f1;
+  --ink:#1a1d24; --ink-soft:#43485360; --ink-mute:#5f6572;
+  --teal:#17635e; --oxblood:#a5332a; --graphite:#5b616e; --amber:#7a4a12;
+  --line:rgba(26,29,36,.16); --line-soft:rgba(26,29,36,.09);
+  --fit-track:rgba(26,29,36,.10); --fit-fill:#2c313c;
+  --apt-track:rgba(23,99,94,.15);
+  --shadow:0 1px 0 rgba(26,29,36,.05), 0 18px 40px -28px rgba(26,29,36,.45);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+/* faint ruled-paper texture, printed-instrument feel */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(23,99,94,.05), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(165,51,42,.045), transparent 60%);
+}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:clamp(14px,3vw,34px)}
+
+/* ------- masthead ------- */
+.masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+  padding-bottom:14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-family:var(--serif)}
+.brand .kicker{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--teal);margin:0 0 4px}
+.brand h1{margin:0;font-size:clamp(1.35rem,3.4vw,2rem);font-weight:600;letter-spacing:-.01em;line-height:1.02}
+.brand h1 em{font-style:italic;color:var(--ink)}
+.masthead .meta{font-family:var(--mono);font-size:.66rem;color:var(--ink-mute);text-align:right;line-height:1.5}
+.themebtn{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--line);color:var(--ink-mute);border-radius:2px;
+  padding:5px 8px;cursor:pointer;margin-top:6px}
+.themebtn:hover{color:var(--ink);border-color:var(--ink-mute)}
+
+/* ------- control strip ------- */
+.controls{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
+  margin:14px 0;padding:8px 6px;
+  background:color-mix(in srgb,var(--paper) 88%, transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line-soft)}
+.navbtn{font-family:var(--mono);font-size:1rem;line-height:1;background:var(--card);
+  border:1px solid var(--line);color:var(--ink);width:38px;height:38px;border-radius:3px;
+  cursor:pointer;display:grid;place-items:center}
+.navbtn:hover{border-color:var(--teal);color:var(--teal)}
+.counter{font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;color:var(--ink-mute);min-width:74px}
+.counter b{color:var(--ink)}
+.progress{flex:1;height:2px;background:var(--line);position:relative;overflow:hidden}
+.progress i{position:absolute;inset:0 auto 0 0;width:0;background:var(--teal);transition:width .2s linear}
+.playbtn{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--line);color:var(--ink-mute);border-radius:2px;padding:6px 9px;cursor:pointer}
+.playbtn:hover{color:var(--ink);border-color:var(--ink-mute)}
+
+/* focus */
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:2px}
+
+/* ------- stage / slides ------- */
+.stage{position:relative;min-height:60vh}
+.slide{display:none}
+.slide.active{display:block}
+@media (prefers-reduced-motion:no-preference){
+  .slide.active{animation:rise .45s cubic-bezier(.2,.7,.2,1) both}
+}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.eyebrow{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-mute);display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.eyebrow .tick{flex:1;height:1px;background:var(--line)}
+.eyebrow .synthetic{color:var(--oxblood)}
+
+.case{background:var(--card);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);
+  padding:clamp(18px,3vw,32px)}
+
+/* persona header */
+.persona-title{font-size:clamp(2rem,6vw,3.4rem);font-weight:600;letter-spacing:-.02em;line-height:.98;margin:0}
+.persona-no{font-family:var(--mono);font-size:.7rem;color:var(--teal);letter-spacing:.14em}
+.tagline{font-size:clamp(1rem,2.1vw,1.18rem);color:var(--ink);max-width:60ch;margin:.5em 0 0;font-style:italic;line-height:1.45}
+
+/* problem chip */
+.problem{display:inline-flex;flex-direction:column;gap:2px;margin-top:18px;padding:10px 14px;
+  border-left:3px solid var(--amber);background:color-mix(in srgb,var(--amber) 8%, transparent);border-radius:0 4px 4px 0}
+.problem .lab{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+.problem .name{font-size:1.05rem;font-weight:600}
+.problem .gloss{font-size:.92rem;color:var(--ink-mute);max-width:58ch;font-style:italic}
+
+/* disposition ribbon */
+.ribbon{margin-top:22px}
+.ribbon h3,.block-h{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-mute);margin:0 0 10px;font-weight:400}
+.ribrow{display:grid;grid-template-columns:15ch 1fr 5ch;align-items:center;gap:10px;padding:2px 0}
+.ribrow .rlab{font-family:var(--sans);font-size:.74rem;color:var(--ink-soft);color:var(--ink-mute);text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ribtrack{position:relative;height:12px;background:var(--fit-track);border-radius:2px}
+.ribtrack .mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line)}
+.ribtrack .fillp,.ribtrack .filln{position:absolute;top:0;bottom:0;border-radius:2px}
+.ribtrack .fillp{left:50%;background:var(--teal)}
+.ribtrack .filln{right:50%;background:var(--graphite)}
+.ribrow .rval{font-family:var(--mono);font-size:.72rem;text-align:right}
+.rval.pos{color:var(--teal)} .rval.neg{color:var(--graphite)} .rval.zero{color:var(--ink-mute)}
+
+/* ranking table */
+.rank-wrap{margin-top:24px;overflow-x:auto}
+.rank{width:100%;border-collapse:collapse;min-width:560px;font-size:.9rem}
+.rank thead th{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-mute);font-weight:400;text-align:left;padding:0 10px 8px;border-bottom:1px solid var(--line)}
+.rank th.num,.rank td.num{text-align:right}
+.rank tbody td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+.rank tr.refused td{opacity:.46}
+.rk{font-family:var(--mono);font-size:.78rem;color:var(--ink-mute);width:2.4ch}
+.who{min-width:15ch}
+.who .nm{font-weight:600;font-size:.98rem}
+.who .md{font-family:var(--sans);font-size:.72rem;color:var(--ink-mute);font-style:italic}
+.gate{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--oxblood);
+  border:1px solid color-mix(in srgb,var(--oxblood) 40%,transparent);border-radius:2px;padding:1px 5px;margin-left:6px;white-space:nowrap}
+.reson{font-family:var(--mono);font-size:.76rem}
+.reson.pos{color:var(--teal)} .reson.neg{color:var(--graphite)}
+
+/* meters inside table */
+.meter{display:flex;align-items:center;gap:8px;min-width:120px}
+.meter .track{position:relative;flex:1;height:8px;border-radius:2px;overflow:hidden}
+.meter .track.fit{background:var(--fit-track)}
+.meter .track.apt{background:var(--apt-track)}
+.meter .track i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}
+.meter .track.fit i{background:var(--fit-fill)}
+.meter .track.apt i{background:var(--apt-fill)}
+tr.refused .meter .track.apt i{background:var(--graphite)}
+.meter .val{font-family:var(--mono);font-size:.74rem;min-width:3.4ch;text-align:right}
+.meter.apt .val{color:var(--teal)}
+tr.refused .meter.apt .val{color:var(--ink-mute)}
+
+/* ranking table — mobile reflow so the APTNESS gauge is never scrolled off-screen */
+@media (max-width:560px){
+  .rank-wrap{overflow-x:visible}
+  .rank,.rank tbody{display:block;min-width:0}
+  .rank thead{display:none}
+  .rank tr{display:block;padding:12px 0;border-bottom:1px solid var(--line-soft)}
+  .rank tr.refused{opacity:1}
+  .rank tr.refused .who .nm{opacity:.6}
+  .rank tr.sep{padding:16px 0 0;border:0}
+  .rank td{display:block;border:0;padding:0}
+  .rank td.rk{display:inline;font-size:.72rem;color:var(--ink-mute);margin-right:8px}
+  .rank td.who{display:inline}
+  .rank td.who .md{display:block;margin-top:1px}
+  .rank td.mfit,.rank td.mapt,.rank td.reson{margin-top:8px}
+  .rank td .meter{min-width:0}
+  .rank td.mfit::before{content:"fit — temperament"}
+  .rank td.mapt::before{content:"aptness — on your problem"}
+  .rank td.reson::before{content:"resonance"}
+  .rank td.mfit::before,.rank td.mapt::before,.rank td.reson::before{
+    display:block;font-family:var(--mono);font-size:.54rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-mute);margin:0 0 4px}
+  .rank td.reson{font-family:var(--mono);font-size:1rem}
+}
+
+/* legend + generic prose */
+.lead{font-size:clamp(1.15rem,2.4vw,1.5rem);line-height:1.4;max-width:36ch;margin:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media (max-width:720px){.two{grid-template-columns:1fr}}
+
+/* verdict / reason beats */
+.beat{margin:0 0 16px;font-size:1.06rem;line-height:1.55;max-width:64ch}
+.beat .kindtag{font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+  display:block;margin-bottom:6px;color:var(--ink-mute)}
+.beat.resonance .kindtag{color:var(--teal)}
+.beat.deficit .kindtag,.beat.excess .kindtag,.beat.clash .kindtag{color:var(--oxblood)}
+.beat.aptness .kindtag{color:var(--teal)}
+.beat.finding .kindtag{color:var(--amber)}
+.beat.deficit,.beat.excess{color:var(--ink);border-left:3px solid var(--oxblood);
+  padding:4px 0 4px 16px;background:color-mix(in srgb,var(--oxblood) 6%,transparent);border-radius:0 4px 4px 0}
+.beat.aptness{border-left:3px solid var(--teal);padding:4px 0 4px 16px;
+  background:color-mix(in srgb,var(--teal) 7%,transparent);border-radius:0 4px 4px 0}
+.beat.finding{border-left:3px solid var(--amber);padding:12px 0 12px 16px;
+  background:color-mix(in srgb,var(--amber) 6%,transparent);border-radius:0 4px 4px 0;font-size:1rem}
+.stip{display:block;margin-top:10px;font-family:var(--mono);font-size:.68rem;line-height:1.5;color:var(--ink-mute);
+  border-top:1px dashed var(--line);padding-top:8px}
+.stip b{color:var(--amber);font-weight:400}
+mono,.n{font-family:var(--mono)}
+.tealn{color:var(--teal);font-family:var(--mono)} .oxn{color:var(--oxblood);font-family:var(--mono)}
+
+/* twist: big side-by-side */
+.versus{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;margin-top:8px}
+@media (max-width:640px){.versus{grid-template-columns:1fr;gap:14px}.versus .vmid{display:none}}
+.vcard{border:1px solid var(--line);border-radius:6px;padding:20px;background:var(--paper-2);display:flex;flex-direction:column;gap:6px}
+.vcard .vnm{font-size:1.5rem;font-weight:600;line-height:1}
+.vcard .vmd{font-family:var(--sans);font-size:.74rem;color:var(--ink-mute);font-style:italic;margin-bottom:8px}
+.stat{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--line-soft)}
+.stat .sl{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute)}
+.stat .sv{font-family:var(--mono);font-size:1.7rem;font-weight:500;line-height:1}
+.sv.big{font-size:2.4rem}
+.sv.teal{color:var(--teal)} .sv.ox{color:var(--oxblood)} .sv.ink{color:var(--ink)}
+.vmid{display:grid;place-items:center;font-family:var(--mono);font-size:.7rem;color:var(--ink-mute);
+  writing-mode:vertical-rl;letter-spacing:.2em;text-transform:uppercase}
+.punch{font-size:clamp(1.1rem,2.4vw,1.4rem);line-height:1.4;max-width:60ch;margin:22px 0 0}
+.punch .oxn,.punch .tealn{font-weight:600}
+
+/* pull quote */
+.pull{font-size:clamp(1.3rem,3vw,1.9rem);line-height:1.36;font-style:italic;max-width:22ch;margin:0;
+  border-left:3px solid var(--amber);padding-left:20px}
+.pull .hl{background:color-mix(in srgb,var(--amber) 22%,transparent);padding:0 .1em;font-style:normal}
+.attrib{font-family:var(--mono);font-size:.72rem;color:var(--ink-mute);margin-top:16px;line-height:1.5}
+.attrib b{color:var(--amber);font-weight:400}
+
+/* aptness-order columns */
+.orders{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:8px}
+@media (max-width:640px){.orders{grid-template-columns:1fr}}
+.olist{list-style:none;margin:0;padding:0}
+.olist li{display:flex;align-items:center;gap:10px;padding:7px 8px;border-bottom:1px solid var(--line-soft);font-size:.92rem}
+.olist li.hi{background:color-mix(in srgb,var(--teal) 12%,transparent);border-radius:3px}
+.olist .oi{font-family:var(--mono);font-size:.72rem;color:var(--ink-mute);width:2ch}
+.olist .on{flex:1;font-weight:600}
+.olist .ov{font-family:var(--mono);font-size:.8rem}
+.olist .ov.teal{color:var(--teal)}
+.ohd{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);margin:0 0 8px}
+
+/* dots */
+.dots{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:22px 0 8px}
+.dot{width:auto;min-width:24px;height:22px;padding:0 6px;border:1px solid var(--line);background:transparent;border-radius:3px;
+  cursor:pointer;font-family:var(--mono);font-size:.6rem;color:var(--ink-mute);display:grid;place-items:center}
+.dot[aria-current="true"]{background:var(--teal);border-color:var(--teal);color:var(--paper)}
+.dot:hover{border-color:var(--teal);color:var(--teal)}
+.dot[aria-current="true"]:hover{color:var(--paper)}
+
+/* generic list on epistemics */
+.limits{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:14px;max-width:66ch}
+.limits li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;font-size:1.02rem}
+.limits .mk{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--teal);border:1px solid var(--line);border-radius:2px;padding:3px 7px;white-space:nowrap;margin-top:2px}
+.ledger{font-family:var(--mono);font-size:.72rem;line-height:1.55;color:var(--ink-mute);white-space:pre-wrap;
+  margin:18px 0 0;padding:14px 16px;border:1px dashed var(--line);border-radius:4px;background:var(--paper-2);overflow-x:auto}
+
+.foot{font-family:var(--mono);font-size:.62rem;color:var(--ink-mute);text-align:center;margin:26px 0 6px;letter-spacing:.04em}
+.section-note{font-size:.98rem;color:var(--ink-mute);max-width:60ch;margin:10px 0 0}
+.hairline{height:1px;background:var(--line);margin:22px 0}
+.title-thesis{font-size:clamp(1.6rem,4.4vw,2.9rem);line-height:1.14;font-weight:600;letter-spacing:-.015em;max-width:20ch;margin:8px 0 0}
+.title-thesis em{font-style:italic;color:var(--teal)}
+.title-sub{font-size:1.05rem;color:var(--ink-mute);max-width:56ch;margin:20px 0 0;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;border:1px solid var(--line);border-radius:2px;
+  padding:5px 9px;color:var(--ink-mute)}
+.chip b{color:var(--ink);font-weight:500}
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="brand">
+      <p class="kicker">The philosopher matchmaker · instrument output</p>
+      <h1>The Reading <em>— five synthetic case-files</em></h1>
+    </div>
+    <div>
+      <div class="meta">
+        decompose a person → a vector<br>
+        decompose a thinker → the same vector<br>
+        cross them → a ranked reason
+      </div>
+      <button class="themebtn" id="themeToggle" type="button" aria-label="Toggle light or dark theme">◐ theme</button>
+    </div>
+  </header>
+
+  <nav class="controls" aria-label="Slide navigation">
+    <button class="navbtn" id="prev" type="button" aria-label="Previous reading">‹</button>
+    <button class="navbtn" id="next" type="button" aria-label="Next reading">›</button>
+    <span class="counter" aria-live="polite"><b id="cur">01</b> / <span id="total">00</span></span>
+    <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+    <button class="playbtn" id="play" type="button" aria-pressed="true">❚❚ pause</button>
+  </nav>
+
+  <main class="stage" id="stage" aria-live="polite"></main>
+
+  <nav class="dots" id="dots" aria-label="Jump to slide"></nav>
+  <p class="foot" id="foot">Synthetic archetypes, not real people. Every number and every sentence shown is real engine output — the readings are stipulated, and the instrument says so.</p>
+</div>
+
+<script id="gallery-data" type="application/json">[
+  {
+    "slug": "the-rigorist",
+    "title": "The Rigorist",
+    "tagline": "High need-for-cognition, low tolerance for loose ends: wants the argument nailed down in formal steps, and has little patience for a philosophy that only consoles.",
+    "problem_id": "the-good-life",
+    "problem_name": "The good life / eudaimonia",
+    "problem_gloss": "What is the best kind of life, and — concretely — how does one live it?",
+    "big_five": {
+      "agreeableness.compliance": -0.5,
+      "conscientiousness.order": 1.0,
+      "method.formality": 1.0,
+      "need_for_cognition": 1.0,
+      "openness.aesthetics": 0.0,
+      "openness.ideas": 0.5,
+      "register.consolation": -0.5,
+      "register.corrosion": 0.5,
+      "register.prescription": 0.0,
+      "tolerance_for_ambiguity": -0.5
+    },
+    "stretch": {
+      "ranked": [
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.919,
+          "resonance": 0.965,
+          "supply_fit": 0.769,
+          "confidence": 0.5,
+          "admissible": true,
+          "aptness": 0.06,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.908,
+          "resonance": 0.963,
+          "supply_fit": 0.738,
+          "confidence": 0.9,
+          "admissible": true,
+          "aptness": 0.9,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.651,
+          "resonance": 0.244,
+          "supply_fit": 0.719,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.4,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.537,
+          "resonance": -0.043,
+          "supply_fit": 0.675,
+          "confidence": 0.9,
+          "admissible": true,
+          "aptness": 0.5,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.488,
+          "resonance": -0.215,
+          "supply_fit": 0.713,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.45,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.466,
+          "resonance": -0.262,
+          "supply_fit": 0.694,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.85,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.254,
+          "resonance": -0.8,
+          "supply_fit": 0.613,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.8,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.892,
+          "resonance": 0.959,
+          "supply_fit": 0.688,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.18,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.839,
+          "resonance": 0.674,
+          "supply_fit": 0.844,
+          "confidence": 0.833,
+          "admissible": false,
+          "aptness": 0.25,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.562,
+          "resonance": -0.012,
+          "supply_fit": 0.721,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.15,
+          "apt_problem": "the-good-life"
+        }
+      ],
+      "reasons": {
+        "russell/logical-atomist": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.97 across the demand dimensions. It is carried by need for cognition and method · formality — need_for_cognition (you +1.00 · this mode +0.95 → +0.95), method.formality (you +1.00 · this mode +0.95 → +0.95). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "deficit",
+            "text": "So here is the part you will not like. You want register.prescription — you reported +0.00. This mode supplies -0.90. The gap is 0.90, and it is the largest thing standing between you and this card. It is not that the mode is THIN on this — it has nothing to say to you here at all, and that is not an oversight, it is a scope boundary. "
+          },
+          {
+            "kind": "aptness",
+            "text": "On The good life / eudaimonia — the problem you brought — this mode is inapt (0.06), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: Wrote the Introduction to Mathematical Philosophy in Brixton Prison, where he was serving six months for a pacifist article — a canonical text of FORMAL LOGIC composed while imprisoned for MORAL CONVICTION. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: (none quoted). If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    russell. Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.06 on The good life / eudaimonia — this mode is inapt on the problem you\n    brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but there is\n    no distance here to cross). This is a real operator now: it ran, and the number is\n    above."
+          }
+        ],
+        "spinoza/the-geometer-of-blessedness": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.96 across the demand dimensions. It is carried by need for cognition and conscientiousness · order — need_for_cognition (you +1.00 · this mode +0.95 → +0.95), conscientiousness.order (you +1.00 · this mode +0.95 → +0.95). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — a philosophy that tells you how to live: the mode runs +0.75 against your -0.50, a surplus of +1.25. It will console you more than you asked to be consoled."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The good life / eudaimonia — the problem you brought — this mode is apt (0.90), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The most rigidly geometric book in Western philosophy contains, in its own text, Spinoza's admission that the geometry failed to deliver the ethics — and then a plain-prose remedy for it. Part IV's Appendix opens: \"concerning the right way of life has not been arranged, so as to admit of being seen at one view, but has been set forth piece-meal, according as I thought each Proposition could most readily be deduced from what preceded it. I propose, therefore, to rearrange my remarks and to bring them under leading heads.\" (Ethics IV, Appendix, opening — immediately following Prop. LXXIII.) He is saying the deductive order is optimal for PROOF and useless for LIVING, so he rewrote the practical payload as an ordinary numbered prose digest. The same tension surfaces again at V.x Note, where the arch-rationalist prescribes rote drill: the reader is told to \"frame a system of right conduct, or fixed practical precepts, to commit it to memory, and to apply it forthwith to the particular circumstances which now and again meet us in life, so that our imagination may become fully imbued therewith\" — memorised maxims, i.e. an exercise in the imagination, which his own epistemology classes as inadequate knowledge. A well-read person knows the Ethics is geometric. Far fewer know that Spinoza himself twice broke the geometry from the inside, in the surviving text, precisely at the points where he needed the book to actually change a reader's behaviour. This is the direct textual warrant for the mode's anomalous shape: maximum formality AND high prescription, in one book, on the author's own testimony. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'concerning the right way of life has not been arranged, so a'; 'frame a system of right conduct, or fixed practical precepts'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    spinoza. Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.90 on The good life / eudaimonia — this mode is apt on the problem you\n    brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but there is\n    no distance here to cross). This is a real operator now: it ran, and the number is\n    above."
+          }
+        ],
+        "de-beauvoir/the-ethics-of-ambiguity": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.24 across the demand dimensions. It is carried by need for cognition and conscientiousness · order — need_for_cognition (you +1.00 · this mode +0.65 → +0.65), conscientiousness.order (you +1.00 · this mode +0.45 → +0.45). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — a philosophy that tells you how to live: the mode runs +0.45 against your -0.50, a surplus of +0.95. It will console you more than you asked to be consoled."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: taste for formal method (it wants -0.60, you are +1.00); comfort with an unsettled question (it wants +0.92, you are -0.50). On The good life / eudaimonia this mode is inapt (0.40), but you do not clash with it here — no distance to cross."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The good life / eudaimonia — the problem you brought — this mode is inapt (0.40), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: Beauvoir's argument that \"To will oneself free and to will that there be being are one and the same choice\" is almost always read as a Kantian universalisation move — will your freedom, therefore will everyone's. It is not. Her actual ground is TEMPORAL: a free project is only fulfilled if it has an open future to unfold into, and a lone individual cannot supply their own future — other people do, by taking your project up after you. Verbatim, Part III: \"my freedom, in order to fulfill itself, requires that it emerge into an open future: it is other men who open the future to me.\" That is why oppression is the cardinal sin in her system and why the oppressor's crime is described as theft of MEANING: \"Only man can be an enemy for man; only he can rob him of the meaning of his acts and his life.\" Solidarity is derived from the structure of time, not from a duty of benevolence — which is why she can be a full-blooded anti-absolutist and still land on an obligatory politics, where Sartre could not. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'To will oneself free and to will that there be being are one'; 'my freedom, in order to fulfill itself, requires that it eme'; 'Only man can be an enemy for man; only he can rob him of the'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    de-beauvoir. Every facet carries a falsifier naming an experiment that would kill\n    it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.40 on The good life / eudaimonia — this mode is inapt on the problem you\n    brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but there is\n    no distance here to cross). This is a real operator now: it ran, and the number is\n    above."
+          }
+        ]
+      }
+    },
+    "break": {
+      "ranked": [
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.64,
+          "resonance": -0.8,
+          "supply_fit": 0.613,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.8,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.223,
+          "resonance": -0.262,
+          "supply_fit": 0.694,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.85,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.097,
+          "resonance": -0.215,
+          "supply_fit": 0.713,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.45,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.022,
+          "resonance": -0.043,
+          "supply_fit": 0.675,
+          "confidence": 0.9,
+          "admissible": true,
+          "aptness": 0.5,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.0,
+          "resonance": 0.965,
+          "supply_fit": 0.769,
+          "confidence": 0.5,
+          "admissible": true,
+          "aptness": 0.06,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.0,
+          "resonance": 0.963,
+          "supply_fit": 0.738,
+          "confidence": 0.9,
+          "admissible": true,
+          "aptness": 0.9,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.0,
+          "resonance": 0.244,
+          "supply_fit": 0.719,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.4,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.571,
+          "resonance": -0.012,
+          "supply_fit": 0.721,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.15,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.367,
+          "resonance": 0.674,
+          "supply_fit": 0.844,
+          "confidence": 0.833,
+          "admissible": false,
+          "aptness": 0.25,
+          "apt_problem": "the-good-life"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.221,
+          "resonance": 0.959,
+          "supply_fit": 0.688,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.18,
+          "apt_problem": "the-good-life"
+        }
+      ],
+      "reasons": {
+        "marcus-aurelius/the-meditations": [
+          {
+            "kind": "resonance",
+            "text": "YOU DO NOT RESONATE WITH THIS MODE. Resonance is -0.80 — negative, over the whole demand space. Two things do line up — tolerance_for_ambiguity (you -0.50 · this mode -0.25 → +0.12), openness.ideas (you +0.50 · this mode +0.15 → +0.07) — and they are outweighed. What the mode requires of a reader, you largely did not bring: conscientiousness.order (you +1.00 · this mode -0.80 → -0.80), method.formality (you +1.00 · this mode -0.70 → -0.70). We could have opened with the two terms that flatter you. That is what a horoscope does."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — a philosophy that tells you how to live: the mode runs +0.95 against your -0.50, a surplus of +1.45. It will console you more than you asked to be consoled."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: patience for a system (it wants -0.80, you are +1.00); taste for formal method (it wants -0.70, you are +1.00); appetite for effortful thought (it wants -0.45, you are +1.00). On The good life / eudaimonia this mode is apt (0.80) and admissible, so the distance is one worth crossing."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The good life / eudaimonia — the problem you brought — this mode is apt (0.80), and you clash with it — friction 0.64, a distance worth crossing."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The most accessible book on the roster is accessible because its author had given up on philosophy's technical apparatus — and he says so twice, in writing, to himself. Stoicism had three parts: logic, physics, ethics. Marcus abandoned two of them. In Book I he thanks the gods that \"I did not waste my time on writers [of histories], or in the resolution of syllogisms, or occupy myself about the investigation of appearances in the heavens\" (I.17) — and at VII.67, in a passage nobody quotes, he is consoling himself for a FAILURE: \"And because thou hast despaired of becoming a dialectician and skilled in the knowledge of nature, do not for this reason renounce the hope of being both free and modest, and social and obedient to God.\" That is not modesty; it is a man talking himself down off a competence he could not reach. So the reason an untrained person can open the Meditations and read it is not that the book was simplified for them. It is that the emperor was standing on their side of the gate. He is the only philosopher on this roster who is, by his own written confession, an amateur — and the gate dimensions are near zero because HE COULD NOT PASS THEM EITHER. The engine should say this to the reader, in these words: the man does not require a dialectician of you, because he could not be one. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'I did not waste my time on writers [of histories], or in the'; 'And because thou hast despaired of becoming a dialectician a'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    marcus-aurelius. Every facet carries a falsifier naming an experiment that would\n    kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.80 on The good life / eudaimonia — this mode is apt on the problem you\n    brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.64 (a distance\n    worth crossing). This is a real operator now: it ran, and the number is above."
+          }
+        ]
+      }
+    },
+    "flags": {
+      "hostile_deficit": true,
+      "excess_warning": true,
+      "productive_friction": true,
+      "curriculum": true,
+      "notable_line": "So here is the part you will not like. You want register.prescription — you reported +0.00. This mode supplies -0.90. The gap is 0.90, and it is the largest thing standing between you and this card. It is not that the mode is THIN on this — it has nothing to say to you here at all, and that is not an oversight, it is a scope boundary. "
+    }
+  },
+  {
+    "slug": "the-seeker",
+    "title": "The Seeker",
+    "tagline": "Modest formal training, high appetite for consolation and concrete guidance: came to philosophy to learn how to face mortality, not to admire a proof.",
+    "problem_id": "facing-death",
+    "problem_name": "How to face death / mortality",
+    "problem_gloss": "How should one live in view of one's own death?",
+    "big_five": {
+      "agreeableness.compliance": 0.5,
+      "conscientiousness.order": 0.5,
+      "method.formality": -0.5,
+      "need_for_cognition": 0.0,
+      "openness.aesthetics": 0.0,
+      "openness.ideas": 0.0,
+      "register.consolation": 1.0,
+      "register.corrosion": -0.5,
+      "register.prescription": 1.0,
+      "tolerance_for_ambiguity": 0.0
+    },
+    "stretch": {
+      "ranked": [
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.66,
+          "resonance": 0.179,
+          "supply_fit": 0.825,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.9,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.649,
+          "resonance": 0.13,
+          "supply_fit": 0.844,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.45,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.479,
+          "resonance": -0.125,
+          "supply_fit": 0.575,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.5,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.593,
+          "resonance": 0.089,
+          "supply_fit": 0.706,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.3,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.548,
+          "resonance": 0.058,
+          "supply_fit": 0.594,
+          "confidence": 0.833,
+          "admissible": false,
+          "aptness": 0.5,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.523,
+          "resonance": -0.169,
+          "supply_fit": 0.775,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.7,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.422,
+          "resonance": -0.223,
+          "supply_fit": 0.5,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.55,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.383,
+          "resonance": -0.356,
+          "supply_fit": 0.525,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.8,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.381,
+          "resonance": -0.153,
+          "supply_fit": 0.284,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.2,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.362,
+          "resonance": -0.248,
+          "supply_fit": 0.331,
+          "confidence": 0.5,
+          "admissible": false,
+          "aptness": 0.05,
+          "apt_problem": "facing-death"
+        }
+      ],
+      "reasons": {
+        "marcus-aurelius/the-meditations": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.18 across the demand dimensions. It is carried by method · formality and agreeableness · compliance — method.formality (you -0.50 · this mode -0.70 → +0.35), agreeableness.compliance (you +0.50 · this mode +0.50 → +0.25). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — having your questions dissolved rather than answered: the mode runs +0.30 against your -0.50, a surplus of +0.80. You came for an answer. This mode's signature move is to demonstrate that your question was malformed and dissolve it. Some readers find that the most liberating thing they have ever read. You have told us you are not one of them."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: patience for a system (it wants -0.80, you are +0.50). On How to face death / mortality this mode is apt (0.90), but you do not clash with it here — no distance to cross."
+          },
+          {
+            "kind": "aptness",
+            "text": "On How to face death / mortality — the problem you brought — this mode is apt (0.90), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The most accessible book on the roster is accessible because its author had given up on philosophy's technical apparatus — and he says so twice, in writing, to himself. Stoicism had three parts: logic, physics, ethics. Marcus abandoned two of them. In Book I he thanks the gods that \"I did not waste my time on writers [of histories], or in the resolution of syllogisms, or occupy myself about the investigation of appearances in the heavens\" (I.17) — and at VII.67, in a passage nobody quotes, he is consoling himself for a FAILURE: \"And because thou hast despaired of becoming a dialectician and skilled in the knowledge of nature, do not for this reason renounce the hope of being both free and modest, and social and obedient to God.\" That is not modesty; it is a man talking himself down off a competence he could not reach. So the reason an untrained person can open the Meditations and read it is not that the book was simplified for them. It is that the emperor was standing on their side of the gate. He is the only philosopher on this roster who is, by his own written confession, an amateur — and the gate dimensions are near zero because HE COULD NOT PASS THEM EITHER. The engine should say this to the reader, in these words: the man does not require a dialectician of you, because he could not be one. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'I did not waste my time on writers [of histories], or in the'; 'And because thou hast despaired of becoming a dialectician a'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    marcus-aurelius. Every facet carries a falsifier naming an experiment that would\n    kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.90 on How to face death / mortality — this mode is apt on the problem\n    you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but\n    there is no distance here to cross). This is a real operator now: it ran, and the\n    number is above."
+          }
+        ],
+        "epictetus/the-handbook": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.13 across the demand dimensions. It is carried by method · formality and agreeableness · compliance — method.formality (you -0.50 · this mode -0.55 → +0.28), agreeableness.compliance (you +0.50 · this mode +0.30 → +0.15). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — having your questions dissolved rather than answered: the mode runs +0.40 against your -0.50, a surplus of +0.90. You came for an answer. This mode's signature move is to demonstrate that your question was malformed and dissolve it. Some readers find that the most liberating thing they have ever read. You have told us you are not one of them."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: patience for a system (it wants -0.55, you are +0.50). On How to face death / mortality this mode is inapt (0.45), but you do not clash with it here — no distance to cross."
+          },
+          {
+            "kind": "aptness",
+            "text": "On How to face death / mortality — the problem you brought — this mode is inapt (0.45), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The premise that Epictetus \"meant you to read it\" and Marcus did not is HALF WRONG, and the correction is in the first paragraph of the Discourses. Arrian's prefatory letter to Lucius Gellius disclaims authorship, intention, and publication all at once: \"I neither wrote these Discourses of Epictetus in the way in which a man might write such things; nor did I make them public myself, inasmuch as I declare that I did not even write them. But whatever I heard him say, the same I attempted to write down in his own words as nearly as possible, for the purpose of preserving them as memorials to myself\" — and then, astonishingly, \"I do not know how they fell into the hands of the public, without either my consent or my knowledge.\"\n\nSo BOTH founding Stoic texts are, on their own testimony, private documents that escaped. Marcus's notebook was self-address; Arrian's was a student's lecture notes kept as a memento for himself. The real distinction survives but must be restated precisely, and it is the one that earns the vector: Epictetus intended the WORDS to be heard by a person who could talk back — Arrian's own gloss is that they are \"such as a man would address without preparation to another, not such as a man would write with the view of others reading them.\" That is not private self-consolation. It is unrehearsed speech aimed at a second person. It is why the mode reaches +0.95 on prescription and +0.40 on corrosion: you are being addressed, and you can be refused.\n\nThe sting in the tail: SEP reports that a minority of scholars, \"especially Dobbin (1998), argue that Epictetus must have composed them himself, the role of Arrian being merely to preserve a mild fiction of orality.\" If Dobbin is right, the most famous humility in ancient philosophy — \"I did not even write them\" — is a literary device, and several of these numbers move. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'meant you to read it'; 'I neither wrote these Discourses of Epictetus in the way in '; 'I do not know how they fell into the hands of the public, wi'; 'such as a man would address without preparation to another, '; 'especially Dobbin (1998), argue that Epictetus must have com'; 'I did not even write them'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    epictetus. Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.45 on How to face death / mortality — this mode is inapt on the problem\n    you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but\n    there is no distance here to cross). This is a real operator now: it ran, and the\n    number is above."
+          }
+        ],
+        "camus/the-myth-of-sisyphus": [
+          {
+            "kind": "resonance",
+            "text": "YOU DO NOT RESONATE WITH THIS MODE. Resonance is -0.12 — negative, over the whole demand space. Two things do line up — method.formality (you -0.50 · this mode -0.75 → +0.38) — and they are outweighed. What the mode requires of a reader, you largely did not bring: agreeableness.compliance (you +0.50 · this mode -0.60 → -0.30), conscientiousness.order (you +0.50 · this mode -0.50 → -0.25). We could have opened with the two terms that flatter you. That is what a horoscope does."
+          },
+          {
+            "kind": "deficit",
+            "text": "So here is the part you will not like. You want register.prescription — you reported +1.00. This mode supplies +0.25. The gap is 0.75, and it is the largest thing standing between you and this card. It is not that the mode is THIN on this — it has nothing to say to you here at all, and that is not an oversight, it is a scope boundary. "
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — having your questions dissolved rather than answered: the mode runs +0.70 against your -0.50, a surplus of +1.20. You came for an answer. This mode's signature move is to demonstrate that your question was malformed and dissolve it. Some readers find that the most liberating thing they have ever read. You have told us you are not one of them."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: deference to established authority (it wants -0.60, you are +0.50). On How to face death / mortality this mode is apt (0.50) and admissible, so the distance is one worth crossing."
+          },
+          {
+            "kind": "aptness",
+            "text": "On How to face death / mortality — the problem you brought — this mode is apt (0.50), and you clash with it — friction 0.06, a distance worth crossing."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The Stanford Encyclopedia of Philosophy — the reference work of academic philosophy — effectively concedes that the founding text of the absurd does not argue. Its assessment of Camus's method is that he \"asserted rather than argued many of his main ideas, presented others in metaphors,\" that his work contains \"sweeping, unsupported assertions,\" and that on at least one central question \"he does not argue this question either, and rather chooses to demonstrate.\" And Camus agreed, in advance and in print: he told Jeanine Delpech in Les Nouvelles Littéraires in November 1945 that he was not a philosopher because he \"did 'not believe sufficiently in reason to believe in a system',\" and described himself as an artist on the grounds that \"I think according to words and not according to ideas.\" This is not a hostile reading and it is not a debunking — SEP maintains in the same breath that \"the sensuous and lyrical side of these essays, their evocative character, is central to the argument.\" That is the striking part: the lyricism is not a substitute for the philosophy, it is the medium of it. Which is why the near-zero formal gates in this vector are not a flattering concession to make Camus accessible — they are the scholarly consensus about what kind of object The Myth of Sisyphus is, and it means the engine can hand this book to a reader with no training without lying to them. (Locus: SEP, 'Albert Camus', plato.stanford.edu/entries/camus/.) [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'asserted rather than argued many of his main ideas, presente'; 'sweeping, unsupported assertions,'; 'he does not argue this question either, and rather chooses t'; \"did 'not believe sufficiently in reason to believe in a syst\"; 'I think according to words and not according to ideas.'; 'the sensuous and lyrical side of these essays, their evocati'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about camus.\n    Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.50 on How to face death / mortality — this mode is apt on the problem\n    you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.06 (a\n    distance worth crossing). This is a real operator now: it ran, and the number is\n    above."
+          }
+        ]
+      }
+    },
+    "break": {
+      "ranked": [
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.062,
+          "resonance": -0.125,
+          "supply_fit": 0.575,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.5,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.0,
+          "resonance": 0.179,
+          "supply_fit": 0.825,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.9,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.0,
+          "resonance": 0.13,
+          "supply_fit": 0.844,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.45,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.642,
+          "resonance": -0.169,
+          "supply_fit": 0.775,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.7,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.632,
+          "resonance": -0.356,
+          "supply_fit": 0.525,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.8,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.578,
+          "resonance": -0.223,
+          "supply_fit": 0.5,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.55,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.536,
+          "resonance": -0.248,
+          "supply_fit": 0.331,
+          "confidence": 0.5,
+          "admissible": false,
+          "aptness": 0.05,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.531,
+          "resonance": 0.089,
+          "supply_fit": 0.706,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.3,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.508,
+          "resonance": 0.058,
+          "supply_fit": 0.594,
+          "confidence": 0.833,
+          "admissible": false,
+          "aptness": 0.5,
+          "apt_problem": "facing-death"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.489,
+          "resonance": -0.153,
+          "supply_fit": 0.284,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.2,
+          "apt_problem": "facing-death"
+        }
+      ],
+      "reasons": {
+        "camus/the-myth-of-sisyphus": [
+          {
+            "kind": "resonance",
+            "text": "YOU DO NOT RESONATE WITH THIS MODE. Resonance is -0.12 — negative, over the whole demand space. Two things do line up — method.formality (you -0.50 · this mode -0.75 → +0.38) — and they are outweighed. What the mode requires of a reader, you largely did not bring: agreeableness.compliance (you +0.50 · this mode -0.60 → -0.30), conscientiousness.order (you +0.50 · this mode -0.50 → -0.25). We could have opened with the two terms that flatter you. That is what a horoscope does."
+          },
+          {
+            "kind": "deficit",
+            "text": "So here is the part you will not like. You want register.prescription — you reported +1.00. This mode supplies +0.25. The gap is 0.75, and it is the largest thing standing between you and this card. It is not that the mode is THIN on this — it has nothing to say to you here at all, and that is not an oversight, it is a scope boundary. "
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — having your questions dissolved rather than answered: the mode runs +0.70 against your -0.50, a surplus of +1.20. You came for an answer. This mode's signature move is to demonstrate that your question was malformed and dissolve it. Some readers find that the most liberating thing they have ever read. You have told us you are not one of them."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: deference to established authority (it wants -0.60, you are +0.50). On How to face death / mortality this mode is apt (0.50) and admissible, so the distance is one worth crossing."
+          },
+          {
+            "kind": "aptness",
+            "text": "On How to face death / mortality — the problem you brought — this mode is apt (0.50), and you clash with it — friction 0.06, a distance worth crossing."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The Stanford Encyclopedia of Philosophy — the reference work of academic philosophy — effectively concedes that the founding text of the absurd does not argue. Its assessment of Camus's method is that he \"asserted rather than argued many of his main ideas, presented others in metaphors,\" that his work contains \"sweeping, unsupported assertions,\" and that on at least one central question \"he does not argue this question either, and rather chooses to demonstrate.\" And Camus agreed, in advance and in print: he told Jeanine Delpech in Les Nouvelles Littéraires in November 1945 that he was not a philosopher because he \"did 'not believe sufficiently in reason to believe in a system',\" and described himself as an artist on the grounds that \"I think according to words and not according to ideas.\" This is not a hostile reading and it is not a debunking — SEP maintains in the same breath that \"the sensuous and lyrical side of these essays, their evocative character, is central to the argument.\" That is the striking part: the lyricism is not a substitute for the philosophy, it is the medium of it. Which is why the near-zero formal gates in this vector are not a flattering concession to make Camus accessible — they are the scholarly consensus about what kind of object The Myth of Sisyphus is, and it means the engine can hand this book to a reader with no training without lying to them. (Locus: SEP, 'Albert Camus', plato.stanford.edu/entries/camus/.) [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'asserted rather than argued many of his main ideas, presente'; 'sweeping, unsupported assertions,'; 'he does not argue this question either, and rather chooses t'; \"did 'not believe sufficiently in reason to believe in a syst\"; 'I think according to words and not according to ideas.'; 'the sensuous and lyrical side of these essays, their evocati'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about camus.\n    Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.50 on How to face death / mortality — this mode is apt on the problem\n    you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.06 (a\n    distance worth crossing). This is a real operator now: it ran, and the number is\n    above."
+          }
+        ]
+      }
+    },
+    "flags": {
+      "hostile_deficit": true,
+      "excess_warning": true,
+      "productive_friction": false,
+      "curriculum": true,
+      "notable_line": "On How to face death / mortality — the problem you brought — this mode is apt (0.90), and you do not clash with it — friction 0.00, no distance to cross."
+    }
+  },
+  {
+    "slug": "the-aesthete",
+    "title": "The Aesthete",
+    "tagline": "High intellect and high tolerance for ambiguity, paired with a hunger for beauty and consolation — a profile built to expose the gap between temperament-fit and whether a mode actually hands you anything to live on.",
+    "problem_id": "meaning-of-life",
+    "problem_name": "The meaning of life / the absurd",
+    "problem_gloss": "Is life worth living, and on what ground, if the universe supplies no meaning of its own?",
+    "big_five": {
+      "agreeableness.compliance": -0.5,
+      "conscientiousness.order": 0.0,
+      "method.formality": 0.0,
+      "need_for_cognition": 1.0,
+      "openness.aesthetics": 1.0,
+      "openness.ideas": 1.0,
+      "register.consolation": 1.0,
+      "register.corrosion": 0.0,
+      "register.prescription": 0.5,
+      "tolerance_for_ambiguity": 0.5
+    },
+    "stretch": {
+      "ranked": [
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.886,
+          "resonance": 0.829,
+          "supply_fit": 0.819,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.55,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.877,
+          "resonance": 0.889,
+          "supply_fit": 0.719,
+          "confidence": 0.833,
+          "admissible": true,
+          "aptness": 0.55,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.86,
+          "resonance": 0.814,
+          "supply_fit": 0.75,
+          "confidence": 0.9,
+          "admissible": true,
+          "aptness": 0.5,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.839,
+          "resonance": 0.712,
+          "supply_fit": 0.8,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.97,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.792,
+          "resonance": 0.817,
+          "supply_fit": 0.521,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.55,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.658,
+          "resonance": 0.596,
+          "supply_fit": 0.331,
+          "confidence": 0.5,
+          "admissible": true,
+          "aptness": 0.06,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.586,
+          "resonance": 0.048,
+          "supply_fit": 0.731,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.28,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.486,
+          "resonance": -0.331,
+          "supply_fit": 0.838,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.3,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.777,
+          "resonance": 0.653,
+          "supply_fit": 0.662,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.6,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.777,
+          "resonance": 0.545,
+          "supply_fit": 0.787,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.55,
+          "apt_problem": "meaning-of-life"
+        }
+      ],
+      "reasons": {
+        "de-beauvoir/the-ethics-of-ambiguity": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.83 across the demand dimensions. It is carried by openness · ideas and need for cognition — openness.ideas (you +1.00 · this mode +0.80 → +0.80), need_for_cognition (you +1.00 · this mode +0.65 → +0.65). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The meaning of life / the absurd — the problem you brought — this mode is apt (0.55), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: Beauvoir's argument that \"To will oneself free and to will that there be being are one and the same choice\" is almost always read as a Kantian universalisation move — will your freedom, therefore will everyone's. It is not. Her actual ground is TEMPORAL: a free project is only fulfilled if it has an open future to unfold into, and a lone individual cannot supply their own future — other people do, by taking your project up after you. Verbatim, Part III: \"my freedom, in order to fulfill itself, requires that it emerge into an open future: it is other men who open the future to me.\" That is why oppression is the cardinal sin in her system and why the oppressor's crime is described as theft of MEANING: \"Only man can be an enemy for man; only he can rob him of the meaning of his acts and his life.\" Solidarity is derived from the structure of time, not from a duty of benevolence — which is why she can be a full-blooded anti-absolutist and still land on an obligatory politics, where Sartre could not. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'To will oneself free and to will that there be being are one'; 'my freedom, in order to fulfill itself, requires that it eme'; 'Only man can be an enemy for man; only he can rob him of the'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    de-beauvoir. Every facet carries a falsifier naming an experiment that would kill\n    it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.55 on The meaning of life / the absurd — this mode is apt on the problem\n    you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but\n    there is no distance here to cross). This is a real operator now: it ran, and the\n    number is above."
+          }
+        ],
+        "kierkegaard/anti-climacus": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.89 across the demand dimensions. It is carried by need for cognition and openness · ideas — need_for_cognition (you +1.00 · this mode +0.85 → +0.85), openness.ideas (you +1.00 · this mode +0.80 → +0.80). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "deficit",
+            "text": "So here is the part you will not like. You want a philosophy that tells you how to live — you reported +1.00. This mode supplies -0.25. The gap is 1.25, and it is the largest thing standing between you and this card. It is not that the mode is THIN on this — it has nothing to say to you here at all, and that is not an oversight, it is a scope boundary. Go to this mode for that and you will come back with a beautifully-argued absence, and you will conclude that philosophy is cold, and you will be wrong, and it will be our fault for sending you."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The meaning of life / the absurd — the problem you brought — this mode is apt (0.55), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The \"Anti-\" in Anti-Climacus does not mean \"against.\" Almost every well-read reader assumes Anti-Climacus is the OPPONENT of Johannes Climacus — the believer answering the sceptic. He is not. The Hongs: \"The prefix (Anti-) does not mean 'against.' An old form of 'ante' (before), as in 'anticipate,' the prefix denotes a relation of rank, as in 'before me' in the First Commandment\" (Howard V. & Edna H. Hong, Historical Introduction to The Sickness Unto Death, as quoted in D. Anthony Storm's Commentary, sorenkierkegaard.org). Both pseudonyms are named for John Climacus, author of the Ladder of Divine Ascent — they are on the SAME ladder, and \"anti\" marks altitude, not opposition. Kierkegaard then placed himself on that ladder, between his own two characters: \"Johannes Climacus and Anti-Climacus have several things in common; but the difference is that whereas Johannes Climacus places himself so low that he even says himself that he is not a Christian, one seems to be able to detect in Anti-Climacus that he regards himself to be a Christian on an extraordinarily high level... I would place myself higher than Johannes Climacus, lower than Anti-Climacus\" (Kierkegaard's journals, as quoted in Storm's Commentary). The consequence for the matchmaker is direct: this is not a philosopher's considered position, it is a position its own author declared himself unqualified to hold. It is the only card in the roster whose stated standard the author admits he does not meet — and that is exactly why the consolation is fenced. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'in Anti-Climacus does not mean'; 'Almost every well-read reader assumes Anti-Climacus is the O'; '(Howard V. & Edna H. Hong, Historical Introduction to The Si'; 'marks altitude, not opposition. Kierkegaard then placed hims'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    kierkegaard. Every facet carries a falsifier naming an experiment that would kill\n    it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.55 on The meaning of life / the absurd — this mode is apt on the problem\n    you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but\n    there is no distance here to cross). This is a real operator now: it ran, and the\n    number is above."
+          }
+        ],
+        "zhuangzi/the-inner-chapters": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.81 across the demand dimensions. It is carried by openness · ideas and need for cognition — openness.ideas (you +1.00 · this mode +0.90 → +0.90), need_for_cognition (you +1.00 · this mode +0.55 → +0.55). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "deficit",
+            "text": "So here is the part you will not like. You want register.prescription — you reported +0.50. This mode supplies -0.25. The gap is 0.75, and it is the largest thing standing between you and this card. It is not that the mode is THIN on this — it has nothing to say to you here at all, and that is not an oversight, it is a scope boundary. "
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — having your questions dissolved rather than answered: the mode runs +0.80 against your +0.00, a surplus of +0.80. You came for an answer. This mode's signature move is to demonstrate that your question was malformed and dissolve it. Some readers find that the most liberating thing they have ever read. You have told us you are not one of them."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The meaning of life / the absurd — the problem you brought — this mode is apt (0.50), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: Zhuangzi almost certainly never read the Dao De Jing. The entire traditional picture — Zhuangzi as the anti-rational mystic disciple of Laozi — depends on the Laozi predating him, and the Mawangdui/Guodian manuscript finds of the 1970s and 1990s pushed that text's emergence LATER. SEP: \"The discoveries in the early 1970s and 1990s together implied a later date for the emergence of the Laozi text. The exact timeline remains unclear, but gives us no reason to doubt Graham's suggestion that Zhuangzi did not know of the text.\" The entry's opening states it flatly: \"Traditional orthodoxy understood Zhuangzi as an anti-rational, credulous follower of a mystical Laozi... Recent archaeological discoveries have largely laid that ancient orthodoxy to rest.\" The founding text of Daoism was, on the current evidence, not an input to its most philosophically sophisticated book. (SEP, 'Zhuangzi', Chad Hansen, rev. 24 Mar 2024, lead paragraphs and §2.) [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'The discoveries in the early 1970s and 1990s together implie'; 'Traditional orthodoxy understood Zhuangzi as an anti-rationa'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    zhuangzi. Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.50 on The meaning of life / the absurd — this mode is apt on the problem\n    you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but\n    there is no distance here to cross). This is a real operator now: it ran, and the\n    number is above."
+          }
+        ]
+      }
+    },
+    "break": {
+      "ranked": [
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.099,
+          "resonance": -0.331,
+          "supply_fit": 0.838,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.3,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.0,
+          "resonance": 0.596,
+          "supply_fit": 0.331,
+          "confidence": 0.5,
+          "admissible": true,
+          "aptness": 0.06,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.0,
+          "resonance": 0.817,
+          "supply_fit": 0.521,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.55,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.0,
+          "resonance": 0.889,
+          "supply_fit": 0.719,
+          "confidence": 0.833,
+          "admissible": true,
+          "aptness": 0.55,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.0,
+          "resonance": 0.829,
+          "supply_fit": 0.819,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.55,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.0,
+          "resonance": 0.712,
+          "supply_fit": 0.8,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.97,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.0,
+          "resonance": 0.814,
+          "supply_fit": 0.75,
+          "confidence": 0.9,
+          "admissible": true,
+          "aptness": 0.5,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.0,
+          "resonance": 0.048,
+          "supply_fit": 0.731,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.28,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.396,
+          "resonance": 0.545,
+          "supply_fit": 0.787,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.55,
+          "apt_problem": "meaning-of-life"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.32,
+          "resonance": 0.653,
+          "supply_fit": 0.662,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.6,
+          "apt_problem": "meaning-of-life"
+        }
+      ],
+      "reasons": {
+        "marcus-aurelius/the-meditations": [
+          {
+            "kind": "resonance",
+            "text": "YOU DO NOT RESONATE WITH THIS MODE. Resonance is -0.33 — negative, over the whole demand space. Two things do line up — openness.ideas (you +1.00 · this mode +0.15 → +0.15) — and they are outweighed. What the mode requires of a reader, you largely did not bring: need_for_cognition (you +1.00 · this mode -0.45 → -0.45), agreeableness.compliance (you -0.50 · this mode +0.50 → -0.25). We could have opened with the two terms that flatter you. That is what a horoscope does."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: appetite for effortful thought (it wants -0.45, you are +1.00). On The meaning of life / the absurd this mode is inapt (0.30) — this is friction without a payoff."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The meaning of life / the absurd — the problem you brought — this mode is inapt (0.30), and you clash with it — friction 0.10, friction without a payoff."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The most accessible book on the roster is accessible because its author had given up on philosophy's technical apparatus — and he says so twice, in writing, to himself. Stoicism had three parts: logic, physics, ethics. Marcus abandoned two of them. In Book I he thanks the gods that \"I did not waste my time on writers [of histories], or in the resolution of syllogisms, or occupy myself about the investigation of appearances in the heavens\" (I.17) — and at VII.67, in a passage nobody quotes, he is consoling himself for a FAILURE: \"And because thou hast despaired of becoming a dialectician and skilled in the knowledge of nature, do not for this reason renounce the hope of being both free and modest, and social and obedient to God.\" That is not modesty; it is a man talking himself down off a competence he could not reach. So the reason an untrained person can open the Meditations and read it is not that the book was simplified for them. It is that the emperor was standing on their side of the gate. He is the only philosopher on this roster who is, by his own written confession, an amateur — and the gate dimensions are near zero because HE COULD NOT PASS THEM EITHER. The engine should say this to the reader, in these words: the man does not require a dialectician of you, because he could not be one. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'I did not waste my time on writers [of histories], or in the'; 'And because thou hast despaired of becoming a dialectician a'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    marcus-aurelius. Every facet carries a falsifier naming an experiment that would\n    kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.30 on The meaning of life / the absurd — this mode is inapt on the\n    problem you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.10\n    (friction without a payoff). This is a real operator now: it ran, and the number is\n    above."
+          }
+        ]
+      }
+    },
+    "flags": {
+      "hostile_deficit": true,
+      "excess_warning": true,
+      "productive_friction": false,
+      "curriculum": true,
+      "notable_line": "On The meaning of life / the absurd — the problem you brought — this mode is apt (0.55), and you do not clash with it — friction 0.00, no distance to cross."
+    }
+  },
+  {
+    "slug": "the-skeptic",
+    "title": "The Skeptic",
+    "tagline": "High openness and sky-high tolerance for ambiguity, low deference to authority, wants corrosion rather than comfort: suspicious of every settled answer, including its own.",
+    "problem_id": "reliability-of-reason",
+    "problem_name": "Skepticism / the reliability of reason",
+    "problem_gloss": "Can reason and the senses be trusted to deliver truth, or is every perspective partial?",
+    "big_five": {
+      "agreeableness.compliance": -0.5,
+      "conscientiousness.order": -0.5,
+      "method.formality": -0.5,
+      "need_for_cognition": 0.5,
+      "openness.aesthetics": 0.5,
+      "openness.ideas": 1.0,
+      "register.consolation": 0.0,
+      "register.corrosion": 0.5,
+      "register.prescription": -0.5,
+      "tolerance_for_ambiguity": 1.0
+    },
+    "stretch": {
+      "ranked": [
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.932,
+          "resonance": 0.978,
+          "supply_fit": 0.8,
+          "confidence": 0.9,
+          "admissible": true,
+          "aptness": 0.95,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.922,
+          "resonance": 0.971,
+          "supply_fit": 0.775,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.6,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.918,
+          "resonance": 0.95,
+          "supply_fit": 0.784,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.5,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.873,
+          "resonance": 0.826,
+          "supply_fit": 0.781,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.1,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.813,
+          "resonance": 0.599,
+          "supply_fit": 0.844,
+          "confidence": 0.833,
+          "admissible": true,
+          "aptness": 0.3,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.596,
+          "resonance": 0.163,
+          "supply_fit": 0.631,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.13,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.59,
+          "resonance": 0.081,
+          "supply_fit": 0.706,
+          "confidence": 0.5,
+          "admissible": true,
+          "aptness": 0.62,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.58,
+          "resonance": 0.078,
+          "supply_fit": 0.675,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.15,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.661,
+          "resonance": 0.149,
+          "supply_fit": 0.863,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.45,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.573,
+          "resonance": 0.016,
+          "supply_fit": 0.725,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.58,
+          "apt_problem": "reliability-of-reason"
+        }
+      ],
+      "reasons": {
+        "zhuangzi/the-inner-chapters": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.98 across the demand dimensions. It is carried by tolerance for ambiguity and openness · ideas — tolerance_for_ambiguity (you +1.00 · this mode +0.95 → +0.95), openness.ideas (you +1.00 · this mode +0.90 → +0.90). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — a philosophy that tells you how to live: the mode runs +0.65 against your +0.00, a surplus of +0.65. It will console you more than you asked to be consoled."
+          },
+          {
+            "kind": "aptness",
+            "text": "On Skepticism / the reliability of reason — the problem you brought — this mode is apt (0.95), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: Zhuangzi almost certainly never read the Dao De Jing. The entire traditional picture — Zhuangzi as the anti-rational mystic disciple of Laozi — depends on the Laozi predating him, and the Mawangdui/Guodian manuscript finds of the 1970s and 1990s pushed that text's emergence LATER. SEP: \"The discoveries in the early 1970s and 1990s together implied a later date for the emergence of the Laozi text. The exact timeline remains unclear, but gives us no reason to doubt Graham's suggestion that Zhuangzi did not know of the text.\" The entry's opening states it flatly: \"Traditional orthodoxy understood Zhuangzi as an anti-rational, credulous follower of a mystical Laozi... Recent archaeological discoveries have largely laid that ancient orthodoxy to rest.\" The founding text of Daoism was, on the current evidence, not an input to its most philosophically sophisticated book. (SEP, 'Zhuangzi', Chad Hansen, rev. 24 Mar 2024, lead paragraphs and §2.) [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'The discoveries in the early 1970s and 1990s together implie'; 'Traditional orthodoxy understood Zhuangzi as an anti-rationa'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    zhuangzi. Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.95 on Skepticism / the reliability of reason — this mode is apt on the\n    problem you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00\n    (but there is no distance here to cross). This is a real operator now: it ran, and\n    the number is above."
+          }
+        ],
+        "camus/the-myth-of-sisyphus": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.97 across the demand dimensions. It is carried by tolerance for ambiguity and openness · ideas — tolerance_for_ambiguity (you +1.00 · this mode +0.85 → +0.85), openness.ideas (you +1.00 · this mode +0.80 → +0.80). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — register.prescription: the mode runs +0.25 against your -0.50, a surplus of +0.75. "
+          },
+          {
+            "kind": "aptness",
+            "text": "On Skepticism / the reliability of reason — the problem you brought — this mode is apt (0.60), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The Stanford Encyclopedia of Philosophy — the reference work of academic philosophy — effectively concedes that the founding text of the absurd does not argue. Its assessment of Camus's method is that he \"asserted rather than argued many of his main ideas, presented others in metaphors,\" that his work contains \"sweeping, unsupported assertions,\" and that on at least one central question \"he does not argue this question either, and rather chooses to demonstrate.\" And Camus agreed, in advance and in print: he told Jeanine Delpech in Les Nouvelles Littéraires in November 1945 that he was not a philosopher because he \"did 'not believe sufficiently in reason to believe in a system',\" and described himself as an artist on the grounds that \"I think according to words and not according to ideas.\" This is not a hostile reading and it is not a debunking — SEP maintains in the same breath that \"the sensuous and lyrical side of these essays, their evocative character, is central to the argument.\" That is the striking part: the lyricism is not a substitute for the philosophy, it is the medium of it. Which is why the near-zero formal gates in this vector are not a flattering concession to make Camus accessible — they are the scholarly consensus about what kind of object The Myth of Sisyphus is, and it means the engine can hand this book to a reader with no training without lying to them. (Locus: SEP, 'Albert Camus', plato.stanford.edu/entries/camus/.) [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'asserted rather than argued many of his main ideas, presente'; 'sweeping, unsupported assertions,'; 'he does not argue this question either, and rather chooses t'; \"did 'not believe sufficiently in reason to believe in a syst\"; 'I think according to words and not according to ideas.'; 'the sensuous and lyrical side of these essays, their evocati'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about camus.\n    Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.60 on Skepticism / the reliability of reason — this mode is apt on the\n    problem you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00\n    (but there is no distance here to cross). This is a real operator now: it ran, and\n    the number is above."
+          }
+        ],
+        "nietzsche/the-genealogist": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.95 across the demand dimensions. It is carried by openness · ideas and tolerance for ambiguity — openness.ideas (you +1.00 · this mode +0.95 → +0.95), tolerance_for_ambiguity (you +1.00 · this mode +0.80 → +0.80). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "aptness",
+            "text": "On Skepticism / the reliability of reason — the problem you brought — this mode is apt (0.50), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: In the Genealogy's Preface Nietzsche offers his own worked example of how to read him: he says the Third Essay is nothing but a commentary on a single aphorism — \"an aphorism is prefixed to that essay, the essay itself is its commentary\" (GM Preface §8, Samuel trans.) — and warns in the same breath that \"it will take some time yet for my writings to become readable.\" He was right by more than a century, and about his own professional readers: for ~110 years scholars assumed the aphorism meant was the Zarathustra epigraph printed above the essay. It is not. SEP, verbatim: \"Maudemarie Clark (1997), John Wilcox (1997), and Christopher Janaway (1997) showed convincingly that the aphorism in question appears in section 1 of the Third Treatise, and is not the Treatise's epigram.\" So the single passage Nietzsche chose to demonstrate his art of reading was itself misread, by the specialists, until 1997 — which is why barrier.textual_close_reading here is 0.92 and not a vibe. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'an aphorism is prefixed to that essay, the essay itself is i'; 'it will take some time yet for my writings to become readabl'; 'Maudemarie Clark (1997), John Wilcox (1997), and Christopher'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    nietzsche. Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.50 on Skepticism / the reliability of reason — this mode is apt on the\n    problem you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00\n    (but there is no distance here to cross). This is a real operator now: it ran, and\n    the number is above."
+          }
+        ]
+      }
+    },
+    "break": {
+      "ranked": [
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.0,
+          "resonance": 0.081,
+          "supply_fit": 0.706,
+          "confidence": 0.5,
+          "admissible": true,
+          "aptness": 0.62,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.0,
+          "resonance": 0.078,
+          "supply_fit": 0.675,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.15,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.0,
+          "resonance": 0.95,
+          "supply_fit": 0.784,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.5,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.0,
+          "resonance": 0.599,
+          "supply_fit": 0.844,
+          "confidence": 0.833,
+          "admissible": true,
+          "aptness": 0.3,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.0,
+          "resonance": 0.826,
+          "supply_fit": 0.781,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.1,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.0,
+          "resonance": 0.971,
+          "supply_fit": 0.775,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.6,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.0,
+          "resonance": 0.978,
+          "supply_fit": 0.8,
+          "confidence": 0.9,
+          "admissible": true,
+          "aptness": 0.95,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.0,
+          "resonance": 0.163,
+          "supply_fit": 0.631,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.13,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.562,
+          "resonance": 0.016,
+          "supply_fit": 0.725,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.58,
+          "apt_problem": "reliability-of-reason"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.557,
+          "resonance": 0.149,
+          "supply_fit": 0.863,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.45,
+          "apt_problem": "reliability-of-reason"
+        }
+      ],
+      "reasons": {
+        "russell/logical-atomist": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.08 across the demand dimensions. It is carried by openness · ideas and need for cognition — openness.ideas (you +1.00 · this mode +0.92 → +0.92), need_for_cognition (you +0.50 · this mode +0.95 → +0.47). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "deficit",
+            "text": "So here is the part you will not like. You want a philosophy that tells you how to live — you reported +0.00. This mode supplies -0.85. The gap is 0.85, and it is the largest thing standing between you and this card. It is not that the mode is THIN on this — it has nothing to say to you here at all, and that is not an oversight, it is a scope boundary. Go to this mode for that and you will come back with a beautifully-argued absence, and you will conclude that philosophy is cold, and you will be wrong, and it will be our fault for sending you. It also short-changes you on beauty in the prose (gap 0.85)."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: comfort with an unsettled question (it wants -0.60, you are +1.00); taste for formal method (it wants +0.95, you are -0.50); patience for a system (it wants +0.85, you are -0.50). On Skepticism / the reliability of reason this mode is apt (0.62), but you do not clash with it here — no distance to cross."
+          },
+          {
+            "kind": "aptness",
+            "text": "On Skepticism / the reliability of reason — the problem you brought — this mode is apt (0.62), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: Wrote the Introduction to Mathematical Philosophy in Brixton Prison, where he was serving six months for a pacifist article — a canonical text of FORMAL LOGIC composed while imprisoned for MORAL CONVICTION. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: (none quoted). If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    russell. Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.62 on Skepticism / the reliability of reason — this mode is apt on the\n    problem you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00\n    (but there is no distance here to cross). This is a real operator now: it ran, and\n    the number is above."
+          }
+        ]
+      }
+    },
+    "flags": {
+      "hostile_deficit": false,
+      "excess_warning": true,
+      "productive_friction": false,
+      "curriculum": true,
+      "notable_line": "On Skepticism / the reliability of reason — the problem you brought — this mode is apt (0.95), and you do not clash with it — friction 0.00, no distance to cross."
+    }
+  },
+  {
+    "slug": "the-devastated",
+    "title": "The Devastated",
+    "tagline": "Low need-for-cognition, low tolerance for ambiguity, and a register profile that is almost pure consolation-seeking: grief wants a hand held, not a question dissolved.",
+    "problem_id": "problem-of-evil",
+    "problem_name": "The problem of evil / suffering",
+    "problem_gloss": "Why do we suffer, and how should undeserved suffering be understood or borne?",
+    "big_five": {
+      "agreeableness.compliance": 0.0,
+      "conscientiousness.order": 0.0,
+      "method.formality": -0.5,
+      "need_for_cognition": 0.0,
+      "openness.aesthetics": 0.5,
+      "openness.ideas": 0.0,
+      "register.consolation": 1.0,
+      "register.corrosion": -1.0,
+      "register.prescription": 0.5,
+      "tolerance_for_ambiguity": -0.5
+    },
+    "stretch": {
+      "ranked": [
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.783,
+          "resonance": 0.664,
+          "supply_fit": 0.669,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.78,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.765,
+          "resonance": 0.52,
+          "supply_fit": 0.775,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.8,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.526,
+          "resonance": -0.044,
+          "supply_fit": 0.637,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.35,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.558,
+          "resonance": -0.026,
+          "supply_fit": 0.725,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.62,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.528,
+          "resonance": -0.129,
+          "supply_fit": 0.744,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.3,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.474,
+          "resonance": -0.128,
+          "supply_fit": 0.562,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.12,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.46,
+          "resonance": 0.018,
+          "supply_fit": 0.346,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.6,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.443,
+          "resonance": -0.238,
+          "supply_fit": 0.588,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.4,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.431,
+          "resonance": -0.331,
+          "supply_fit": 0.656,
+          "confidence": 0.833,
+          "admissible": false,
+          "aptness": 0.5,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.389,
+          "resonance": -0.118,
+          "supply_fit": 0.269,
+          "confidence": 0.5,
+          "admissible": false,
+          "aptness": 0.05,
+          "apt_problem": "problem-of-evil"
+        }
+      ],
+      "reasons": {
+        "epictetus/the-handbook": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.66 across the demand dimensions. It is carried by tolerance for ambiguity and method · formality — tolerance_for_ambiguity (you -0.50 · this mode -0.70 → +0.35), method.formality (you -0.50 · this mode -0.55 → +0.28). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — having your questions dissolved rather than answered: the mode runs +0.40 against your -1.00, a surplus of +1.40. You came for an answer. This mode's signature move is to demonstrate that your question was malformed and dissolve it. Some readers find that the most liberating thing they have ever read. You have told us you are not one of them."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The problem of evil / suffering — the problem you brought — this mode is apt (0.78), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The premise that Epictetus \"meant you to read it\" and Marcus did not is HALF WRONG, and the correction is in the first paragraph of the Discourses. Arrian's prefatory letter to Lucius Gellius disclaims authorship, intention, and publication all at once: \"I neither wrote these Discourses of Epictetus in the way in which a man might write such things; nor did I make them public myself, inasmuch as I declare that I did not even write them. But whatever I heard him say, the same I attempted to write down in his own words as nearly as possible, for the purpose of preserving them as memorials to myself\" — and then, astonishingly, \"I do not know how they fell into the hands of the public, without either my consent or my knowledge.\"\n\nSo BOTH founding Stoic texts are, on their own testimony, private documents that escaped. Marcus's notebook was self-address; Arrian's was a student's lecture notes kept as a memento for himself. The real distinction survives but must be restated precisely, and it is the one that earns the vector: Epictetus intended the WORDS to be heard by a person who could talk back — Arrian's own gloss is that they are \"such as a man would address without preparation to another, not such as a man would write with the view of others reading them.\" That is not private self-consolation. It is unrehearsed speech aimed at a second person. It is why the mode reaches +0.95 on prescription and +0.40 on corrosion: you are being addressed, and you can be refused.\n\nThe sting in the tail: SEP reports that a minority of scholars, \"especially Dobbin (1998), argue that Epictetus must have composed them himself, the role of Arrian being merely to preserve a mild fiction of orality.\" If Dobbin is right, the most famous humility in ancient philosophy — \"I did not even write them\" — is a literary device, and several of these numbers move. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'meant you to read it'; 'I neither wrote these Discourses of Epictetus in the way in '; 'I do not know how they fell into the hands of the public, wi'; 'such as a man would address without preparation to another, '; 'especially Dobbin (1998), argue that Epictetus must have com'; 'I did not even write them'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    epictetus. Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.78 on The problem of evil / suffering — this mode is apt on the problem\n    you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but\n    there is no distance here to cross). This is a real operator now: it ran, and the\n    number is above."
+          }
+        ],
+        "marcus-aurelius/the-meditations": [
+          {
+            "kind": "resonance",
+            "text": "You and this mode agree, on balance: resonance +0.52 across the demand dimensions. It is carried by method · formality and tolerance for ambiguity — method.formality (you -0.50 · this mode -0.70 → +0.35), tolerance_for_ambiguity (you -0.50 · this mode -0.25 → +0.12). What the mode requires of a reader, you brought."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — having your questions dissolved rather than answered: the mode runs +0.30 against your -1.00, a surplus of +1.30. You came for an answer. This mode's signature move is to demonstrate that your question was malformed and dissolve it. Some readers find that the most liberating thing they have ever read. You have told us you are not one of them."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The problem of evil / suffering — the problem you brought — this mode is apt (0.80), and you do not clash with it — friction 0.00, no distance to cross."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The most accessible book on the roster is accessible because its author had given up on philosophy's technical apparatus — and he says so twice, in writing, to himself. Stoicism had three parts: logic, physics, ethics. Marcus abandoned two of them. In Book I he thanks the gods that \"I did not waste my time on writers [of histories], or in the resolution of syllogisms, or occupy myself about the investigation of appearances in the heavens\" (I.17) — and at VII.67, in a passage nobody quotes, he is consoling himself for a FAILURE: \"And because thou hast despaired of becoming a dialectician and skilled in the knowledge of nature, do not for this reason renounce the hope of being both free and modest, and social and obedient to God.\" That is not modesty; it is a man talking himself down off a competence he could not reach. So the reason an untrained person can open the Meditations and read it is not that the book was simplified for them. It is that the emperor was standing on their side of the gate. He is the only philosopher on this roster who is, by his own written confession, an amateur — and the gate dimensions are near zero because HE COULD NOT PASS THEM EITHER. The engine should say this to the reader, in these words: the man does not require a dialectician of you, because he could not be one. [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'I did not waste my time on writers [of histories], or in the'; 'And because thou hast despaired of becoming a dialectician a'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about\n    marcus-aurelius. Every facet carries a falsifier naming an experiment that would\n    kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.80 on The problem of evil / suffering — this mode is apt on the problem\n    you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.00 (but\n    there is no distance here to cross). This is a real operator now: it ran, and the\n    number is above."
+          }
+        ],
+        "camus/the-myth-of-sisyphus": [
+          {
+            "kind": "resonance",
+            "text": "YOU DO NOT RESONATE WITH THIS MODE. Resonance is -0.04 — negative, over the whole demand space. Two things do line up — method.formality (you -0.50 · this mode -0.75 → +0.38) — and they are outweighed. What the mode requires of a reader, you largely did not bring: tolerance_for_ambiguity (you -0.50 · this mode +0.85 → -0.42). We could have opened with the two terms that flatter you. That is what a horoscope does."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — having your questions dissolved rather than answered: the mode runs +0.70 against your -1.00, a surplus of +1.70. You came for an answer. This mode's signature move is to demonstrate that your question was malformed and dissolve it. Some readers find that the most liberating thing they have ever read. You have told us you are not one of them."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: comfort with an unsettled question (it wants +0.85, you are -0.50). On The problem of evil / suffering this mode is inapt (0.35) — this is friction without a payoff."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The problem of evil / suffering — the problem you brought — this mode is inapt (0.35), and you clash with it — friction 0.02, friction without a payoff."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The Stanford Encyclopedia of Philosophy — the reference work of academic philosophy — effectively concedes that the founding text of the absurd does not argue. Its assessment of Camus's method is that he \"asserted rather than argued many of his main ideas, presented others in metaphors,\" that his work contains \"sweeping, unsupported assertions,\" and that on at least one central question \"he does not argue this question either, and rather chooses to demonstrate.\" And Camus agreed, in advance and in print: he told Jeanine Delpech in Les Nouvelles Littéraires in November 1945 that he was not a philosopher because he \"did 'not believe sufficiently in reason to believe in a system',\" and described himself as an artist on the grounds that \"I think according to words and not according to ideas.\" This is not a hostile reading and it is not a debunking — SEP maintains in the same breath that \"the sensuous and lyrical side of these essays, their evocative character, is central to the argument.\" That is the striking part: the lyricism is not a substitute for the philosophy, it is the medium of it. Which is why the near-zero formal gates in this vector are not a flattering concession to make Camus accessible — they are the scholarly consensus about what kind of object The Myth of Sisyphus is, and it means the engine can hand this book to a reader with no training without lying to them. (Locus: SEP, 'Albert Camus', plato.stanford.edu/entries/camus/.) [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'asserted rather than argued many of his main ideas, presente'; 'sweeping, unsupported assertions,'; 'he does not argue this question either, and rather chooses t'; \"did 'not believe sufficiently in reason to believe in a syst\"; 'I think according to words and not according to ideas.'; 'the sensuous and lyrical side of these essays, their evocati'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about camus.\n    Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.35 on The problem of evil / suffering — this mode is inapt on the\n    problem you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.02\n    (friction without a payoff). This is a real operator now: it ran, and the number is\n    above."
+          }
+        ]
+      }
+    },
+    "break": {
+      "ranked": [
+        {
+          "subject": "camus",
+          "mode": "the-myth-of-sisyphus",
+          "fit": 0.015,
+          "resonance": -0.044,
+          "supply_fit": 0.637,
+          "confidence": 0.733,
+          "admissible": true,
+          "aptness": 0.35,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "marcus-aurelius",
+          "mode": "the-meditations",
+          "fit": 0.0,
+          "resonance": 0.52,
+          "supply_fit": 0.775,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.8,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "epictetus",
+          "mode": "the-handbook",
+          "fit": 0.0,
+          "resonance": 0.664,
+          "supply_fit": 0.669,
+          "confidence": 0.933,
+          "admissible": true,
+          "aptness": 0.78,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "kierkegaard",
+          "mode": "anti-climacus",
+          "fit": 0.663,
+          "resonance": -0.331,
+          "supply_fit": 0.656,
+          "confidence": 0.833,
+          "admissible": false,
+          "aptness": 0.5,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "de-beauvoir",
+          "mode": "the-ethics-of-ambiguity",
+          "fit": 0.618,
+          "resonance": -0.129,
+          "supply_fit": 0.744,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.3,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "zhuangzi",
+          "mode": "the-inner-chapters",
+          "fit": 0.609,
+          "resonance": -0.238,
+          "supply_fit": 0.588,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.4,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "spinoza",
+          "mode": "the-geometer-of-blessedness",
+          "fit": 0.577,
+          "resonance": -0.026,
+          "supply_fit": 0.725,
+          "confidence": 0.9,
+          "admissible": false,
+          "aptness": 0.62,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "wittgenstein",
+          "mode": "the-tractatus",
+          "fit": 0.563,
+          "resonance": -0.128,
+          "supply_fit": 0.562,
+          "confidence": 0.967,
+          "admissible": false,
+          "aptness": 0.12,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "russell",
+          "mode": "logical-atomist",
+          "fit": 0.472,
+          "resonance": -0.118,
+          "supply_fit": 0.269,
+          "confidence": 0.5,
+          "admissible": false,
+          "aptness": 0.05,
+          "apt_problem": "problem-of-evil"
+        },
+        {
+          "subject": "nietzsche",
+          "mode": "the-genealogist",
+          "fit": 0.448,
+          "resonance": 0.018,
+          "supply_fit": 0.346,
+          "confidence": 0.933,
+          "admissible": false,
+          "aptness": 0.6,
+          "apt_problem": "problem-of-evil"
+        }
+      ],
+      "reasons": {
+        "camus/the-myth-of-sisyphus": [
+          {
+            "kind": "resonance",
+            "text": "YOU DO NOT RESONATE WITH THIS MODE. Resonance is -0.04 — negative, over the whole demand space. Two things do line up — method.formality (you -0.50 · this mode -0.75 → +0.38) — and they are outweighed. What the mode requires of a reader, you largely did not bring: tolerance_for_ambiguity (you -0.50 · this mode +0.85 → -0.42). We could have opened with the two terms that flatter you. That is what a horoscope does."
+          },
+          {
+            "kind": "excess",
+            "text": "And it will do this to you whether you asked for it or not — having your questions dissolved rather than answered: the mode runs +0.70 against your -1.00, a surplus of +1.70. You came for an answer. This mode's signature move is to demonstrate that your question was malformed and dissolve it. Some readers find that the most liberating thing they have ever read. You have told us you are not one of them."
+          },
+          {
+            "kind": "clash",
+            "text": "Where you will fight it: comfort with an unsettled question (it wants +0.85, you are -0.50). On The problem of evil / suffering this mode is inapt (0.35) — this is friction without a payoff."
+          },
+          {
+            "kind": "aptness",
+            "text": "On The problem of evil / suffering — the problem you brought — this mode is inapt (0.35), and you clash with it — friction 0.02, friction without a payoff."
+          },
+          {
+            "kind": "finding",
+            "text": "And the thing you should actually know, which is not about you at all: The Stanford Encyclopedia of Philosophy — the reference work of academic philosophy — effectively concedes that the founding text of the absurd does not argue. Its assessment of Camus's method is that he \"asserted rather than argued many of his main ideas, presented others in metaphors,\" that his work contains \"sweeping, unsupported assertions,\" and that on at least one central question \"he does not argue this question either, and rather chooses to demonstrate.\" And Camus agreed, in advance and in print: he told Jeanine Delpech in Les Nouvelles Littéraires in November 1945 that he was not a philosopher because he \"did 'not believe sufficiently in reason to believe in a system',\" and described himself as an artist on the grounds that \"I think according to words and not according to ideas.\" This is not a hostile reading and it is not a debunking — SEP maintains in the same breath that \"the sensuous and lyrical side of these essays, their evocative character, is central to the argument.\" That is the striking part: the lyricism is not a substitute for the philosophy, it is the medium of it. Which is why the near-zero formal gates in this vector are not a flattering concession to make Camus accessible — they are the scholarly consensus about what kind of object The Myth of Sisyphus is, and it means the engine can hand this book to a reader with no training without lying to them. (Locus: SEP, 'Albert Camus', plato.stanford.edu/entries/camus/.) [STIPULATED — this is our reading. The quoted span has NOT been checked against the primary text, because we have never fetched it. Falsifier: Fetch the primary text named in this finding's own locus and string-check the quoted spans: 'asserted rather than argued many of his main ideas, presente'; 'sweeping, unsupported assertions,'; 'he does not argue this question either, and rather chooses t'; \"did 'not believe sufficiently in reason to believe in a syst\"; 'I think according to words and not according to ideas.'; 'the sensuous and lyrical side of these essays, their evocati'. If a span is absent from the text, this finding is a FABRICATION and is deleted. Until that fetch happens the check CANNOT RUN, and the claim stays ours.]"
+          },
+          {
+            "kind": "ledger",
+            "text": "─ WHAT THIS RESTS ON, AND WHAT IT CANNOT SEE:\n  · The philosopher's disposition vector is OURS (STIPULATED) — not a fact about camus.\n    Every facet carries a falsifier naming an experiment that would kill it.\n  · Your vector is what YOU told us (testimonial). We did not measure you.\n  · A derived claim is never stronger than its weakest input, so THIS MATCH IS\n    STIPULATED TOO. The arithmetic is sound. It was sound ON A GUESS, and it does not\n    get promoted for being tidy.\n  · APTNESS = 0.35 on The problem of evil / suffering — this mode is inapt on the\n    problem you brought. PRODUCTIVE FRICTION = aptness × dispositional distance = 0.02\n    (friction without a payoff). This is a real operator now: it ran, and the number is\n    above."
+          }
+        ]
+      }
+    },
+    "flags": {
+      "hostile_deficit": false,
+      "excess_warning": true,
+      "productive_friction": false,
+      "curriculum": true,
+      "notable_line": "On The problem of evil / suffering — the problem you brought — this mode is apt (0.78), and you do not clash with it — friction 0.00, no distance to cross."
+    }
+  }
+]</script>
+<script>
+"use strict";
+const DATA = JSON.parse(document.getElementById('gallery-data').textContent);
+
+/* ---------- lookups (display only; not data) ---------- */
+const PHIL = {
+  "russell":"Bertrand Russell","spinoza":"Baruch Spinoza","de-beauvoir":"Simone de Beauvoir",
+  "zhuangzi":"Zhuangzi","camus":"Albert Camus","epictetus":"Epictetus","marcus-aurelius":"Marcus Aurelius",
+  "wittgenstein":"Ludwig Wittgenstein","kierkegaard":"Søren Kierkegaard","nietzsche":"Friedrich Nietzsche"
+};
+const MODES = {
+  "logical-atomist":"the logical atomist","the-geometer-of-blessedness":"the geometer of blessedness",
+  "the-ethics-of-ambiguity":"the ethics of ambiguity","the-inner-chapters":"the inner chapters",
+  "the-myth-of-sisyphus":"the myth of Sisyphus","the-handbook":"the handbook","the-meditations":"the meditations",
+  "the-tractatus":"the Tractatus","anti-climacus":"Anti-Climacus","the-genealogist":"the genealogist"
+};
+const DIM = {
+  "agreeableness.compliance":"deference to authority","conscientiousness.order":"patience for a system",
+  "method.formality":"taste for formal method","need_for_cognition":"appetite for effortful thought",
+  "openness.aesthetics":"hunger for beauty","openness.ideas":"openness to ideas",
+  "register.consolation":"want for consolation","register.corrosion":"tolerance for corrosion",
+  "register.prescription":"want for how-to-live","tolerance_for_ambiguity":"comfort with ambiguity"
+};
+const phil = s => PHIL[s]||s;
+const mode = m => MODES[m]||m.replace(/-/g,' ');
+const dim  = k => DIM[k]||k;
+const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const f2   = x => (Math.round(x*100)/100).toFixed(2);
+const sgn  = x => (x>=0?'+':'−')+f2(Math.abs(x));
+
+/* split a finding beat into prose + the [STIPULATED …] tail */
+function splitStip(t){
+  const i = t.indexOf('[STIPULATED');
+  if(i<0) return {prose:t, stip:''};
+  return {prose:t.slice(0,i).trim(), stip:t.slice(i).replace(/^\[|\]$/g,'').trim()};
+}
+function beatByKind(reasons, key, kind){
+  const arr = (reasons&&reasons[key])||[];
+  return arr.find(b=>b.kind===kind);
+}
+
+/* ---------- component builders ---------- */
+function ribbon(bf){
+  const rows = Object.keys(bf).map(k=>{
+    const v = bf[k], pct = Math.abs(v)*50;
+    const cls = v>0.001?'pos':(v<-0.001?'neg':'zero');
+    const fill = v>0 ? `<i class="fillp" style="width:${pct}%"></i>` :
+                 v<0 ? `<i class="filln" style="width:${pct}%"></i>` : '';
+    return `<div class="ribrow">
+      <div class="rlab" title="${esc(k)}">${esc(dim(k))}</div>
+      <div class="ribtrack"><span class="mid"></span>${fill}</div>
+      <div class="rval ${cls}">${v===0?' 0.00':sgn(v)}</div>
+    </div>`;
+  }).join('');
+  return `<section class="ribbon"><h3>disposition vector — what you told us</h3>${rows}</section>`;
+}
+function meter(kind,val){
+  const cls = kind==='apt'?'apt':'fit';
+  return `<div class="meter ${cls}"><div class="track ${cls}"><i style="width:${Math.max(0,Math.min(1,val))*100}%"></i></div><span class="val">${f2(val)}</span></div>`;
+}
+function rankTable(rows){
+  const adm = rows.filter(r=>r.admissible).slice().sort((a,b)=>b.fit-a.fit);
+  const ref = rows.filter(r=>!r.admissible).slice().sort((a,b)=>b.fit-a.fit);
+  const row = (r,i,refused)=>`<tr class="${refused?'refused':''}">
+    <td class="rk">${refused?'—':String(i+1).padStart(2,'0')}</td>
+    <td class="who"><span class="nm">${esc(phil(r.subject))}</span>${refused?'<span class="gate">⦸ gated</span>':''}<br><span class="md">${esc(mode(r.mode))}</span></td>
+    <td class="mfit">${meter('fit',r.fit)}</td>
+    <td class="mapt">${meter('apt',r.aptness)}</td>
+    <td class="num reson ${r.resonance>=0?'pos':'neg'}">${sgn(r.resonance)}</td>
+  </tr>`;
+  return `<div class="rank-wrap"><table class="rank">
+    <thead><tr><th>#</th><th>thinker · mode</th><th>fit — temperament</th><th>aptness — on your problem</th><th class="num">resonance</th></tr></thead>
+    <tbody>
+      ${adm.map((r,i)=>row(r,i,false)).join('')}
+      ${ref.length?`<tr class="sep"><td colspan="5" style="padding:10px 10px 4px;font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--oxblood);border:0">refused by the gate — shown, never ranked</td></tr>`:''}
+      ${ref.map((r,i)=>row(r,i,true)).join('')}
+    </tbody></table></div>`;
+}
+function topAdmissible(rows){
+  return rows.filter(r=>r.admissible).slice().sort((a,b)=>b.fit-a.fit)[0];
+}
+function renderBeat(b){
+  if(!b) return '';
+  const tag = b.kind.toUpperCase();
+  if(b.kind==='finding'){
+    const {prose,stip}=splitStip(b.text);
+    return `<p class="beat finding"><span class="kindtag">the finding — about the thinker, marked stipulated</span>${esc(prose)}
+      ${stip?`<span class="stip"><b>${esc(stip)}</b></span>`:''}</p>`;
+  }
+  return `<p class="beat ${b.kind}"><span class="kindtag">${esc(tag)}</span>${esc(b.text)}</p>`;
+}
+
+/* ---------- slide spec ---------- */
+const P = {}; DATA.forEach(p=>P[p.slug]=p);
+const slides = [];
+
+/* 1 — title */
+slides.push({eyebrow:'the thesis', html:()=>`<div class="case">
+  <p class="eyebrow"><span>the instrument</span><span class="tick"></span><span class="synthetic">5 synthetic readings</span></p>
+  <p class="title-thesis">Tell it <em>who you are</em>. It tells you which philosophers you'd resonate with — and whether they're any <em>good</em> on the problem you actually brought.</p>
+  <p class="title-sub">The matchmaker decomposes a temperament into a vector, decomposes each thinker into the same space, and crosses them. What comes back is ranked, and each rank carries a legible — sometimes hostile — reason. Below are the engine's real outputs for five synthetic archetypes. No real person said any of this.</p>
+  <div class="chips">
+    ${DATA.map((p,i)=>`<span class="chip"><b>${String(i+1).padStart(2,'0')}</b> ${esc(p.title)}</span>`).join('')}
+  </div>
+</div>`});
+
+/* 2 — how to read a reading (legend) */
+slides.push({eyebrow:'how to read a reading', html:()=>`<div class="case">
+  <p class="eyebrow"><span>the legend</span><span class="tick"></span><span>three numbers, one gate</span></p>
+  <div class="two">
+    <div>
+      <h3 class="block-h">fit — the temperament match</h3>
+      ${meter('fit',0.88)}
+      <p class="section-note">How much this thinker's mode suits your disposition. A person reduced to a vector, in monospace. High fit means "you'd get on."</p>
+      <div class="hairline"></div>
+      <h3 class="block-h">aptness — on the problem you brought</h3>
+      ${meter('apt',0.90)}
+      <p class="section-note">A separate operator: is this thinker actually <em>good</em> on your question? It can flatly contradict fit — a mind you'd love, with nothing to say on what you asked.</p>
+    </div>
+    <div>
+      <h3 class="block-h">the gate</h3>
+      <p class="section-note">Some modes are <span class="gate">⦸ gated</span> — inadmissible for you (a barrier you don't clear). They are shown, greyed, and <b>never</b> interleaved as if rankable.</p>
+      <div class="hairline"></div>
+      <h3 class="block-h">the marks</h3>
+      <ul class="limits">
+        <li><span class="mk" style="color:var(--teal)">resonance</span><span>agreement across the demand dimensions, signed −1…+1.</span></li>
+        <li><span class="mk" style="color:var(--oxblood);border-color:color-mix(in srgb,var(--oxblood) 40%,transparent)">deficit / excess</span><span>the hostile line: what the mode withholds, or forces on you unasked.</span></li>
+        <li><span class="mk" style="color:var(--amber);border-color:color-mix(in srgb,var(--amber) 40%,transparent)">stipulated</span><span>every thinker-vector and finding is our reading, with a named falsifier.</span></li>
+      </ul>
+    </div>
+  </div>
+</div>`});
+
+/* per-persona slide factories */
+function readingSlide(p,idx){
+  return {eyebrow:p.title+' — the reading', persona:p.slug, html:()=>`<div class="case">
+    <p class="eyebrow"><span class="persona-no">reading ${String(idx+1).padStart(2,'0')} / 05</span><span class="tick"></span><span class="synthetic">synthetic persona</span></p>
+    <h2 class="persona-title">${esc(p.title)}</h2>
+    <p class="tagline">${esc(p.tagline)}</p>
+    <div class="problem">
+      <span class="lab">the problem they brought</span>
+      <span class="name">${esc(p.problem_name)}</span>
+      <span class="gloss">${esc(p.problem_gloss)}</span>
+    </div>
+    ${ribbon(p.big_five)}
+    ${rankTable(p.stretch.ranked)}
+  </div>`};
+}
+function verdictSlide(p){
+  const top = topAdmissible(p.stretch.ranked);
+  const key = top.subject+'/'+top.mode;
+  const R = p.stretch.reasons;
+  const money = beatByKind(R,key,'deficit') || beatByKind(R,key,'excess');
+  const ledger = beatByKind(R,key,'ledger');
+  return {eyebrow:p.title+' — the verdict', persona:p.slug, html:()=>`<div class="case">
+    <p class="eyebrow"><span>${esc(p.title)} · the verdict</span><span class="tick"></span><span>top match — ${esc(phil(top.subject))}</span></p>
+    <h2 class="persona-title" style="font-size:clamp(1.5rem,4vw,2.4rem)">${esc(phil(top.subject))} <span style="font-family:var(--sans);font-size:.5em;font-style:italic;color:var(--ink-mute)">· ${esc(mode(top.mode))}</span></h2>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin:14px 0 20px">
+      <div><span class="stat"><span class="sl">fit</span></span><div class="sv ink" style="font-family:var(--mono);font-size:2rem">${f2(top.fit)}</div></div>
+      <div><span class="stat"><span class="sl">aptness</span></span><div class="sv teal" style="font-family:var(--mono);font-size:2rem">${f2(top.aptness)}</div></div>
+      <div><span class="stat"><span class="sl">resonance</span></span><div class="sv ${top.resonance>=0?'teal':'ox'}" style="font-family:var(--mono);font-size:2rem">${sgn(top.resonance)}</div></div>
+    </div>
+    ${renderBeat(beatByKind(R,key,'resonance'))}
+    ${renderBeat(money)}
+    ${renderBeat(beatByKind(R,key,'aptness'))}
+    ${ledger?`<details><summary style="font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);cursor:pointer;margin-top:6px">what this rests on, and what it cannot see</summary><pre class="ledger">${esc(ledger.text)}</pre></details>`:''}
+  </div>`};
+}
+
+/* ---- persona reading + verdict, then the specific twist ---- */
+const RIG=P['the-rigorist'], SEE=P['the-seeker'], AES=P['the-aesthete'], SKE=P['the-skeptic'], DEV=P['the-devastated'];
+
+slides.push(readingSlide(RIG,0));
+slides.push(verdictSlide(RIG));
+
+/* rigorist twist — HERO aptness contradiction */
+(function(){
+  const rows=RIG.stretch.ranked, russ=rows.find(r=>r.subject==='russell'), spin=rows.find(r=>r.subject==='spinoza');
+  slides.push({eyebrow:'the rigorist — the twist', persona:'the-rigorist', html:()=>`<div class="case">
+    <p class="eyebrow"><span>the aptness operator</span><span class="tick"></span><span class="synthetic">fit says one thing, the problem says another</span></p>
+    <p class="lead" style="max-width:44ch;margin-bottom:6px">Your mind matches the logician. On the question you actually asked, he has nothing to say.</p>
+    <div class="versus">
+      <div class="vcard">
+        <div class="vnm">${esc(phil('russell'))}</div><div class="vmd">${esc(mode('logical-atomist'))}</div>
+        <div class="stat"><span class="sl">fit — temperament</span><span class="sv big ink">${f2(russ.fit)}</span></div>
+        <div class="stat"><span class="sl">aptness — the good life</span><span class="sv big ox">${f2(russ.aptness)}</span></div>
+      </div>
+      <div class="vmid">versus</div>
+      <div class="vcard">
+        <div class="vnm">${esc(phil('spinoza'))}</div><div class="vmd">${esc(mode('the-geometer-of-blessedness'))}</div>
+        <div class="stat"><span class="sl">fit — temperament</span><span class="sv big ink">${f2(spin.fit)}</span></div>
+        <div class="stat"><span class="sl">aptness — the good life</span><span class="sv big teal">${f2(spin.aptness)}</span></div>
+      </div>
+    </div>
+    <p class="punch">Nearly identical fit — <span class="n">${f2(russ.fit)}</span> against <span class="n">${f2(spin.fit)}</span>. But on <em>${esc(RIG.problem_name)}</em>, Russell scores <span class="oxn">${f2(russ.aptness)}</span> and Spinoza <span class="tealn">${f2(spin.aptness)}</span>. Temperament would have handed you the wrong book. Aptness is the operator that catches it.</p>
+  </div>`});
+})();
+
+/* rigorist break spotlight — productive friction */
+(function(){
+  const m=RIG.break.ranked.find(r=>r.subject==='marcus-aurelius');
+  const key='marcus-aurelius/the-meditations';
+  const apt=beatByKind(RIG.break.reasons,key,'aptness');
+  const clash=beatByKind(RIG.break.reasons,key,'clash');
+  slides.push({eyebrow:'the rigorist — the break', persona:'the-rigorist', html:()=>`<div class="case">
+    <p class="eyebrow"><span>the break list — friction worth having</span><span class="tick"></span><span>${esc(phil('marcus-aurelius'))}</span></p>
+    <p class="lead" style="max-width:46ch">Not every match is a mirror. The break list ranks the thinkers you'd <em>fight</em> — and asks whether the fight pays.</p>
+    <div style="display:flex;gap:26px;flex-wrap:wrap;margin:20px 0">
+      <div><div class="stat"><span class="sl">friction</span></div><div class="sv big teal" style="font-family:var(--mono)">0.64</div></div>
+      <div><div class="stat"><span class="sl">aptness</span></div><div class="sv big ink" style="font-family:var(--mono)">${f2(m.aptness)}</div></div>
+      <div><div class="stat"><span class="sl">resonance</span></div><div class="sv big ox" style="font-family:var(--mono)">${sgn(m.resonance)}</div></div>
+    </div>
+    ${renderBeat(clash)}
+    ${renderBeat(apt)}
+  </div>`});
+})();
+
+slides.push(readingSlide(SEE,1));
+slides.push(verdictSlide(SEE));
+
+/* seeker twist — finding pull-quote */
+(function(){
+  const key='marcus-aurelius/the-meditations';
+  const find=beatByKind(SEE.stretch.reasons,key,'finding');
+  const {stip}=splitStip(find.text);
+  slides.push({eyebrow:'the seeker — the finding', persona:'the-seeker', html:()=>`<div class="case">
+    <p class="eyebrow"><span>the finding — about the thinker, not you</span><span class="tick"></span><span style="color:var(--amber)">stipulated</span></p>
+    <p class="pull">The most accessible book on the roster is accessible because <span class="hl">the emperor was standing on their side of the gate.</span></p>
+    <p class="beat finding" style="margin-top:22px">By his own written confession Marcus Aurelius abandoned two of Stoicism's three parts — he thanks the gods he never mastered the syllogism, and at VII.67 consoles himself for <em>failing</em> to become a dialectician. He does not require of the reader a competence he could not reach himself. That is why the gate dimensions sit near zero — not simplification, biography.
+      <span class="stip"><b>${esc(stip)}</b></span>
+    </p>
+  </div>`});
+})();
+
+slides.push(readingSlide(AES,2));
+slides.push(verdictSlide(AES));
+
+/* aesthete twist — fit-order vs aptness-order disagree */
+(function(){
+  const adm=AES.stretch.ranked.filter(r=>r.admissible);
+  const byFit=adm.slice().sort((a,b)=>b.fit-a.fit).slice(0,6);
+  const byApt=adm.slice().sort((a,b)=>b.aptness-a.aptness).slice(0,6);
+  const li=(r,rankKind)=>`<li class="${r.subject==='camus'?'hi':''}">
+      <span class="oi">${String((rankKind==='fit'?byFit:byApt).indexOf(r)+1).padStart(2,'0')}</span>
+      <span class="on">${esc(phil(r.subject))}</span>
+      <span class="ov ${rankKind==='apt'?'teal':''}">${f2(rankKind==='fit'?r.fit:r.aptness)}</span></li>`;
+  slides.push({eyebrow:'the aesthete — the twist', persona:'the-aesthete', html:()=>`<div class="case">
+    <p class="eyebrow"><span>two orderings that disagree</span><span class="tick"></span><span class="synthetic">the same ten modes, sorted twice</span></p>
+    <p class="lead" style="max-width:48ch;margin-bottom:4px">By temperament, Camus is your fourth pick. By whether he's built for the question of meaning, he's first — by a mile.</p>
+    <div class="orders">
+      <div><p class="ohd">ranked by fit — temperament</p><ol class="olist">${byFit.map(r=>li(r,'fit')).join('')}</ol></div>
+      <div><p class="ohd">ranked by aptness — meaning of life</p><ol class="olist">${byApt.map(r=>li(r,'apt')).join('')}</ol></div>
+    </div>
+    <p class="punch">${esc(phil('camus'))} carries the highest aptness on <em>${esc(AES.problem_name)}</em> — <span class="tealn">0.97</span> — yet fit ranks him fourth. Read down the left column and you'd miss him. Read down the right and he's unmissable. The instrument shows both, and refuses to collapse them.</p>
+  </div>`});
+})();
+
+slides.push(readingSlide(SKE,3));
+slides.push(verdictSlide(SKE));
+
+/* skeptic twist — clean card, both high */
+(function(){
+  const z=SKE.stretch.ranked.find(r=>r.subject==='zhuangzi');
+  slides.push({eyebrow:'the skeptic — the alignment', persona:'the-skeptic', html:()=>`<div class="case">
+    <p class="eyebrow"><span>when both operators agree</span><span class="tick"></span><span>${esc(phil('zhuangzi'))}</span></p>
+    <p class="lead" style="max-width:44ch">Sometimes the thinker built for your question is also the one you resonate with. No contradiction to resolve — just a clean recommendation.</p>
+    <div class="versus" style="grid-template-columns:1fr 1fr">
+      <div class="vcard">
+        <div class="vmd" style="margin:0 0 4px">fit — temperament</div>
+        <div class="sv big teal" style="font-family:var(--mono)">${f2(z.fit)}</div>
+        <div class="stat"><span class="sl">resonance</span><span class="n" style="color:var(--teal)">${sgn(z.resonance)}</span></div>
+      </div>
+      <div class="vcard">
+        <div class="vmd" style="margin:0 0 4px">aptness — reliability of reason</div>
+        <div class="sv big teal" style="font-family:var(--mono)">${f2(z.aptness)}</div>
+        <div class="stat"><span class="sl">confidence</span><span class="n" style="color:var(--teal)">${f2(z.confidence)}</span></div>
+      </div>
+    </div>
+    <p class="punch">${esc(phil('zhuangzi'))} owns <em>${esc(SKE.problem_name)}</em>: fit <span class="tealn">${f2(z.fit)}</span>, aptness <span class="tealn">${f2(z.aptness)}</span>. When the two agree this hard, the reason writes itself — the doubt you brought is the mode's native element.</p>
+  </div>`});
+})();
+
+slides.push(readingSlide(DEV,4));
+slides.push(verdictSlide(DEV));
+
+/* devastated twist — excess beat verbatim (emotional peak) */
+(function(){
+  const key='epictetus/the-handbook';
+  const ex=beatByKind(DEV.stretch.reasons,key,'excess');
+  slides.push({eyebrow:'the devastated — the excess', persona:'the-devastated', html:()=>`<div class="case">
+    <p class="eyebrow"><span>the excess — forced on you unasked</span><span class="tick"></span><span style="color:var(--oxblood)">the hostile line</span></p>
+    <p class="lead" style="max-width:46ch;margin-bottom:14px">Grief wants a hand held, not a question dissolved. The top match by fit will do the second thing — and the engine says so to your face.</p>
+    <p class="beat excess" style="font-size:1.18rem;line-height:1.5">${esc(ex.text)}</p>
+    <p class="section-note">This is the engine's real output for a synthetic reader whose register profile is near-pure consolation-seeking (corrosion <span class="n" style="color:var(--oxblood)">−1.00</span>). It recommends Epictetus on fit — then warns, in the same breath, that his method will corrode the very thing you came for. The recommendation and its own objection ship together.</p>
+  </div>`});
+})();
+
+/* the pattern across all five — fit's pick vs the problem's pick */
+(function(){
+  const rows = DATA.map(p=>{
+    const adm=p.stretch.ranked.filter(r=>r.admissible);
+    const byFit=adm.slice().sort((a,b)=>b.fit-a.fit)[0];
+    const byApt=adm.slice().sort((a,b)=>b.aptness-a.aptness)[0];
+    const agree = byFit.subject===byApt.subject;
+    return {p,byFit,byApt,agree};
+  });
+  slides.push({eyebrow:'the pattern', html:()=>`<div class="case">
+    <p class="eyebrow"><span>across all five readings</span><span class="tick"></span><span class="synthetic">temperament's pick vs the problem's pick</span></p>
+    <p class="lead" style="max-width:52ch;margin-bottom:6px">The gap between "who suits you" and "who's built for your question" is not a one-off. It is the point of the third operator.</p>
+    <div class="rank-wrap"><table class="rank" style="min-width:640px">
+      <thead><tr><th>reading</th><th>the problem brought</th><th>fit's top pick</th><th>aptness' top pick</th></tr></thead>
+      <tbody>
+        ${rows.map(r=>`<tr>
+          <td class="who"><span class="nm" style="font-size:.92rem">${esc(r.p.title)}</span></td>
+          <td style="font-family:var(--sans);font-size:.8rem;color:var(--ink-mute)">${esc(r.p.problem_name)}</td>
+          <td><span class="nm" style="font-size:.9rem">${esc(phil(r.byFit.subject))}</span> <span class="n" style="color:var(--ink-mute);font-size:.76rem">${f2(r.byFit.fit)}</span></td>
+          <td><span class="nm" style="font-size:.9rem;${r.agree?'':'color:var(--teal)'}">${esc(phil(r.byApt.subject))}</span> <span class="tealn" style="font-size:.76rem">${f2(r.byApt.aptness)}</span>${r.agree?' <span class="n" style="color:var(--ink-mute);font-size:.66rem">— agrees</span>':''}</td>
+        </tr>`).join('')}
+      </tbody></table></div>
+    <p class="section-note" style="margin-top:16px">In three of five readings the problem's best thinker is <em>not</em> the one temperament would have handed you. In two, both operators agree — and the recommendation is that much cleaner. Either way, the instrument reports both, and never lets fit quietly stand in for aptness.</p>
+  </div>`});
+})();
+
+/* closing — epistemics */
+(function(){
+  const key=topAdmissible(RIG.stretch.ranked); // russell top
+  const ledger=beatByKind(RIG.stretch.reasons,'russell/logical-atomist','ledger');
+  slides.push({eyebrow:'the honest limits', html:()=>`<div class="case">
+    <p class="eyebrow"><span>what the instrument will not pretend</span><span class="tick"></span><span>epistemics, first-class</span></p>
+    <p class="lead" style="max-width:40ch">A match without a defensible "why" is noise. So the instrument shows its work — including the parts that weaken its own claim.</p>
+    <ul class="limits">
+      <li><span class="mk" style="color:var(--amber);border-color:color-mix(in srgb,var(--amber) 40%,transparent)">stipulated</span><span>Every philosopher vector is <em>our</em> reading, not a fact about the thinker. Each facet names an experiment that would kill it.</span></li>
+      <li><span class="mk">testimonial</span><span>Your vector is what you told us. We did not measure you — so a derived match is never stronger than that input.</span></li>
+      <li><span class="mk" style="color:var(--teal)">deterministic</span><span>The reasons are generated from the arithmetic, not written by a person. The prose is a rendering of the numbers above it.</span></li>
+      <li><span class="mk" style="color:var(--oxblood);border-color:color-mix(in srgb,var(--oxblood) 40%,transparent)">falsifiable</span><span>Aptness is a stipulation <em>with a falsifier</em>: fetch the primary text, string-check the quoted spans, and a failed check deletes the finding.</span></li>
+      <li><span class="mk">n = 0</span><span>These are five synthetic archetypes. No human has been read yet. Nothing here is a testimonial.</span></li>
+    </ul>
+    ${ledger?`<pre class="ledger">${esc(ledger.text)}</pre>`:''}
+  </div>`});
+})();
+
+/* ---------- carousel engine ---------- */
+const stage=document.getElementById('stage');
+const dotsEl=document.getElementById('dots');
+const curEl=document.getElementById('cur');
+const totalEl=document.getElementById('total');
+const barEl=document.getElementById('bar');
+const playBtn=document.getElementById('play');
+const reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+let idx=0, timer=null, tick=null, playing=!reduce;
+const DUR=6000;
+
+totalEl.textContent=String(slides.length).padStart(2,'0');
+
+// build dots
+slides.forEach((s,i)=>{
+  const b=document.createElement('button');
+  b.className='dot'; b.type='button'; b.textContent=String(i+1).padStart(2,'0');
+  b.setAttribute('aria-label','Go to slide '+(i+1)+(s.eyebrow?': '+s.eyebrow:''));
+  b.addEventListener('click',()=>{go(i);restart();});
+  dotsEl.appendChild(b);
+});
+
+function render(){
+  const s=slides[idx];
+  stage.innerHTML=`<section class="slide active" id="slide-${idx+1}" role="group" aria-roledescription="slide" aria-label="${(idx+1)}: ${(s.eyebrow||'').replace(/"/g,'')}">${s.html()}</section>`;
+  curEl.textContent=String(idx+1).padStart(2,'0');
+  [...dotsEl.children].forEach((d,i)=>d.setAttribute('aria-current', i===idx?'true':'false'));
+  try{ history.replaceState(null,'', '#slide-'+(idx+1)); }catch(e){}
+}
+function go(i){ idx=(i+slides.length)%slides.length; render(); }
+function nextS(){ go(idx+1); }
+function prevS(){ go(idx-1); }
+
+function startAuto(){
+  stopAuto();
+  if(!playing) return;
+  const t0=Date.now();
+  barEl.style.width='0%';
+  tick=setInterval(()=>{ barEl.style.width=Math.min(100,(Date.now()-t0)/DUR*100)+'%'; },80);
+  timer=setTimeout(()=>{ nextS(); startAuto(); }, DUR);
+}
+function stopAuto(){ clearTimeout(timer); clearInterval(tick); timer=tick=null; }
+function restart(){ startAuto(); }
+function setPlaying(v){
+  playing=v;
+  playBtn.textContent = v ? '❚❚ pause' : '▶ play';
+  playBtn.setAttribute('aria-pressed', String(v));
+  if(v) startAuto(); else { stopAuto(); barEl.style.width='0%'; }
+}
+
+document.getElementById('next').addEventListener('click',()=>{nextS();restart();});
+document.getElementById('prev').addEventListener('click',()=>{prevS();restart();});
+playBtn.addEventListener('click',()=>setPlaying(!playing));
+
+// keyboard
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){nextS();restart();}
+  else if(e.key==='ArrowLeft'){prevS();restart();}
+});
+
+// pause on hover
+stage.addEventListener('mouseenter',()=>{ if(playing) stopAuto(); });
+stage.addEventListener('mouseleave',()=>{ if(playing) startAuto(); });
+
+// touch swipe
+let tx=0,ty=0;
+stage.addEventListener('touchstart',e=>{tx=e.changedTouches[0].clientX;ty=e.changedTouches[0].clientY;},{passive:true});
+stage.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)){ if(dx<0)nextS(); else prevS(); restart(); }
+},{passive:true});
+
+// theme toggle
+const tbtn=document.getElementById('themeToggle');
+tbtn.addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const sysDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const now = cur ? cur : (sysDark?'dark':'light');
+  document.documentElement.setAttribute('data-theme', now==='dark'?'light':'dark');
+});
+
+// deep-link
+const m=(location.hash||'').match(/slide-(\d+)/);
+if(m){ const n=parseInt(m[1],10)-1; if(n>=0&&n<slides.length) idx=n; }
+
+render();
+if(playing) startAuto();
+if(reduce){ playBtn.textContent='▶ play'; playBtn.setAttribute('aria-pressed','false'); barEl.style.width='0%'; }
+</script>
+
+</html>

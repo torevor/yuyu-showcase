@@ -1,0 +1,40 @@
+{
+  "slug": "two-ai",
+  "title": "Two-AI — three views inside a language model",
+  "tagline": "A small GPT-style AI running live in your browser, cracked open three ways so you can watch what an LLM is actually doing",
+  "category": "standalone",
+  "standalone": true,
+  "substance_rank": 66,
+  "badges": [
+    {
+      "label": "standalone",
+      "kind": "ok"
+    }
+  ],
+  "thumbnail": "assets/two-ai/thumb.jpg",
+  "links": {
+    "open": "./two-ai/"
+  },
+  "functionality": [
+    {
+      "name": "Runs In-Browser",
+      "blurb": "A small GPT-style AI runs entirely in your browser, no server needed."
+    },
+    {
+      "name": "Word-Meaning Galaxy",
+      "blurb": "Visualizes the model's word-meanings as a navigable galaxy."
+    },
+    {
+      "name": "Live Attention Maps",
+      "blurb": "Shows live attention maps of which words the model is looking at."
+    },
+    {
+      "name": "Next-Word Tree",
+      "blurb": "Displays an exploding tree of the next words the model considered."
+    }
+  ],
+  "detail_body": [
+    "A small <b>GPT-style AI</b> running entirely in your browser, opened up three ways to reveal what's actually happening inside a language model.",
+    "See a <em>galaxy of word-meanings</em>, <em>live attention maps</em> showing which words the model \"looks at,\" and an <em>exploding tree</em> of the next words it considered — a rare look inside an LLM."
+  ]
+}

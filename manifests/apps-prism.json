@@ -1,0 +1,12 @@
+{
+  "slug": "apps-prism",
+  "title": "The Interpretation Prism",
+  "tagline": "One sentence, split like light through a prism into the several different meanings a reader could take from it.",
+  "category": "prototype",
+  "standalone": true,
+  "substance_rank": 40,
+  "badges": [{"label": "prototype", "kind": "art"}],
+  "thumbnail": "assets/apps-prism/thumb.jpg",
+  "links": {"open": "./apps/prism.html"},
+  "detail_body": ["A single-page sketch: one sentence, split like light through a prism into the several different meanings a reader could take from it — a visual take on interpretive ambiguity from the engine."]
+}

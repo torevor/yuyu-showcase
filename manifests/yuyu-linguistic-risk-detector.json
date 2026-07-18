@@ -9,7 +9,7 @@
     {"label": "★ flagship", "kind": "flag"},
     {"label": "live scan needs backend", "kind": "backend"}
   ],
-  "thumbnail": "assets/yuyu-linguistic-risk-detector/thumb.png",
+  "thumbnail": "assets/yuyu-linguistic-risk-detector/thumb.jpg",
   "links": {
     "open": "./yuyu-linguistic-risk-detector/"
   },

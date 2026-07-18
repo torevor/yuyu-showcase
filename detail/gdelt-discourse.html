@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discourse Live — a real-time window on the world’s press &middot; Yuyu Showcase</title>
+<link rel="stylesheet" href="../showcase.css">
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="../index.html">&#8592; all projects</a>
+  <header class="detail-hero">
+    <div class="badges"><span class="badge backend">requires backend</span><span class="badge ext">runs on ps14 · tunnel</span></div>
+    <h1>Discourse Live — a real-time window on the world’s press</h1>
+    <p class="tagline">The world's press, live: every 15 minutes GDELT's news firehose becomes headlines you query in plain English</p>
+    <div class="actions"><a class="btn" href="https://gdelt.elua2.org/app/">&#9654; Open it</a><a class="btn ghost" href="https://claude.ai/code/artifact/e1b4fe3f-6766-47f1-950c-e6ae011814c7">How it works &rarr;</a></div>
+  </header>
+
+
+    <section>
+      <p class="eyebrow">What it does</p>
+      <div class="funcs"><div class="func"><h3>Live GDELT stream</h3><p>Every 15 minutes it streams what the world's media just wrote into a fast analytics database, roughly 120,000+ articles a day.</p></div><div class="func"><h3>Rich article tagging</h3><p>Each article is tagged with themes, named entities, a six-axis emotional tone, and ~2,300 affect dimensions.</p></div><div class="func"><h3>Plain-English querying</h3><p>Ask a question in plain English and it writes a safe database query in front of you, returning fresh headlines within minutes of publication.</p></div><div class="func"><h3>Planetary mood map</h3><p>It paints the planet's mood as a clay-to-teal spectrum.</p></div></div>
+    </section>
+  <div class="ops-note"><b>&#9656; ops</b> &middot; The ClickHouse + Postgres stack is always-on, but the public gdelt.elua2.org address is a Cloudflare tunnel — on ps14 run gdelt-tunnel once per boot and keep the window open.</div>
+<section class="detail-body">
+      <p>The global news firehose, live. Every 15 minutes <b>GDELT</b> publishes what the world's media just wrote, and this app streams that into a fast analytics database — roughly <b>120,000+ articles a day</b>. Each is tagged with themes, named entities, a six-axis emotional tone, and <b>~2,300 affect dimensions</b>.</p>
+      <p>Ask a question in plain English and it writes a <em>safe</em> database query in front of you, returns fresh headlines within minutes of publication, and paints the planet's mood as a <b>clay-to-teal spectrum</b>.</p>
+    </section>
+</div>
+
+</body>
+</html>

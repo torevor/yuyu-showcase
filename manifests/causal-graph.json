@@ -1,0 +1,36 @@
+{
+  "slug": "causal-graph",
+  "title": "Causal Decomposition",
+  "tagline": "An interactive tree that pulls an event into cause and effect on two axes at once — with cycles where causes feed back on themselves",
+  "category": "standalone",
+  "standalone": true,
+  "substance_rank": 64,
+  "badges": [
+    {
+      "label": "standalone",
+      "kind": "ok"
+    }
+  ],
+  "thumbnail": "assets/causal-graph/thumb.jpg",
+  "links": {
+    "open": "./causal-graph/"
+  },
+  "functionality": [
+    {
+      "name": "Dual-axis decomposition",
+      "blurb": "Pulls an event apart into cause and effect along two axes at once, with time running sideways and composition running down."
+    },
+    {
+      "name": "Wormhole cycles",
+      "blurb": "Includes looping \"wormhole\" cycles where causes feed back on themselves."
+    },
+    {
+      "name": "Interactive tree",
+      "blurb": "Presents the decomposition as an interactive tree of an event's causes and effects."
+    }
+  ],
+  "detail_body": [
+    "An <b>interactive tree</b> that pulls an event apart into its causes and effects along <em>two axes at once</em>: time runs sideways while composition runs down.",
+    "It also handles looping <b>\"wormhole\" cycles</b> — cases where causes feed back on themselves."
+  ]
+}

@@ -1,14 +1,36 @@
 {
   "slug": "grounding-atlas",
   "title": "Grounding Atlas",
-  "tagline": "Every definition uses words you'd also have to look up. This maps that circularity across ~500 real definitions and isolates the primitives.",
+  "tagline": "Every definition is made of words you also have to look up — this maps the loops and finds the words underneath them all",
   "category": "standalone",
   "standalone": true,
-  "substance_rank": 70,
-  "badges": [{"label": "standalone", "kind": "ok"}],
-  "thumbnail": "assets/grounding-atlas/thumb.png",
-  "links": {"open": "./grounding-atlas/"},
+  "substance_rank": 68,
+  "badges": [
+    {
+      "label": "standalone",
+      "kind": "ok"
+    }
+  ],
+  "thumbnail": "assets/grounding-atlas/thumb.jpg",
+  "links": {
+    "open": "./grounding-atlas/"
+  },
+  "functionality": [
+    {
+      "name": "Definition circularity map",
+      "blurb": "Maps how dictionary definitions refer to other words that themselves need looking up, across roughly 500 real definitions."
+    },
+    {
+      "name": "Loop detection",
+      "blurb": "Finds the circular loops where words are ultimately defined in terms of each other."
+    },
+    {
+      "name": "Primitive word isolation",
+      "blurb": "Isolates the small set of primitive words that everything else is ultimately defined in terms of."
+    }
+  ],
   "detail_body": [
-    "If you look up a word, the definition uses other words &mdash; which you also have to look up. This maps that circularity across ~500 real dictionary definitions, finds the loops, and isolates the small set of primitive words everything else is ultimately defined in terms of."
+    "If you look up a word, its definition uses other words — which you also have to look up. Grounding Atlas maps that circularity across <b>~500 real dictionary definitions</b>.",
+    "It <em>finds the loops</em> in that web and isolates the <b>small set of primitive words</b> everything else is ultimately defined in terms of."
   ]
 }

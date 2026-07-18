@@ -1,0 +1,12 @@
+{
+  "slug": "apps-begriff",
+  "title": "Begriffsschrift, Rendered",
+  "tagline": "Frege's 19th-century “concept-writing” — the ancestor of modern logic notation — as an interactive diagram.",
+  "category": "prototype",
+  "standalone": true,
+  "substance_rank": 38,
+  "badges": [{"label": "prototype", "kind": "art"}],
+  "thumbnail": "assets/apps-begriff/thumb.jpg",
+  "links": {"open": "./apps/begriff.html"},
+  "detail_body": ["Frege's 19th-century <em>Begriffsschrift</em> (“concept-writing”) — the ancestor of modern logic notation — brought to life as an interactive diagram."]
+}
