@@ -247,7 +247,7 @@ def render_index(items: list[dict]) -> str:
       </div>
     </div>
   </header>
-{featured}{ops_strip_html(ops)}{sections}
+{featured}{sections}{ops_strip_html(ops)}
 
   <p class="foot">Ordered by substance: flagship first, then power-apps that need a server, then
     everything that just runs. Badges are honest &mdash; an amber tile whose backend is off will
